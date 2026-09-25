@@ -1,0 +1,19 @@
+# Environment variables (secret API keys — never commit these)
+.env
+.env.local
+.env.*.local
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local only files (not needed for Cloudflare deployment)
+start.bat
+migrate_neon.bat
+migrate_neon.py
+server.js
+cronjob-dashboard.html

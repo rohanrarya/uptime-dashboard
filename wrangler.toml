@@ -1,0 +1,12 @@
+name = "uptime-dashboard"
+main = "_worker.js"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "public"
+
+# Environment variable required:
+# UPTIMEROBOT_API_KEY — your UptimeRobot Read-Only API key
+#
+# Set it in Cloudflare Pages:
+# Pages -> Your Project -> Settings -> Environment Variables
+# Variable name: UPTIMEROBOT_API_KEY
+# Value: your actual key (starts with ur...)
