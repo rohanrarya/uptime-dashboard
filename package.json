@@ -1,0 +1,17 @@
+{
+  "name": "cronjob-monitor-dashboard",
+  "version": "1.0.0",
+  "description": "Single-page dashboard to monitor all cron-job.org cron jobs with secure .env API key management",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "cronjob",
+    "dashboard",
+    "monitoring"
+  ],
+  "author": "",
+  "license": "ISC"
+}
