@@ -928,6 +928,13 @@ CF_LABEL_2=Cloudflare - Studio</div>
             <div class="commit-message">${commitMsg}</div>
           </div>
 
+          ${d.error ? `
+            <div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);padding:0.75rem 0.9rem;border-radius:var(--radius-sm);font-size:0.78rem;color:#fca5a5;line-height:1.45;">
+              <strong style="color:#ef4444;display:block;margin-bottom:0.2rem;">⚠️ Diagnostic / Action Required:</strong>
+              ${esc(d.error)}
+            </div>
+          ` : ''}
+
           ${liveUrl ? `
             <div class="site-url-bar">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
