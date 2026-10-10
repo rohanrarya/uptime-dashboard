@@ -529,24 +529,45 @@ def test_db_connection():
 
 
 # =============================================================================
-# Static Frontend Serving (For Local Development)
+# Frontend Serving (Root & Static Assets)
 # =============================================================================
 @app.route('/')
 def serve_index():
-    public_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public')
-    if os.path.exists(os.path.join(public_dir, 'index.html')):
-        return send_from_directory(public_dir, 'index.html')
+    candidates = [
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public', 'index.html'),
+        os.path.join(os.path.dirname(__file__), '..', 'public', 'index.html'),
+        os.path.join(os.path.dirname(__file__), 'public', 'index.html'),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), 'index.html'),
+        os.path.join(os.path.dirname(__file__), 'index.html'),
+        os.path.join(os.getcwd(), 'public', 'index.html'),
+        os.path.join(os.getcwd(), 'index.html'),
+        'public/index.html',
+        'index.html'
+    ]
+    for c in candidates:
+        if os.path.exists(c):
+            with open(c, 'r', encoding='utf-8') as f:
+                return f.read(), 200, {'Content-Type': 'text/html; charset=utf-8'}
     return jsonify({'status': 'Ops Command Center API is running!'})
 
 @app.route('/<path:path>')
 def serve_static(path):
-    public_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public')
-    file_path = os.path.join(public_dir, path)
-    if os.path.exists(file_path) and os.path.isfile(file_path):
-        return send_from_directory(public_dir, path)
-    if os.path.exists(os.path.join(public_dir, 'index.html')):
-        return send_from_directory(public_dir, 'index.html')
-    return jsonify({'error': 'Not found'}), 404
+    if path.startswith('api/'):
+        return jsonify({'error': 'Endpoint not found'}), 404
+
+    candidates = [
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public', path),
+        os.path.join(os.path.dirname(__file__), '..', 'public', path),
+        os.path.join(os.path.dirname(__file__), path),
+        os.path.join(os.getcwd(), 'public', path),
+        os.path.join(os.getcwd(), path),
+        path
+    ]
+    for c in candidates:
+        if os.path.exists(c) and os.path.isfile(c):
+            return send_from_directory(os.path.dirname(c), os.path.basename(c))
+
+    return serve_index()
 
 # =============================================================================
 # Local Runner
