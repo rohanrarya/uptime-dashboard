@@ -28,14 +28,86 @@ def get_pooled_db_url(raw_url):
     return url
 
 
+# =============================================================================
+# Persistent Connection Pool / Reuse for Serverless (Fast Latency)
+# =============================================================================
+_persistent_pg_conn = None
+_persistent_sqlite_conn = None
+_db_initialized = False
+_env_synced = False
+
+
+class PooledConnectionWrapper:
+    """
+    Transparent connection wrapper that keeps the underlying TCP/SSL socket
+    alive across requests in warm serverless instances while allowing caller
+    code to call `conn.close()` without tearing down the connection.
+    """
+    def __init__(self, raw_conn, engine):
+        self._raw_conn = raw_conn
+        self.engine = engine
+
+    def cursor(self, *args, **kwargs):
+        return self._raw_conn.cursor(*args, **kwargs)
+
+    def commit(self):
+        return self._raw_conn.commit()
+
+    def rollback(self):
+        return self._raw_conn.rollback()
+
+    def close(self):
+        # NO-OP: Keep underlying connection open and warm!
+        pass
+
+    def real_close(self):
+        try:
+            self._raw_conn.close()
+        except Exception:
+            pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type:
+            self.rollback()
+        else:
+            self.commit()
+
+    def __getattr__(self, name):
+        return getattr(self._raw_conn, name)
+
+
+def reset_persistent_connection():
+    global _persistent_pg_conn, _persistent_sqlite_conn
+    try:
+        if _persistent_pg_conn:
+            _persistent_pg_conn.close()
+    except Exception:
+        pass
+    _persistent_pg_conn = None
+    _persistent_sqlite_conn = None
+
+
 def get_connection():
     """
-    Returns a database connection with auto-retry and connection pooling.
-    Uses PostgreSQL if DATABASE_URL is set, otherwise falls back to local SQLite.
+    Returns a database connection with auto-retry and persistent connection reuse.
+    Reuses open connections across warm serverless requests to eliminate 300-500ms
+    TLS handshakes on every query.
     """
+    global _persistent_pg_conn, _persistent_sqlite_conn
     raw_url = os.environ.get('DATABASE_URL', '').strip()
     
     if raw_url and (raw_url.startswith('postgres://') or raw_url.startswith('postgresql://')):
+        # Check if persistent connection is still valid and alive
+        if _persistent_pg_conn is not None:
+            try:
+                if hasattr(_persistent_pg_conn, 'closed') and _persistent_pg_conn.closed == 0:
+                    return PooledConnectionWrapper(_persistent_pg_conn, 'postgres'), 'postgres'
+            except Exception:
+                _persistent_pg_conn = None
+
         db_url = get_pooled_db_url(raw_url)
         
         # Retry up to 3 times to allow suspended Neon databases to wake up smoothly
@@ -53,7 +125,8 @@ def get_connection():
                     keepalives_count=5
                 )
                 conn.autocommit = True
-                return conn, 'postgres'
+                _persistent_pg_conn = conn
+                return PooledConnectionWrapper(_persistent_pg_conn, 'postgres'), 'postgres'
             except Exception as e:
                 if attempt < 2:
                     import time
@@ -64,30 +137,59 @@ def get_connection():
                     from psycopg.rows import dict_row
                     conn = psycopg.connect(db_url, row_factory=dict_row)
                     conn.autocommit = True
-                    return conn, 'postgres'
+                    _persistent_pg_conn = conn
+                    return PooledConnectionWrapper(_persistent_pg_conn, 'postgres'), 'postgres'
                 except Exception as inner_e:
                     print(f"[DB Warning] Could not connect to PostgreSQL: {e} | {inner_e}. Falling back to SQLite.")
     
-    # Fallback to local SQLite database (use /tmp on serverless environments like Vercel)
+    # Fallback to local SQLite database (reused within warm serverless container)
+    if _persistent_sqlite_conn is not None:
+        try:
+            return PooledConnectionWrapper(_persistent_sqlite_conn, 'sqlite'), 'sqlite'
+        except Exception:
+            _persistent_sqlite_conn = None
+
     import sqlite3
     if os.environ.get('VERCEL') or os.path.exists('/tmp'):
         db_path = '/tmp/local.db'
     else:
         db_path = os.path.join(os.path.dirname(__file__), 'local.db')
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
-    return conn, 'sqlite'
+    _persistent_sqlite_conn = conn
+    return PooledConnectionWrapper(_persistent_sqlite_conn, 'sqlite'), 'sqlite'
 
 
-def init_db():
+def init_db(force=False):
     """
     Creates necessary tables if they don't exist yet.
+    Fast check avoids re-running DDL statements on every serverless invocation.
     """
+    global _db_initialized
+    if _db_initialized and not force:
+        return
+
     conn, engine = get_connection()
     cur = conn.cursor()
     
     try:
         if engine == 'postgres':
+            # Fast check: If project_titles table already exists, schema is already intact
+            try:
+                cur.execute("""
+                    SELECT EXISTS (
+                        SELECT 1 FROM information_schema.tables 
+                        WHERE table_schema = 'public' AND table_name = 'project_titles'
+                    );
+                """)
+                row = cur.fetchone()
+                exists = row['exists'] if isinstance(row, dict) else (row[0] if row else False)
+                if exists and not force:
+                    _db_initialized = True
+                    return
+            except Exception:
+                pass
+
             # PostgreSQL Schema
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS users (
@@ -98,7 +200,6 @@ def init_db():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """)
-            # Ensure role column exists if table was previously created
             try:
                 cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'admin';")
             except Exception:
@@ -205,10 +306,15 @@ def init_db():
         conn.close()
 
 
-def sync_env_to_db():
+def sync_env_to_db(force=False):
     """
     Auto-syncs credentials from environment variables into the database if missing.
+    Skips redundant work across warm serverless requests.
     """
+    global _env_synced
+    if _env_synced and not force:
+        return
+
     from werkzeug.security import generate_password_hash
     
     conn, engine = get_connection()
@@ -358,6 +464,7 @@ def sync_env_to_db():
                             VALUES (?, ?, datetime('now'));
                         """, (alias, title))
                         conn.commit()
+        _env_synced = True
     except Exception as e:
         print(f"[DB Sync Error] {e}")
     finally:
@@ -366,10 +473,25 @@ def sync_env_to_db():
 
 
 # =============================================================================
-# Database Query Helpers (Simple & Clean)
+# In-Memory Cache (Instant sub-millisecond responses)
 # =============================================================================
+import time
+
+_settings_cache = {}
+_settings_cache_ts = {}
+
+_accounts_cache = None
+_accounts_cache_ts = 0
+
+_titles_cache = None
+_titles_cache_ts = 0
+
 
 def get_setting(key, default=''):
+    now = time.time()
+    if key in _settings_cache and (now - _settings_cache_ts.get(key, 0) < 60):
+        return _settings_cache[key]
+
     conn, engine = get_connection()
     cur = conn.cursor()
     try:
@@ -378,15 +500,19 @@ def get_setting(key, default=''):
         else:
             cur.execute("SELECT key_value FROM settings WHERE key_name = ?;", (key,))
         row = cur.fetchone()
-        if row:
-            return row['key_value'] if isinstance(row, dict) or hasattr(row, '__getitem__') else row[0]
-        return default
+        val = (row['key_value'] if isinstance(row, dict) or hasattr(row, '__getitem__') else row[0]) if row else default
+        _settings_cache[key] = val
+        _settings_cache_ts[key] = now
+        return val
     finally:
         cur.close()
         conn.close()
 
 
 def set_setting(key, value):
+    _settings_cache[key] = value
+    _settings_cache_ts[key] = time.time()
+
     conn, engine = get_connection()
     cur = conn.cursor()
     try:
@@ -409,6 +535,11 @@ def set_setting(key, value):
 
 
 def get_all_accounts():
+    global _accounts_cache, _accounts_cache_ts
+    now = time.time()
+    if _accounts_cache is not None and (now - _accounts_cache_ts < 30):
+        return _accounts_cache
+
     conn, engine = get_connection()
     cur = conn.cursor()
     try:
@@ -424,6 +555,8 @@ def get_all_accounts():
                 'api_key': r['api_key'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[4],
                 'is_active': bool(r['is_active'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[5])
             })
+        _accounts_cache = accounts
+        _accounts_cache_ts = now
         return accounts
     finally:
         cur.close()
@@ -431,6 +564,9 @@ def get_all_accounts():
 
 
 def add_account(provider, account_name, api_key, account_id=None):
+    global _accounts_cache
+    _accounts_cache = None
+
     conn, engine = get_connection()
     cur = conn.cursor()
     try:
@@ -454,6 +590,9 @@ def add_account(provider, account_name, api_key, account_id=None):
 
 
 def delete_account(account_id):
+    global _accounts_cache
+    _accounts_cache = None
+
     conn, engine = get_connection()
     cur = conn.cursor()
     try:
@@ -469,6 +608,11 @@ def delete_account(account_id):
 
 
 def get_all_project_titles():
+    global _titles_cache, _titles_cache_ts
+    now = time.time()
+    if _titles_cache is not None and (now - _titles_cache_ts < 30):
+        return _titles_cache
+
     conn, engine = get_connection()
     cur = conn.cursor()
     try:
@@ -482,6 +626,8 @@ def get_all_project_titles():
                 'custom_title': r['custom_title'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[2],
                 'target_url': r['target_url'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[3]
             })
+        _titles_cache = titles
+        _titles_cache_ts = now
         return titles
     finally:
         cur.close()
@@ -489,6 +635,9 @@ def get_all_project_titles():
 
 
 def set_project_title(alias, custom_title, target_url=None):
+    global _titles_cache
+    _titles_cache = None
+
     conn, engine = get_connection()
     cur = conn.cursor()
     try:
@@ -514,6 +663,9 @@ def set_project_title(alias, custom_title, target_url=None):
 
 
 def delete_project_title(title_id):
+    global _titles_cache
+    _titles_cache = None
+
     conn, engine = get_connection()
     cur = conn.cursor()
     try:

@@ -1,27 +1,141 @@
 # =============================================================================
-# Services Module
+# Services Module — High Performance Async / Parallel Operations
 # Business logic for Render, Cloudflare, UptimeRobot, TinyURL & DB Health
+# Features: HTTP connection pooling, parallel threaded queries & in-memory caching
 # =============================================================================
 
 import os
+import time
 import requests
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import db
 
 # =============================================================================
-# Render Deployments Fetcher
+# Shared HTTP Client with Connection Pooling & Keep-Alive
+# =============================================================================
+_http_session = None
+
+def get_http_session():
+    """Returns a shared requests.Session with connection pooling to eliminate TLS handshakes."""
+    global _http_session
+    if _http_session is None:
+        from requests.adapters import HTTPAdapter
+        from urllib3.util.retry import Retry
+
+        _http_session = requests.Session()
+        adapter = HTTPAdapter(
+            pool_connections=20,
+            pool_maxsize=20,
+            max_retries=Retry(total=2, backoff_factor=0.3, status_forcelist=[500, 502, 503, 504])
+        )
+        _http_session.mount('https://', adapter)
+        _http_session.mount('http://', adapter)
+    return _http_session
+
+
+# =============================================================================
+# In-Memory Response Caches (Ultra-Fast Sub-10ms Serving)
+# =============================================================================
+_deployments_cache = None
+_deployments_cache_ts = 0
+
+_monitors_cache = None
+_monitors_cache_ts = 0
+
+_tinyurl_cache = None
+_tinyurl_cache_ts = 0
+
+
+def invalidate_services_cache():
+    """Clears all in-memory caches when settings, titles, or accounts change."""
+    global _deployments_cache, _monitors_cache, _tinyurl_cache
+    _deployments_cache = None
+    _monitors_cache = None
+    _tinyurl_cache = None
+
+
+# =============================================================================
+# Render Deployments Fetcher (Parallelized per Service)
 # =============================================================================
 
+def _fetch_single_render_service(s_item, acc_name, api_key):
+    """Fetches latest deploy for an individual Render service in a thread worker."""
+    srv = s_item.get('service', s_item)
+    srv_id = srv.get('id')
+    srv_name = srv.get('name', 'Unnamed Service')
+    srv_url = srv.get('serviceDetails', {}).get('url', srv.get('url', ''))
+    branch = srv.get('branch', 'main')
+
+    dep_status = 'live'
+    dep_label = 'Live'
+    commit_msg = 'No commit message'
+    commit_hash = ''
+    updated_at = None
+
+    try:
+        session = get_http_session()
+        dep_r = session.get(
+            f'https://api.render.com/v1/services/{srv_id}/deploys?limit=1',
+            headers={'Authorization': f'Bearer {api_key}', 'Accept': 'application/json'},
+            timeout=8
+        )
+        if dep_r.status_code == 200:
+            deploys = dep_r.json()
+            if isinstance(deploys, list) and len(deploys) > 0:
+                d = deploys[0].get('deploy', deploys[0])
+                raw_st = (d.get('status') or '').lower()
+                updated_at = d.get('finishedAt') or d.get('createdAt')
+                
+                if raw_st == 'live':
+                    dep_status = 'live'
+                    dep_label = 'Live'
+                elif any(w in raw_st for w in ['in_progress', 'created', 'queued', 'building']):
+                    dep_status = 'building'
+                    dep_label = 'Building'
+                elif 'failed' in raw_st:
+                    dep_status = 'failed'
+                    dep_label = 'Build Failed'
+                elif raw_st == 'canceled':
+                    dep_status = 'canceled'
+                    dep_label = 'Canceled'
+
+                c_obj = d.get('commit') or {}
+                commit_msg = (c_obj.get('message') or '').split('\n')[0]
+                commit_hash = (c_obj.get('id') or '')[:7]
+    except Exception:
+        pass
+
+    return {
+        'id': f"render-{srv_id}",
+        'provider': 'render',
+        'accountName': acc_name,
+        'projectName': srv_name,
+        'serviceType': srv.get('type', 'Web Service'),
+        'liveUrl': srv_url,
+        'dashboardUrl': f"https://dashboard.render.com/web/{srv_id}",
+        'status': dep_status,
+        'statusLabel': dep_label,
+        'commit': {
+            'message': commit_msg,
+            'hash': commit_hash,
+            'branch': branch
+        },
+        'updatedAt': updated_at
+    }
+
+
 def fetch_render_deployments(accounts):
-    """Fetches services and latest commit/deploy status from Render accounts."""
+    """Fetches services and latest commit/deploy status from Render accounts concurrently."""
     render_accounts = [a for a in accounts if a['provider'] == 'render' and a['is_active']]
     deployments = []
+    session = get_http_session()
 
     for acc in render_accounts:
         api_key = acc['api_key']
         acc_name = acc['account_name']
         try:
-            r = requests.get(
+            r = session.get(
                 'https://api.render.com/v1/services?limit=50',
                 headers={'Authorization': f'Bearer {api_key}', 'Accept': 'application/json'},
                 timeout=10
@@ -31,68 +145,16 @@ def fetch_render_deployments(accounts):
                 if isinstance(services, dict):
                     services = services.get('services', [])
 
-                for s_item in services:
-                    srv = s_item.get('service', s_item)
-                    srv_id = srv.get('id')
-                    srv_name = srv.get('name', 'Unnamed Service')
-                    srv_url = srv.get('serviceDetails', {}).get('url', srv.get('url', ''))
-                    branch = srv.get('branch', 'main')
-
-                    dep_status = 'live'
-                    dep_label = 'Live'
-                    commit_msg = 'No commit message'
-                    commit_hash = ''
-                    updated_at = None
-
-                    try:
-                        dep_r = requests.get(
-                            f'https://api.render.com/v1/services/{srv_id}/deploys?limit=1',
-                            headers={'Authorization': f'Bearer {api_key}', 'Accept': 'application/json'},
-                            timeout=8
-                        )
-                        if dep_r.status_code == 200:
-                            deploys = dep_r.json()
-                            if isinstance(deploys, list) and len(deploys) > 0:
-                                d = deploys[0].get('deploy', deploys[0])
-                                raw_st = (d.get('status') or '').lower()
-                                updated_at = d.get('finishedAt') or d.get('createdAt')
-                                
-                                if raw_st == 'live':
-                                    dep_status = 'live'
-                                    dep_label = 'Live'
-                                elif any(w in raw_st for w in ['in_progress', 'created', 'queued', 'building']):
-                                    dep_status = 'building'
-                                    dep_label = 'Building'
-                                elif 'failed' in raw_st:
-                                    dep_status = 'failed'
-                                    dep_label = 'Build Failed'
-                                elif raw_st == 'canceled':
-                                    dep_status = 'canceled'
-                                    dep_label = 'Canceled'
-
-                                c_obj = d.get('commit') or {}
-                                commit_msg = (c_obj.get('message') or '').split('\n')[0]
-                                commit_hash = (c_obj.get('id') or '')[:7]
-                    except Exception:
-                        pass
-
-                    deployments.append({
-                        'id': f"render-{srv_id}",
-                        'provider': 'render',
-                        'accountName': acc_name,
-                        'projectName': srv_name,
-                        'serviceType': srv.get('type', 'Web Service'),
-                        'liveUrl': srv_url,
-                        'dashboardUrl': f"https://dashboard.render.com/web/{srv_id}",
-                        'status': dep_status,
-                        'statusLabel': dep_label,
-                        'commit': {
-                            'message': commit_msg,
-                            'hash': commit_hash,
-                            'branch': branch
-                        },
-                        'updatedAt': updated_at
-                    })
+                if services:
+                    # Query all service deploys in parallel
+                    workers = min(12, max(len(services), 1))
+                    with ThreadPoolExecutor(max_workers=workers) as executor:
+                        futures = [executor.submit(_fetch_single_render_service, s, acc_name, api_key) for s in services]
+                        for f in as_completed(futures):
+                            try:
+                                deployments.append(f.result())
+                            except Exception:
+                                pass
             else:
                 deployments.append({
                     'id': f"render-err-{acc['id']}",
@@ -127,6 +189,7 @@ def fetch_cloudflare_deployments(accounts):
     """Fetches Pages projects and recent deployments from Cloudflare accounts."""
     cf_accounts = [a for a in accounts if a['provider'] == 'cloudflare' and a['is_active']]
     deployments = []
+    session = get_http_session()
 
     for acc in cf_accounts:
         acc_id = acc.get('account_id')
@@ -137,7 +200,7 @@ def fetch_cloudflare_deployments(accounts):
             continue
 
         try:
-            r = requests.get(
+            r = session.get(
                 f'https://api.cloudflare.com/client/v4/accounts/{acc_id}/pages/projects',
                 headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'},
                 timeout=10
@@ -201,14 +264,24 @@ def fetch_cloudflare_deployments(accounts):
     return deployments
 
 
-def get_all_deployments():
-    """Aggregates deployments from all configured Render and Cloudflare accounts."""
-    accounts = db.get_all_accounts()
-    render_deps = fetch_render_deployments(accounts)
-    cf_deps = fetch_cloudflare_deployments(accounts)
-    all_deps = render_deps + cf_deps
+def get_all_deployments(force=False):
+    """Aggregates deployments from all configured Render and Cloudflare accounts in parallel with caching."""
+    global _deployments_cache, _deployments_cache_ts
+    now = time.time()
+    if not force and _deployments_cache and (now - _deployments_cache_ts < 20):
+        return _deployments_cache
 
-    return {
+    accounts = db.get_all_accounts()
+
+    # Query Render and Cloudflare concurrently
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        f_render = executor.submit(fetch_render_deployments, accounts)
+        f_cf = executor.submit(fetch_cloudflare_deployments, accounts)
+        render_deps = f_render.result()
+        cf_deps = f_cf.result()
+
+    all_deps = render_deps + cf_deps
+    result = {
         'deployments': all_deps,
         'summary': {
             'total': len(all_deps),
@@ -217,20 +290,29 @@ def get_all_deployments():
             'failed': len([d for d in all_deps if d.get('status') == 'failed'])
         }
     }
+    _deployments_cache = result
+    _deployments_cache_ts = now
+    return result
 
 
 # =============================================================================
 # UptimeRobot Monitors Fetcher
 # =============================================================================
 
-def fetch_uptimerobot_monitors():
-    """Queries UptimeRobot v2 getMonitors API."""
+def fetch_uptimerobot_monitors(force=False):
+    """Queries UptimeRobot v2 getMonitors API with keep-alive and in-memory cache."""
+    global _monitors_cache, _monitors_cache_ts
+    now = time.time()
+    if not force and _monitors_cache and (now - _monitors_cache_ts < 20):
+        return _monitors_cache
+
     api_key = db.get_setting('uptimerobot_api_key')
     if not api_key:
         return {'error': 'UptimeRobot API key not configured in settings.'}, 400
 
     try:
-        r = requests.post(
+        session = get_http_session()
+        r = session.post(
             'https://api.uptimerobot.com/v2/getMonitors',
             data={
                 'api_key': api_key,
@@ -242,7 +324,11 @@ def fetch_uptimerobot_monitors():
             headers={'Content-Type': 'application/x-www-form-urlencoded'},
             timeout=10
         )
-        return r.json(), r.status_code
+        res = r.json(), r.status_code
+        if r.status_code == 200:
+            _monitors_cache = res
+            _monitors_cache_ts = now
+        return res
     except Exception as e:
         return {'error': 'Failed to contact UptimeRobot API', 'detail': str(e)}, 502
 
@@ -251,8 +337,13 @@ def fetch_uptimerobot_monitors():
 # TinyURL Quick Launch Fetcher
 # =============================================================================
 
-def fetch_tinyurl_projects():
-    """Fetches TinyURL links and merges custom title overrides."""
+def fetch_tinyurl_projects(force=False):
+    """Fetches TinyURL links and merges custom title overrides with caching."""
+    global _tinyurl_cache, _tinyurl_cache_ts
+    now = time.time()
+    if not force and _tinyurl_cache and (now - _tinyurl_cache_ts < 30):
+        return _tinyurl_cache
+
     token = db.get_setting('tinyurl_api_token')
     if not token:
         return {'configured': False, 'links': [], 'message': 'TinyURL API token not configured.'}, 200
@@ -261,7 +352,8 @@ def fetch_tinyurl_projects():
     titles_map = {t['alias'].lower().strip(): t['custom_title'] for t in titles_list}
 
     try:
-        r = requests.get(
+        session = get_http_session()
+        r = session.get(
             'https://api.tinyurl.com/urls/available',
             headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},
             timeout=10
@@ -298,7 +390,10 @@ def fetch_tinyurl_projects():
                 'targetUrl': target_url
             })
 
-        return {'configured': True, 'links': links, 'count': len(links)}, 200
+        res = {'configured': True, 'links': links, 'count': len(links)}, 200
+        _tinyurl_cache = res
+        _tinyurl_cache_ts = now
+        return res
     except Exception as e:
         return {'configured': True, 'links': [], 'error': str(e)}, 200
 

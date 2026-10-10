@@ -179,14 +179,16 @@ def get_config():
 @require_auth
 def get_deployments():
     """Aggregates all deployments across Render and Cloudflare accounts."""
-    return jsonify(services.get_all_deployments())
+    force = request.args.get('force') in ['1', 'true', 'yes']
+    return jsonify(services.get_all_deployments(force=force))
 
 
 @app.route('/api/monitors', methods=['GET'])
 @require_auth
 def get_monitors():
     """Proxies UptimeRobot monitors."""
-    result, code = services.fetch_uptimerobot_monitors()
+    force = request.args.get('force') in ['1', 'true', 'yes']
+    result, code = services.fetch_uptimerobot_monitors(force=force)
     return jsonify(result), code
 
 
@@ -194,7 +196,8 @@ def get_monitors():
 @require_auth
 def get_projects():
     """Fetches TinyURL projects with custom titles."""
-    result, code = services.fetch_tinyurl_projects()
+    force = request.args.get('force') in ['1', 'true', 'yes']
+    result, code = services.fetch_tinyurl_projects(force=force)
     return jsonify(result), code
 
 
@@ -243,6 +246,7 @@ def update_settings():
     if 'database_url' in data:
         db.set_setting('database_url', data['database_url'].strip())
 
+    services.invalidate_services_cache()
     return jsonify({'success': True, 'message': 'Settings saved to database successfully!'})
 
 
@@ -260,6 +264,7 @@ def add_account():
         return jsonify({'error': 'Provider, Account Name, and API Key/Token are required.'}), 400
 
     new_id = db.add_account(provider, account_name, api_key, account_id)
+    services.invalidate_services_cache()
     return jsonify({'success': True, 'id': new_id, 'message': f'{account_name} added successfully!'})
 
 
@@ -268,6 +273,7 @@ def add_account():
 def delete_account(acc_id):
     """Deletes an account."""
     db.delete_account(acc_id)
+    services.invalidate_services_cache()
     return jsonify({'success': True, 'message': 'Account deleted successfully!'})
 
 
@@ -284,6 +290,7 @@ def save_project_title():
         return jsonify({'error': 'Alias and Custom Title are required.'}), 400
 
     db.set_project_title(alias, custom_title, target_url)
+    services.invalidate_services_cache()
     return jsonify({'success': True, 'message': f"Title for '{alias}' set to '{custom_title}'!"})
 
 
@@ -292,6 +299,7 @@ def save_project_title():
 def delete_project_title(title_id):
     """Deletes a custom title override."""
     db.delete_project_title(title_id)
+    services.invalidate_services_cache()
     return jsonify({'success': True, 'message': 'Title override removed.'})
 
 

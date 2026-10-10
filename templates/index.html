@@ -1078,12 +1078,13 @@
     }
 
     if (!isSilent) $('refreshIcon').classList.add('spin');
+    const force = !isSilent;
 
     try {
       await Promise.allSettled([
-        loadQuickLaunch(),
-        loadDeployments(),
-        loadMonitors()
+        loadQuickLaunch(force),
+        loadDeployments(force),
+        loadMonitors(force)
       ]);
       if (!isSilent) toast('Dashboard refreshed', 'success');
     } catch (e) {
@@ -1094,9 +1095,9 @@
   }
 
   // 1. Quick Launch (Projects + Titles)
-  async function loadQuickLaunch() {
+  async function loadQuickLaunch(force = false) {
     try {
-      const res = await apiFetch('/projects');
+      const res = await apiFetch(force ? '/projects?force=1' : '/projects');
       const data = await res.json();
 
       if (!data.configured) {
@@ -1144,9 +1145,9 @@
   }
 
   // 2. Git Deployments
-  async function loadDeployments() {
+  async function loadDeployments(force = false) {
     try {
-      const res = await apiFetch('/deployments');
+      const res = await apiFetch(force ? '/deployments?force=1' : '/deployments');
       const data = await res.json();
       const list = data.deployments || [];
       const sum = data.summary || { total: 0, live: 0, building: 0, failed: 0 };
@@ -1209,9 +1210,9 @@
   }
 
   // 3. Monitors
-  async function loadMonitors() {
+  async function loadMonitors(force = false) {
     try {
-      const res = await apiFetch('/monitors');
+      const res = await apiFetch(force ? '/monitors?force=1' : '/monitors');
       const data = await res.json();
       const monitors = data.monitors || [];
 

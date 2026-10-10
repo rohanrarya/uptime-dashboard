@@ -76,6 +76,16 @@ def generate_token(username, user_agent='', ip_address=''):
     return token
 
 
+# In-memory active session cache & activity throttler for instant sub-millisecond auth
+_active_sessions_cache = {}
+_last_activity_update = {}
+
+
+def clear_session_cache():
+    global _active_sessions_cache
+    _active_sessions_cache.clear()
+
+
 def validate_token(token):
     """Validates session token signature, expiry, and active status in DB."""
     if not token or ':' not in token:
@@ -97,10 +107,21 @@ def validate_token(token):
 
     # Verify session has not been revoked (1-click logout check)
     token_hash = get_token_hash(token)
-    if not db.is_session_active(token_hash):
-        return None
+    now = time.time()
+    cached_exp = _active_sessions_cache.get(token_hash)
+    if not (cached_exp and now < cached_exp):
+        if not db.is_session_active(token_hash):
+            return None
+        _active_sessions_cache[token_hash] = now + 60
 
-    db.update_session_activity(token_hash)
+    # Throttle DB write to once per 2 minutes instead of every single HTTP request
+    if now - _last_activity_update.get(token_hash, 0) > 120:
+        _last_activity_update[token_hash] = now
+        try:
+            db.update_session_activity(token_hash)
+        except Exception:
+            pass
+
     return username
 
 
@@ -335,6 +356,7 @@ def list_active_sessions(current_token):
 def logout_device(session_id):
     """Revokes a specific device session (1-click logout)."""
     db.revoke_session(session_id)
+    clear_session_cache()
     return {'success': True, 'message': 'Device logged out successfully.'}, 200
 
 
@@ -342,12 +364,14 @@ def logout_all_other_devices(current_username, current_token):
     """Revokes all sessions except the current one."""
     current_hash = get_token_hash(current_token)
     db.revoke_all_other_sessions(current_username, current_hash)
+    clear_session_cache()
     return {'success': True, 'message': 'All other devices logged out successfully.'}, 200
 
 
 def logout_session(token):
     """Revokes the current session."""
     token_hash = get_token_hash(token)
+    clear_session_cache()
     if token_hash:
         try:
             conn, engine = db.get_connection()
