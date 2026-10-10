@@ -691,8 +691,13 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: u, password: p })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Login failed');
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        throw new Error(`Server returned HTTP ${res.status}. Vercel is initializing or building backend functions.`);
+      }
+      if (!res.ok) throw new Error(data.error || 'Invalid username or password');
 
       localStorage.setItem('ops_token', data.token);
       hideLoginScreen();

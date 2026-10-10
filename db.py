@@ -38,9 +38,12 @@ def get_connection():
             except Exception as inner_e:
                 print(f"[DB Warning] Could not connect to PostgreSQL: {e} | {inner_e}. Falling back to SQLite.")
     
-    # Fallback to local SQLite database
+    # Fallback to local SQLite database (use /tmp on serverless environments like Vercel)
     import sqlite3
-    db_path = os.path.join(os.path.dirname(__file__), 'local.db')
+    if os.environ.get('VERCEL') or os.path.exists('/tmp'):
+        db_path = '/tmp/local.db'
+    else:
+        db_path = os.path.join(os.path.dirname(__file__), 'local.db')
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn, 'sqlite'
@@ -458,24 +461,28 @@ def delete_project_title(title_id):
 
 
 def get_user(username='admin'):
-    conn, engine = get_connection()
-    cur = conn.cursor()
     try:
-        if engine == 'postgres':
-            cur.execute("SELECT id, username, password_hash FROM users WHERE username = %s;", (username,))
-        else:
-            cur.execute("SELECT id, username, password_hash FROM users WHERE username = ?;", (username,))
-        r = cur.fetchone()
-        if r:
-            return {
-                'id': r['id'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[0],
-                'username': r['username'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[1],
-                'password_hash': r['password_hash'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[2]
-            }
+        conn, engine = get_connection()
+        cur = conn.cursor()
+        try:
+            if engine == 'postgres':
+                cur.execute("SELECT id, username, password_hash FROM users WHERE username = %s;", (username,))
+            else:
+                cur.execute("SELECT id, username, password_hash FROM users WHERE username = ?;", (username,))
+            r = cur.fetchone()
+            if r:
+                return {
+                    'id': r['id'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[0],
+                    'username': r['username'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[1],
+                    'password_hash': r['password_hash'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[2]
+                }
+            return None
+        finally:
+            cur.close()
+            conn.close()
+    except Exception as e:
+        print(f"[DB Warning] Could not query user '{username}': {e}")
         return None
-    finally:
-        cur.close()
-        conn.close()
 
 
 def update_admin_password(new_password):
