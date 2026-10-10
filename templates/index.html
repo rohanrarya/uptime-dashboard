@@ -669,48 +669,70 @@
       <div id="cpTabTitles" class="cp-content" style="display:none;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
           <div>
-            <h4 style="font-size:0.88rem;font-weight:700;color:#fff;">TinyURL Project Titles</h4>
+            <h4 style="font-size:0.88rem;font-weight:700;color:#fff;">Project Titles (TinyURL)</h4>
             <p style="font-size:0.78rem;color:var(--text3);margin-top:0.2rem;">
-              Override project titles for your TinyURL aliases. Custom titles will appear in Quick Launch and previews.
+              Rename your TinyURL links for Quick Launch. TinyURL redirect URLs remain untouched.
             </p>
           </div>
-          <button type="button" onclick="loadTinyUrlSlugs()" class="btn btn-secondary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;">
+          <button type="button" onclick="loadTitlesTable()" class="btn btn-secondary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-            <span>Refresh TinyURL Slugs</span>
+            <span>Refresh Projects</span>
           </button>
         </div>
 
+        <!-- Table listing all TinyURL projects directly -->
         <div class="table-container" style="margin-bottom:1.25rem;">
           <table>
             <thead>
-              <tr><th>TinyURL Alias (Slug)</th><th>Custom Display Name</th><th>Action</th></tr>
+              <tr>
+                <th>Project Link</th>
+                <th>Target Destination</th>
+                <th>Display Title</th>
+                <th style="text-align:right;">Action</th>
+              </tr>
             </thead>
-            <tbody id="cpTitlesTableBody"></tbody>
+            <tbody id="cpTitlesTableBody">
+              <tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1.5rem;">Loading your TinyURL projects...</td></tr>
+            </tbody>
           </table>
         </div>
 
+        <!-- Direct Title Editor (No alias typing needed) -->
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.15rem;">
-          <h4 style="font-size:0.85rem;font-weight:700;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            <span>Add / Update Title Override</span>
+          <h4 style="font-size:0.85rem;font-weight:700;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;color:#fff;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            <span>Change Project Title</span>
           </h4>
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:0.85rem;">
             <div class="form-group">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.2rem;">
-                <label class="form-label" style="margin-bottom:0;">Alias (Slug)</label>
-                <span id="titleTinyUrlStatus" style="font-size:0.68rem;color:#38bdf8;font-weight:600;">Auto-fetching...</span>
-              </div>
-              <select id="titleSlugSelect" class="form-input mono" onchange="onTitleSlugSelectChange()" style="cursor:pointer;margin-bottom:0.4rem;">
-                <option value="">-- Choose Auto-Fetched Slug from TinyURL --</option>
+              <label class="form-label">Select Project</label>
+              <select id="titleProjectSelect" class="form-input mono" onchange="onProjectSelectChange()" style="cursor:pointer;">
+                <option value="">-- Loading projects... --</option>
               </select>
-              <input type="text" id="titleNewAlias" class="form-input mono" placeholder="Or type slug manually (e.g. rohanrarya)" />
+              <!-- Hidden alias input populated automatically -->
+              <input type="hidden" id="titleNewAlias" />
             </div>
             <div class="form-group">
-              <label class="form-label">Custom Display Name</label>
-              <input type="text" id="titleNewName" class="form-input" placeholder="e.g. My Portfolio" />
-              <button onclick="submitProjectTitle()" class="btn btn-primary" style="margin-top:0.4rem;font-size:0.82rem;padding:0.65rem 1rem;">
-                Save Title Override
-              </button>
+              <label class="form-label">New Display Title</label>
+              <div style="display:flex;gap:0.5rem;">
+                <input type="text" id="titleNewName" class="form-input" placeholder="e.g. My Portfolio" style="flex:1;" onkeydown="if(event.key==='Enter') submitProjectTitle()" />
+                <button type="button" onclick="submitProjectTitle()" class="btn btn-primary" style="font-size:0.82rem;padding:0.6rem 1.15rem;white-space:nowrap;display:inline-flex;align-items:center;gap:0.35rem;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span>Save Title</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div id="manualSlugToggleWrap" style="margin-top:0.75rem;display:flex;align-items:center;justify-content:space-between;">
+            <span id="titleTinyUrlStatus" style="font-size:0.72rem;color:var(--text3);"></span>
+            <button type="button" onclick="toggleManualSlugInput()" style="background:none;border:none;color:var(--text3);font-size:0.72rem;cursor:pointer;text-decoration:underline;">
+              + Enter custom slug manually (advanced)
+            </button>
+          </div>
+          <div id="manualSlugInputWrap" style="display:none;margin-top:0.75rem;padding-top:0.75rem;border-top:1px dashed var(--border);">
+            <div class="form-group">
+              <label class="form-label">Manual Slug (Alias)</label>
+              <input type="text" id="manualAliasInput" class="form-input mono" placeholder="e.g. custom-slug" oninput="$('titleNewAlias').value = this.value" />
             </div>
           </div>
         </div>
@@ -1256,7 +1278,7 @@
     document.querySelectorAll('.cp-tab-btn').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.tab === tab);
     });
-    if (tab === 'titles') loadTinyUrlSlugs();
+    if (tab === 'titles') loadTitlesTable();
     if (tab === 'security') load2FAStatus();
     if (tab === 'users') loadUsersList();
     if (tab === 'sessions') loadSessionsList();
@@ -1280,10 +1302,10 @@
       $('cpUptimeKey').value = data.keys.uptimerobot_api_key || '';
       $('cpTinyKey').value = data.keys.tinyurl_api_token || '';
 
-      // 2FA Status, Users Count, & Auto-fetch TinyURL slugs
+      // 2FA Status, Users Count, & Auto-fetch TinyURL projects
       load2FAStatus();
       loadUsersList();
-      loadTinyUrlSlugs();
+      loadTitlesTable();
 
       // Accounts Table
       $('cpAccountsTableBody').innerHTML = (data.accounts || []).map(a => `
@@ -1294,20 +1316,6 @@
           <td><button onclick="deleteAccount(${a.id})" class="btn btn-danger btn-sm">Delete</button></td>
         </tr>
       `).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);">No accounts yet.</td></tr>';
-
-      // Project Titles Table
-      $('cpTitlesTableBody').innerHTML = (data.titles || []).map(t => `
-        <tr>
-          <td><code style="color:#818cf8;background:rgba(99,102,241,0.12);padding:0.15rem 0.4rem;border-radius:4px;font-size:0.8rem;">${esc(t.alias)}</code></td>
-          <td><strong>${esc(t.custom_title)}</strong></td>
-          <td>
-            <div style="display:flex;gap:0.4rem;">
-              <button onclick="editTitle('${esc(t.alias)}', '${esc(t.custom_title)}')" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.55rem;font-size:0.72rem;">Edit</button>
-              <button onclick="deleteTitle(${t.id})" class="btn btn-danger btn-sm" style="padding:0.2rem 0.55rem;font-size:0.72rem;">Delete</button>
-            </div>
-          </td>
-        </tr>
-      `).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--text3);padding:1rem;">No custom title overrides yet.</td></tr>';
     } catch (e) {}
   }
 
@@ -1381,85 +1389,172 @@
   }
 
   // =========================================================================
-  // TINYURL SLUG AUTO-FETCHER & PROJECT TITLES
+  // TINYURL PROJECT TITLES (NO MANUAL ALIAS TYPING NEEDED)
   // =========================================================================
-  let cachedTinyLinks = [];
+  let cachedTinyProjects = [];
+  let cachedOverridesMap = {};
 
-  async function loadTinyUrlSlugs() {
-    const select = $('titleSlugSelect');
+  async function loadTitlesTable() {
+    const tbody = $('cpTitlesTableBody');
+    const select = $('titleProjectSelect');
     const status = $('titleTinyUrlStatus');
-    if (!select) return;
+    if (!tbody) return;
 
-    if (status) status.textContent = 'Auto-fetching from TinyURL...';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1.5rem;">Loading your TinyURL projects...</td></tr>';
 
     try {
-      const res = await apiFetch('/projects');
-      const data = await res.json();
+      const [projRes, overRes] = await Promise.all([
+        apiFetch('/projects'),
+        apiFetch('/admin/overview')
+      ]);
+      const projData = await projRes.json();
+      const overData = await overRes.json();
 
-      if (!data.configured) {
+      const customOverrides = overData.titles || [];
+      const overridesMap = {};
+      customOverrides.forEach(o => {
+        overridesMap[(o.alias || '').toLowerCase().trim()] = { id: o.id, title: o.custom_title };
+      });
+      cachedOverridesMap = overridesMap;
+
+      if (!projData.configured) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1.5rem;">TinyURL API token not configured yet. Set it in the <strong>API Keys</strong> tab.</td></tr>';
+        if (select) select.innerHTML = '<option value="">-- Add TinyURL Token in API Keys --</option>';
         if (status) status.textContent = 'API token not configured';
-        select.innerHTML = '<option value="">-- TinyURL token not set in API Keys tab --</option>';
         return;
       }
 
-      cachedTinyLinks = data.links || [];
-      if (!cachedTinyLinks.length) {
-        if (status) status.textContent = '0 links in TinyURL account';
-        select.innerHTML = '<option value="">-- No links found in TinyURL account --</option>';
+      cachedTinyProjects = projData.links || [];
+      if (!cachedTinyProjects.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1.5rem;">No short links found in your TinyURL account.</td></tr>';
+        if (select) select.innerHTML = '<option value="">-- No links in TinyURL account --</option>';
+        if (status) status.textContent = '0 links in TinyURL';
         return;
       }
 
       if (status) {
-        status.innerHTML = `<span style="color:#4ade80;">✓ ${cachedTinyLinks.length} slugs fetched</span>`;
+        status.innerHTML = `<span style="color:#4ade80;display:inline-flex;align-items:center;gap:0.25rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> ${cachedTinyProjects.length} projects synced</span>`;
       }
 
-      select.innerHTML = '<option value="">-- Select Auto-Fetched Slug (' + cachedTinyLinks.length + ' available) --</option>' +
-        cachedTinyLinks.map(l => {
-          const aliasVal = l.alias || '';
-          return `<option value="${esc(aliasVal)}">${esc(aliasVal)} (${esc(l.displayUrl)})</option>`;
+      // Populate Project Selector Dropdown
+      if (select) {
+        select.innerHTML = cachedTinyProjects.map(l => {
+          const aliasLower = (l.alias || '').toLowerCase().trim();
+          const override = overridesMap[aliasLower];
+          const displayTitle = override ? override.title : l.title;
+          return `<option value="${esc(l.alias)}">${esc(displayTitle)} (${esc(l.displayUrl)})</option>`;
         }).join('');
 
+        // Automatically pre-select first project
+        if (cachedTinyProjects.length > 0) {
+          const first = cachedTinyProjects[0];
+          $('titleNewAlias').value = first.alias;
+          const firstOverride = overridesMap[(first.alias || '').toLowerCase().trim()];
+          $('titleNewName').value = firstOverride ? firstOverride.title : (first.title || '');
+        }
+      }
+
+      // Populate Table
+      tbody.innerHTML = cachedTinyProjects.map(l => {
+        const aliasLower = (l.alias || '').toLowerCase().trim();
+        const override = overridesMap[aliasLower];
+        const isCustom = Boolean(override);
+        const displayTitle = isCustom ? override.title : l.title;
+
+        return `
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:0.45rem;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent-light);"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                <a href="${esc(l.tinyUrl)}" target="_blank" rel="noopener" class="site-url-link" style="font-weight:700;">${esc(l.displayUrl)}</a>
+              </div>
+            </td>
+            <td>
+              <span style="font-size:0.75rem;color:var(--text3);font-family:'JetBrains Mono';max-width:200px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(l.targetUrl || '')}">
+                ${esc(l.targetUrl ? l.targetUrl.replace(/^https?:\/\//, '') : '—')}
+              </span>
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:0.45rem;">
+                <strong style="color:var(--text1);font-size:0.86rem;">${esc(displayTitle)}</strong>
+                ${isCustom ? '<span style="font-size:0.62rem;font-weight:700;padding:0.05rem 0.35rem;border-radius:999px;background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3);">CUSTOM</span>' : ''}
+              </div>
+            </td>
+            <td style="text-align:right;">
+              <div style="display:inline-flex;gap:0.35rem;">
+                <button type="button" onclick="selectProjectForRename('${esc(l.alias)}', '${esc(displayTitle)}')" class="btn btn-secondary btn-sm" style="font-size:0.75rem;padding:0.25rem 0.6rem;display:inline-flex;align-items:center;gap:0.3rem;">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  <span>Rename</span>
+                </button>
+                ${isCustom ? `
+                  <button type="button" onclick="deleteTitle(${override.id})" class="btn btn-danger btn-sm" style="font-size:0.75rem;padding:0.25rem 0.5rem;" title="Reset to default title">
+                    Reset
+                  </button>
+                ` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
     } catch (err) {
-      if (status) status.textContent = 'Failed to fetch slugs';
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#fca5a5;padding:1.5rem;">Failed to load projects: ${esc(err.message)}</td></tr>`;
     }
   }
 
-  function onTitleSlugSelectChange() {
-    const select = $('titleSlugSelect');
-    const val = (select.value || '').trim();
-    if (val) {
-      $('titleNewAlias').value = val;
-      const found = cachedTinyLinks.find(l => (l.alias || '').toLowerCase() === val.toLowerCase());
-      if (found) {
-        if (found.title && found.title !== val) {
-          $('titleNewName').value = found.title;
-        } else {
-          $('titleNewName').value = '';
-        }
-      }
-      $('titleNewName').focus();
-    }
-  }
-
-  function editTitle(alias, customTitle) {
+  function onProjectSelectChange() {
+    const alias = $('titleProjectSelect').value;
     $('titleNewAlias').value = alias;
-    $('titleNewName').value = customTitle;
-    const select = $('titleSlugSelect');
-    if (select) {
-      for (let i = 0; i < select.options.length; i++) {
-        if (select.options[i].value.toLowerCase() === alias.toLowerCase()) {
-          select.selectedIndex = i;
-          break;
-        }
-      }
+    const aliasLower = (alias || '').toLowerCase().trim();
+    const override = cachedOverridesMap[aliasLower];
+    const found = cachedTinyProjects.find(l => (l.alias || '').toLowerCase() === aliasLower);
+    if (override) {
+      $('titleNewName').value = override.title;
+    } else if (found) {
+      $('titleNewName').value = found.title || '';
     }
     $('titleNewName').focus();
+    $('titleNewName').select();
+  }
+
+  function selectProjectForRename(alias, currentTitle) {
+    const select = $('titleProjectSelect');
+    if (select) {
+      select.value = alias;
+    }
+    $('titleNewAlias').value = alias;
+    $('titleNewName').value = currentTitle;
+    $('titleNewName').focus();
+    $('titleNewName').select();
+  }
+
+  function toggleManualSlugInput() {
+    const wrap = $('manualSlugInputWrap');
+    if (wrap) {
+      wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+      if (wrap.style.display === 'block') {
+        $('manualAliasInput').focus();
+      }
+    }
   }
 
   async function submitProjectTitle() {
-    const alias = $('titleNewAlias').value.trim();
+    let alias = $('titleNewAlias').value.trim();
+    if (!alias && $('titleProjectSelect')) {
+      alias = $('titleProjectSelect').value.trim();
+      $('titleNewAlias').value = alias;
+    }
     const title = $('titleNewName').value.trim();
-    if (!alias || !title) return alert('Alias and Custom Title are required');
+
+    if (!title) {
+      toast('Please enter a display title', 'error');
+      $('titleNewName').focus();
+      return;
+    }
+    if (!alias) {
+      toast('Please select a project to rename', 'error');
+      return;
+    }
 
     try {
       const res = await apiFetch('/admin/titles', {
@@ -1469,11 +1564,8 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      toast('Title override saved!', 'success');
-      $('titleNewAlias').value = '';
-      $('titleNewName').value = '';
-      if ($('titleSlugSelect')) $('titleSlugSelect').value = '';
-      loadControlPanelData();
+      toast(`Title updated to "${title}"!`, 'success');
+      loadTitlesTable();
       refreshDashboard(true);
     } catch (err) {
       toast(err.message, 'error');
@@ -1483,11 +1575,11 @@
   async function deleteTitle(id) {
     try {
       await apiFetch(`/admin/titles/${id}`, { method: 'DELETE' });
-      toast('Title override removed', 'success');
-      loadControlPanelData();
+      toast('Title override removed (reverted to default)', 'success');
+      loadTitlesTable();
       refreshDashboard(true);
     } catch (e) {
-      toast('Failed to delete', 'error');
+      toast('Failed to reset title', 'error');
     }
   }
 
