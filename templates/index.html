@@ -1256,6 +1256,10 @@
             </p>
           </div>
           <div class="cp-header-actions">
+            <a href="https://tinyurl.com/app/my-urls" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;text-decoration:none;" title="Open your official TinyURL account dashboard">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              <span>TinyURL.com ↗</span>
+            </a>
             <button type="button" onclick="showAddCustomLinkForm()" class="btn btn-primary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               <span>+ Add Custom Link</span>
@@ -2209,15 +2213,15 @@
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                   <span>Edit</span>
                 </button>
-                ${isCustomLink && dbId ? `
-                  <button type="button" onclick="deleteTitle(${dbId})" class="btn btn-danger btn-sm" style="font-size:0.75rem;padding:0.25rem 0.5rem;" title="Delete custom link">
+                ${isCustomLink ? `
+                  <button type="button" onclick="deleteCustomLink(${dbId || 'null'}, '${esc(l.alias)}')" class="btn btn-danger btn-sm" style="font-size:0.75rem;padding:0.25rem 0.5rem;" title="Delete custom link">
                     Delete
                   </button>
-                ` : (isRenamed ? `
-                  <button type="button" onclick="deleteTitle(${override.id})" class="btn btn-danger btn-sm" style="font-size:0.75rem;padding:0.25rem 0.5rem;" title="Reset to default title">
-                    Reset
+                ` : `
+                  <button type="button" onclick="deleteTinyUrlLink('${esc(l.alias)}')" class="btn btn-danger btn-sm" style="font-size:0.75rem;padding:0.25rem 0.5rem;" title="Delete from TinyURL and remove from dashboard">
+                    Delete
                   </button>
-                ` : '')}
+                `}
               </div>
             </td>
           </tr>
@@ -2374,6 +2378,36 @@
       refreshDashboard(true);
     } catch (err) {
       toast(err.message, 'error');
+    }
+  }
+
+  async function deleteCustomLink(id, alias) {
+    if (!confirm('Are you sure you want to delete this custom link?')) return;
+    try {
+      if (id) {
+        await apiFetch(`/admin/titles/${id}`, { method: 'DELETE' });
+      } else if (alias) {
+        await apiFetch('/admin/tinyurl/' + encodeURIComponent(alias), { method: 'DELETE' });
+      }
+      toast('Custom link deleted', 'success');
+      loadTitlesTable();
+      refreshDashboard(true);
+    } catch (e) {
+      toast(e.message || 'Failed to delete custom link', 'error');
+    }
+  }
+
+  async function deleteTinyUrlLink(alias) {
+    if (!confirm(`Are you sure you want to delete "${alias}" from your dashboard and TinyURL?`)) return;
+    try {
+      const res = await apiFetch('/admin/tinyurl/' + encodeURIComponent(alias), { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to remove link');
+      toast(data.message || `Removed "${alias}"`, 'success');
+      loadTitlesTable();
+      refreshDashboard(true);
+    } catch (e) {
+      toast(e.message || 'Failed to delete TinyURL link', 'error');
     }
   }
 

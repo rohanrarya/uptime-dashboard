@@ -310,6 +310,13 @@ def save_project_title():
         if any(t['alias'].lower() == alias for t in all_titles):
             alias = f"{alias}-{int(time.time()) % 10000}"
 
+    # If updating a TinyURL link's destination URL, attempt to sync to TinyURL API
+    if target_url:
+        try:
+            services.change_tinyurl_destination(alias, target_url)
+        except Exception:
+            pass
+
     db.set_project_title(alias, custom_title, target_url or None)
     services.invalidate_services_cache()
     return jsonify({'success': True, 'message': f"Saved '{custom_title}' successfully!"})
@@ -322,6 +329,14 @@ def delete_project_title(title_id):
     db.delete_project_title(title_id)
     services.invalidate_services_cache()
     return jsonify({'success': True, 'message': 'Title override removed.'})
+
+
+@app.route('/api/admin/tinyurl/<alias>', methods=['DELETE'])
+@require_auth
+def delete_tinyurl_link(alias):
+    """Deletes or removes a TinyURL link from TinyURL API and hides from dashboard."""
+    result = services.delete_tinyurl_link(alias.strip().lower())
+    return jsonify(result), 200
 
 
 @app.route('/api/admin/test-db', methods=['POST'])

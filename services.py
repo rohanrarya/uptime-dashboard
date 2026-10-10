@@ -350,6 +350,9 @@ def fetch_tinyurl_projects(force=False):
     matched_aliases = set()
     links = []
 
+    hidden = db.get_setting('hidden_tinyurl_aliases', '')
+    hidden_set = set(h.strip().lower() for h in hidden.split(',') if h.strip())
+
     # 1. Fetch TinyURL links if token is configured
     if token:
         try:
@@ -368,16 +371,21 @@ def fetch_tinyurl_projects(force=False):
                 for item in raw_list:
                     domain = item.get('domain', 'tinyurl.com')
                     alias = item.get('alias', '')
+                    clean_alias = alias.lower().strip()
+                    if clean_alias in hidden_set:
+                        continue
+
                     short_url = item.get('tiny_url') or f"https://{domain}/{alias}"
                     target_url = item.get('url', '')
 
-                    clean_alias = alias.lower().strip()
                     matched_aliases.add(clean_alias)
 
                     if clean_alias in titles_map:
                         t_item = titles_map[clean_alias]
-                        title = t_item.get('custom_title')
+                        title = t_item.get('custom_title') or item.get('description') or alias
                         db_id = t_item.get('id')
+                        if t_item.get('target_url'):
+                            target_url = t_item.get('target_url')
                     else:
                         title = item.get('description') or item.get('title') or (
                             alias.replace('-', ' ').replace('_', ' ').title() if alias else 'Project Link'
@@ -400,6 +408,8 @@ def fetch_tinyurl_projects(force=False):
     # 2. Add all custom direct links from database that are not TinyURL short links
     for t in titles_list:
         c_alias = (t.get('alias') or '').lower().strip()
+        if c_alias in hidden_set:
+            continue
         if c_alias not in matched_aliases:
             target = (t.get('target_url') or '').strip()
             if not target or target == '#':
@@ -432,6 +442,104 @@ def fetch_tinyurl_projects(force=False):
     _tinyurl_cache = res
     _tinyurl_cache_ts = now
     return res
+
+
+def delete_tinyurl_link(alias, domain='tinyurl.com'):
+    """Deletes short link from TinyURL API, removes local title overrides, and hides from dashboard."""
+    token = db.get_setting('tinyurl_api_token')
+    clean_alias = alias.lower().strip()
+    api_deleted = False
+    api_message = ''
+
+    if token:
+        try:
+            session = get_http_session()
+            r = session.delete(
+                f'https://api.tinyurl.com/alias/{domain}/{clean_alias}',
+                headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},
+                timeout=10
+            )
+            if r.status_code in (200, 204):
+                api_deleted = True
+                api_message = 'Deleted from TinyURL server.'
+            else:
+                try:
+                    err_json = r.json()
+                    errors = err_json.get('errors', [])
+                    msg = err_json.get('message') or (errors[0] if errors else f"HTTP {r.status_code}")
+                except Exception:
+                    msg = f"HTTP {r.status_code}"
+                api_message = f"TinyURL note: {msg}"
+        except Exception as e:
+            api_message = f"TinyURL API unreachable: {str(e)}"
+
+    # Remove any local title override
+    for t in db.get_all_project_titles():
+        if t['alias'].lower().strip() == clean_alias:
+            db.delete_project_title(t['id'])
+
+    # Add to hidden aliases set to ensure it disappears immediately from dashboard
+    hidden = db.get_setting('hidden_tinyurl_aliases', '')
+    hidden_set = set(h.strip().lower() for h in hidden.split(',') if h.strip())
+    hidden_set.add(clean_alias)
+    db.set_setting('hidden_tinyurl_aliases', ','.join(sorted(hidden_set)))
+
+    invalidate_services_cache()
+    return {
+        'success': True,
+        'api_deleted': api_deleted,
+        'message': f"Link '{clean_alias}' removed from dashboard. {api_message}".strip()
+    }
+
+
+def change_tinyurl_destination(alias, new_target_url, domain='tinyurl.com'):
+    """Updates target destination on TinyURL API servers and stores local override."""
+    token = db.get_setting('tinyurl_api_token')
+    clean_alias = alias.lower().strip()
+    api_updated = False
+    api_message = ''
+
+    if token and new_target_url and new_target_url != '#':
+        try:
+            session = get_http_session()
+            payload = {
+                'domain': domain,
+                'alias': clean_alias,
+                'url': new_target_url
+            }
+            r = session.patch(
+                'https://api.tinyurl.com/change',
+                headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json', 'Accept': 'application/json'},
+                json=payload,
+                timeout=10
+            )
+            if r.status_code in (200, 204):
+                api_updated = True
+                api_message = 'Updated on TinyURL server.'
+            else:
+                try:
+                    err_json = r.json()
+                    errors = err_json.get('errors', [])
+                    msg = err_json.get('message') or (errors[0] if errors else f"HTTP {r.status_code}")
+                except Exception:
+                    msg = f"HTTP {r.status_code}"
+                api_message = f"TinyURL note: {msg}"
+        except Exception as e:
+            api_message = f"TinyURL API note: {str(e)}"
+
+    # Unhide if it was hidden
+    hidden = db.get_setting('hidden_tinyurl_aliases', '')
+    hidden_set = set(h.strip().lower() for h in hidden.split(',') if h.strip())
+    if clean_alias in hidden_set:
+        hidden_set.remove(clean_alias)
+        db.set_setting('hidden_tinyurl_aliases', ','.join(sorted(hidden_set)))
+
+    invalidate_services_cache()
+    return {
+        'success': True,
+        'api_updated': api_updated,
+        'message': api_message
+    }
 
 
 # =============================================================================
