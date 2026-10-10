@@ -2,32 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Ops & Uptime Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ops Command Center — Deployments & Uptime</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #090d16;
-      --surface: #101623;
-      --surface2: #182032;
-      --surface3: #222d46;
-      --border: #232e46;
-      --border-subtle: #192237;
+      --bg: #090c15;
+      --surface: #101626;
+      --surface2: #161e33;
+      --surface3: #1d2742;
+      --border: #232f4e;
+      --border-subtle: rgba(255, 255, 255, 0.07);
       --accent: #6366f1;
       --accent-light: #818cf8;
       --accent-glow: rgba(99, 102, 241, 0.2);
       --success: #10b981;
-      --success-glow: rgba(16, 185, 129, 0.16);
+      --success-glow: rgba(16, 185, 129, 0.15);
       --warning: #f59e0b;
-      --warning-glow: rgba(245, 158, 11, 0.18);
+      --warning-glow: rgba(245, 158, 11, 0.15);
       --danger: #ef4444;
-      --danger-glow: rgba(239, 68, 68, 0.16);
-      --render-color: #46e3b7;
-      --cf-color: #f6821f;
-      --muted: #64748b;
+      --danger-glow: rgba(239, 68, 68, 0.15);
       --text: #f8fafc;
       --text2: #94a3b8;
       --text3: #64748b;
@@ -35,394 +32,65 @@
       --radius-md: 10px;
       --radius-lg: 14px;
       --radius-xl: 18px;
-      --shadow-sm: 0 2px 6px rgba(0,0,0,0.3);
-      --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
-      --shadow-lg: 0 16px 40px rgba(0,0,0,0.6);
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+      --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
     }
 
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       min-height: 100vh;
-      line-height: 1.5;
-      -webkit-tap-highlight-color: transparent;
+      display: flex;
+      flex-direction: column;
     }
 
     /* Header */
     header {
-      background: rgba(16, 22, 35, 0.92);
+      background: rgba(16, 22, 38, 0.85);
+      backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
-      padding: 0.85rem 1.75rem;
+      padding: 0.9rem 1.75rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
       z-index: 100;
-      backdrop-filter: blur(14px);
     }
-    .brand { display: flex; align-items: center; gap: 0.85rem; }
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
     .brand-icon {
-      width: 38px; height: 38px; border-radius: var(--radius-md);
-      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      width: 36px; height: 36px; border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #4f46e5, #06b6d4);
       display: flex; align-items: center; justify-content: center;
-      color: white; box-shadow: 0 0 18px var(--accent-glow); flex-shrink: 0;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
     }
-    .brand-text h1 { font-size: 1.05rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
-    .brand-text span { font-size: 0.72rem; color: var(--text3); font-weight: 500; display: block; }
+    .brand-text h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; }
+    .brand-text span { font-size: 0.72rem; color: var(--text3); font-weight: 500; }
+    .header-actions { display: flex; align-items: center; gap: 0.6rem; }
 
-    .header-actions { display: flex; align-items: center; gap: 0.75rem; }
-    .refresh-btn {
-      padding: 0.48rem 0.9rem; border-radius: var(--radius-sm); font-weight: 600;
-      font-size: 0.8rem; border: 1px solid var(--border); cursor: pointer;
-      display: inline-flex; align-items: center; gap: 0.45rem; transition: all 0.2s ease;
-      background: var(--surface2); color: var(--text2); font-family: inherit;
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
+      padding: 0.5rem 0.95rem; border-radius: var(--radius-md); font-size: 0.8rem;
+      font-weight: 600; cursor: pointer; transition: all 0.15s ease; border: none; outline: none;
     }
-    .refresh-btn:hover { background: var(--surface3); color: var(--text); border-color: var(--accent-light); }
-    .spin { animation: spin 0.8s linear infinite; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3); }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--surface3); border-color: var(--accent-light); }
+    .btn-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.3); }
+    .btn-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .btn-success:hover { background: rgba(16, 185, 129, 0.3); }
+    .btn-sm { padding: 0.3rem 0.65rem; font-size: 0.72rem; border-radius: var(--radius-sm); }
 
-    /* Main Container */
-    main { padding: 1.75rem 2rem 4rem; max-width: 1440px; margin: 0 auto; }
+    /* Layout Container */
+    main { flex: 1; max-width: 1320px; width: 100%; margin: 0 auto; padding: 1.75rem 1.5rem 3rem; }
 
-    /* Top Navigation Tabs */
-    .view-tabs-container {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 1rem; margin-bottom: 1.75rem; flex-wrap: wrap;
-    }
-    .view-tabs {
-      display: inline-flex; background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 0.3rem; gap: 0.3rem;
-    }
-    .view-tab {
-      padding: 0.55rem 1.25rem; border-radius: var(--radius-md); font-weight: 600;
-      font-size: 0.84rem; cursor: pointer; border: none; background: transparent;
-      color: var(--text2); transition: all 0.2s ease; display: inline-flex;
-      align-items: center; gap: 0.55rem; font-family: inherit;
-    }
-    .view-tab:hover { color: var(--text); background: rgba(255, 255, 255, 0.04); }
-    .view-tab.active {
-      background: var(--surface2); color: #fff;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); border: 1px solid var(--border);
-    }
-    .tab-badge {
-      padding: 0.12rem 0.55rem; border-radius: 999px; font-size: 0.7rem;
-      font-weight: 700; background: var(--surface3); color: var(--text2);
-    }
-    .tab-badge.building {
-      background: rgba(245, 158, 11, 0.2); color: #fbbf24;
-      border: 1px solid rgba(245, 158, 11, 0.4); animation: pulse 1.8s infinite;
-    }
-
-    .live-indicator {
-      display: inline-flex; align-items: center; gap: 0.45rem;
-      font-size: 0.75rem; color: var(--text3); font-weight: 500;
-    }
-    .pulse-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--success); box-shadow: 0 0 8px var(--success);
-      animation: pulse 2s infinite;
-    }
-    .pulse-dot.warning { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
-    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; } }
-
-    /* Summary Stats Grid */
-    .stats-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem; margin-bottom: 2rem;
-    }
-    .stat-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
-      padding: 1.15rem 1.35rem; position: relative; overflow: hidden;
-      transition: transform 0.2s ease, border-color 0.2s ease;
-    }
-    .stat-card:hover { transform: translateY(-2px); border-color: var(--surface3); }
-    .stat-card::after {
-      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
-      background: var(--stat-color, var(--accent));
-    }
-    .stat-card.total    { --stat-color: var(--accent); }
-    .stat-card.live     { --stat-color: var(--success); }
-    .stat-card.building { --stat-color: var(--warning); }
-    .stat-card.failed   { --stat-color: var(--danger); }
-    .stat-card.accounts { --stat-color: #38bdf8; }
-
-    .stat-label {
-      font-size: 0.72rem; font-weight: 700; color: var(--text3);
-      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem;
-    }
-    .stat-value { font-size: 2rem; font-weight: 800; line-height: 1; color: var(--text); }
-    .stat-sub { font-size: 0.72rem; color: var(--text3); margin-top: 0.45rem; }
-
-    /* Controls Strip */
-    .controls-strip {
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
-      padding: 0.85rem 1.25rem; margin-bottom: 1.75rem; display: flex; align-items: center;
-      justify-content: space-between; gap: 1rem; flex-wrap: wrap;
-    }
-    .filter-group { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
-    .filter-chip {
-      padding: 0.35rem 0.85rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600;
-      cursor: pointer; border: 1px solid var(--border); background: var(--surface2);
-      color: var(--text2); transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 0.4rem;
-    }
-    .filter-chip:hover { background: var(--surface3); color: var(--text); }
-    .filter-chip.active { background: var(--accent-glow); border-color: var(--accent-light); color: #c7d2fe; }
-    .chip-count { background: rgba(255,255,255,0.08); padding: 0.05rem 0.4rem; border-radius: 999px; font-size: 0.7rem; }
-
-    .search-box { position: relative; min-width: 260px; }
-    .search-box input {
-      width: 100%; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: var(--radius-md); padding: 0.5rem 1rem 0.5rem 2.25rem; color: var(--text);
-      font-size: 0.82rem; font-family: inherit; outline: none; transition: border-color 0.2s ease;
-    }
-    .search-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-    .search-icon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
-
-    /* Deployments Grid */
-    .deployments-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 1.25rem;
-    }
-
-    .deployment-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
-      padding: 1.35rem; display: flex; flex-direction: column; gap: 1rem;
-      position: relative; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: var(--shadow-sm);
-    }
-    .deployment-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--accent-light); }
-    .deployment-card.is-building {
-      border-color: rgba(245, 158, 11, 0.5);
-      box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
-    }
-
-    .card-header {
-      display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem;
-    }
-    .project-info { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
-    .project-name-wrap { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-    .project-title { font-size: 1.05rem; font-weight: 700; color: var(--text); word-break: break-word; }
-    
-    .platform-pill {
-      display: inline-flex; align-items: center; gap: 0.35rem;
-      font-size: 0.7rem; font-weight: 700; padding: 0.18rem 0.55rem;
-      border-radius: var(--radius-sm); letter-spacing: 0.03em; text-transform: uppercase;
-    }
-    .platform-pill.render { background: rgba(70, 227, 183, 0.12); color: #46e3b7; border: 1px solid rgba(70, 227, 183, 0.3); }
-    .platform-pill.cloudflare { background: rgba(246, 130, 31, 0.12); color: #f6821f; border: 1px solid rgba(246, 130, 31, 0.3); }
-
-    .account-badge {
-      display: inline-flex; align-items: center; gap: 0.35rem;
-      font-size: 0.72rem; color: var(--text3); font-weight: 500;
-    }
-
-    /* Status Badges */
-    .status-badge {
-      display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.75rem;
-      border-radius: 999px; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap; flex-shrink: 0;
-    }
-    .badge-live { background: var(--success-glow); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .badge-building {
-      background: var(--warning-glow); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);
-      animation: pulse 1.8s infinite;
-    }
-    .badge-failed { background: var(--danger-glow); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-    .badge-canceled { background: rgba(100, 116, 139, 0.15); color: var(--muted); border: 1px solid rgba(100, 116, 139, 0.25); }
-
-    /* Commit Box */
-    .commit-box {
-      background: rgba(24, 32, 50, 0.65); border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md); padding: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem;
-    }
-    .commit-meta {
-      display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
-      font-size: 0.72rem;
-    }
-    .branch-pill {
-      display: inline-flex; align-items: center; gap: 0.35rem;
-      font-family: 'JetBrains Mono', monospace; color: #818cf8;
-      background: rgba(99, 102, 241, 0.12); padding: 0.15rem 0.5rem; border-radius: 4px;
-    }
-    .commit-hash {
-      font-family: 'JetBrains Mono', monospace; color: var(--text3);
-    }
-    .commit-message {
-      font-size: 0.84rem; color: var(--text); font-weight: 500;
-      line-height: 1.35; word-break: break-word;
-    }
-    .commit-message.empty { color: var(--text3); font-style: italic; }
-
-    /* URL Strip */
-    .site-url-bar {
-      background: var(--surface2); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
-      padding: 0.45rem 0.75rem; font-size: 0.78rem; font-family: 'JetBrains Mono', monospace;
-      color: var(--text2); display: flex; align-items: center; gap: 0.5rem; overflow: hidden;
-    }
-    .site-url-link {
-      color: var(--text2); text-decoration: none; white-space: nowrap; overflow: hidden;
-      text-overflow: ellipsis; flex: 1; transition: color 0.15s ease;
-    }
-    .site-url-link:hover { color: var(--accent-light); text-decoration: underline; }
-
-    /* Card Footer Actions */
-    .card-footer-actions {
-      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
-      padding-top: 0.5rem; border-top: 1px solid var(--border-subtle); font-size: 0.75rem;
-    }
-    .time-stamp { color: var(--text3); display: flex; align-items: center; gap: 0.35rem; }
-    .action-links { display: flex; align-items: center; gap: 0.85rem; }
-    .action-link {
-      color: var(--accent-light); text-decoration: none; font-weight: 600;
-      display: inline-flex; align-items: center; gap: 0.25rem; transition: color 0.15s ease;
-    }
-    .action-link:hover { color: #fff; text-decoration: underline; }
-
-    /* Setup Guide Card (When no accounts configured) */
-    .setup-guide-card {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(16, 22, 35, 0.95));
-      border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-xl);
-      padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-md);
-    }
-    .setup-guide-header {
-      display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;
-    }
-    .setup-icon {
-      width: 44px; height: 44px; border-radius: var(--radius-md);
-      background: rgba(99, 102, 241, 0.15); display: flex; align-items: center;
-      justify-content: center; color: var(--accent-light); flex-shrink: 0;
-    }
-    .setup-guide-header h3 { font-size: 1.15rem; font-weight: 700; color: #fff; }
-    .setup-guide-header p { font-size: 0.85rem; color: var(--text2); }
-    .setup-tabs {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 1.25rem; margin-top: 1.25rem;
-    }
-    .setup-box {
-      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-md);
-      padding: 1.25rem;
-    }
-    .setup-box h4 { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.45rem; }
-    .setup-box p { font-size: 0.8rem; color: var(--text2); margin-bottom: 0.75rem; }
-    .code-block {
-      background: #090b10; border: 1px solid var(--border); border-radius: var(--radius-sm);
-      padding: 0.75rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.76rem;
-      color: #38bdf8; overflow-x: auto; white-space: pre; line-height: 1.5; margin-bottom: 0.5rem;
-    }
-
-    /* Monitors Section Styles (from existing dashboard) */
-    .system-health-banner {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 22, 35, 0.95));
-      border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-lg);
-      padding: 1.25rem 1.75rem; margin-bottom: 2rem; display: flex; align-items: center;
-      justify-content: space-between; gap: 1rem; box-shadow: var(--shadow-sm);
-    }
-    .system-health-banner.degraded {
-      background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(16, 22, 35, 0.95));
-      border-color: rgba(239, 68, 68, 0.3);
-    }
-    .health-status-text { display: flex; align-items: center; gap: 0.85rem; }
-    .health-status-icon {
-      width: 38px; height: 38px; border-radius: 50%;
-      background: var(--success); display: flex; align-items: center;
-      justify-content: center; color: white; box-shadow: 0 0 12px var(--success-glow); flex-shrink: 0;
-    }
-    .system-health-banner.degraded .health-status-icon {
-      background: var(--danger); box-shadow: 0 0 12px var(--danger-glow);
-    }
-    .health-title { font-size: 1.05rem; font-weight: 700; color: #fff; }
-    .health-sub { font-size: 0.78rem; color: var(--text2); }
-
-    .monitors-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 1.25rem;
-    }
-    .monitor-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
-      padding: 1.4rem; display: flex; flex-direction: column; gap: 1rem; cursor: pointer;
-      position: relative; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: var(--shadow-sm);
-    }
-    .monitor-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--accent-light); }
-
-    .meta-metrics {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
-      background: rgba(24, 32, 50, 0.5); border-radius: var(--radius-md); padding: 0.85rem;
-    }
-    .metric-item { display: flex; flex-direction: column; gap: 0.15rem; }
-    .metric-title { font-size: 0.68rem; color: var(--text3); text-transform: uppercase; font-weight: 600; letter-spacing: 0.04em; }
-    .metric-value { font-size: 0.84rem; font-weight: 600; color: var(--text); }
-    .metric-value.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #38bdf8; }
-
-    .sparkline-wrap { display: flex; align-items: flex-end; gap: 3px; height: 26px; padding: 2px 0; }
-    .spark-bar { flex: 1; background: rgba(56, 189, 248, 0.35); border-radius: 2px; min-height: 4px; }
-    .spark-bar:hover { background: #38bdf8; }
-    .uptime-pill { font-weight: 700; color: #34d399; font-family: 'JetBrains Mono', monospace; }
-
-    /* Modal */
-    .modal-backdrop {
-      display: none; position: fixed; inset: 0; background: rgba(5, 7, 12, 0.85);
-      z-index: 200; align-items: center; justify-content: center; padding: 1.25rem; backdrop-filter: blur(8px);
-    }
-    .modal-backdrop.open { display: flex; }
-    .modal-box {
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
-      width: 100%; max-width: 820px; max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow-lg);
-      animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    @keyframes modalIn { from { opacity: 0; transform: scale(0.97) translateY(12px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-    .modal-head {
-      position: sticky; top: 0; background: var(--surface); border-bottom: 1px solid var(--border);
-      padding: 1.25rem 1.75rem; display: flex; align-items: center; justify-content: space-between; z-index: 10;
-    }
-    .modal-head h2 { font-size: 1.15rem; font-weight: 700; color: #fff; }
-    .modal-close-btn {
-      background: var(--surface2); border: 1px solid var(--border); color: var(--text2);
-      width: 32px; height: 32px; border-radius: var(--radius-sm); display: flex; align-items: center;
-      justify-content: center; cursor: pointer; font-size: 1rem;
-    }
-    .modal-close-btn:hover { background: var(--surface3); color: #fff; }
-    .modal-content { padding: 1.75rem; display: flex; flex-direction: column; gap: 1.5rem; }
-
-    .section-header {
-      font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
-      color: var(--text3); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.6rem;
-    }
-    .section-header::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
-    .specs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.85rem; }
-    .spec-item {
-      background: var(--surface2); border-radius: var(--radius-md); padding: 0.75rem 1rem;
-      border: 1px solid var(--border-subtle);
-    }
-    .spec-name { font-size: 0.68rem; color: var(--text3); text-transform: uppercase; font-weight: 600; letter-spacing: 0.04em; }
-    .spec-val { font-size: 0.88rem; font-weight: 600; color: var(--text); margin-top: 0.25rem; word-break: break-all; }
-    .spec-val.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #38bdf8; }
-
-    /* Tables */
-    .history-card { background: var(--surface2); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-    th, td { text-align: left; padding: 0.7rem 1rem; border-bottom: 1px solid var(--border-subtle); }
-    th { background: var(--surface3); color: var(--text2); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(255,255,255,0.02); }
-    .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 0.4rem; }
-    .dot-green { background: var(--success); box-shadow: 0 0 6px var(--success); }
-    .dot-red { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
-
-    .empty-state { text-align: center; padding: 4rem 1.5rem; color: var(--text2); }
-    .empty-state h3 { font-size: 1.15rem; color: var(--text); font-weight: 700; margin-bottom: 0.35rem; }
-    .empty-state p { font-size: 0.85rem; color: var(--text3); max-width: 480px; margin: 0 auto; line-height: 1.5; }
-    .loading-spinner {
-      width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent-light);
-      border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem;
-    }
-
-    .toast-tray { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 500; display: flex; flex-direction: column; gap: 0.5rem; max-width: 90vw; }
-    .toast-msg {
-      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-md);
-      padding: 0.75rem 1.25rem; font-size: 0.85rem; color: var(--text); box-shadow: var(--shadow-md);
-    }
-    .toast-msg.error { border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
-    .toast-msg.success { border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7; }
-
-    /* Quick Launch / TinyURLs Bar */
+    /* Quick Launch Bar */
     .quick-launch-section {
       background: linear-gradient(135deg, rgba(24, 32, 50, 0.75), rgba(16, 22, 35, 0.95));
       border: 1px solid var(--border);
@@ -497,55 +165,229 @@
     }
     .ql-copy-btn:hover { background: rgba(99, 102, 241, 0.2); color: #fff; }
 
-    .ql-loading {
-      grid-column: 1 / -1; display: flex; align-items: center; gap: 0.65rem;
-      color: var(--text3); font-size: 0.8rem; padding: 0.5rem 0;
+    /* Navigation Tabs */
+    .view-tabs-container {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
     }
-    .ql-empty-prompt {
-      grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between;
-      gap: 1rem; flex-wrap: wrap; background: rgba(99, 102, 241, 0.06);
-      border: 1px dashed rgba(99, 102, 241, 0.3); border-radius: var(--radius-md);
-      padding: 0.85rem 1.15rem; font-size: 0.82rem; color: var(--text2);
+    .view-tabs {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 0.35rem; display: flex; gap: 0.35rem;
+    }
+    .view-tab {
+      display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 1.25rem;
+      border-radius: var(--radius-md); font-size: 0.86rem; font-weight: 700;
+      color: var(--text2); background: transparent; border: none; cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .view-tab.active { background: var(--surface2); color: #fff; box-shadow: var(--shadow-sm); }
+    .tab-badge {
+      font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem;
+      border-radius: 999px; background: rgba(255, 255, 255, 0.1); color: var(--text);
+    }
+    .tab-badge.building { background: var(--warning); color: #000; animation: pulse 1.5s infinite; }
+
+    /* KPI Stats Grid */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg); padding: 1.25rem; position: relative;
+      overflow: hidden; box-shadow: var(--shadow-sm);
+    }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--border);
+    }
+    .stat-card.live::before { background: var(--success); }
+    .stat-card.building::before { background: var(--warning); }
+    .stat-card.failed::before { background: var(--danger); }
+    .stat-card.accounts::before { background: var(--accent); }
+    .stat-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text3); letter-spacing: 0.05em; }
+    .stat-value { font-size: 1.85rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.15rem; font-family: 'JetBrains Mono', monospace; }
+    .stat-sub { font-size: 0.75rem; color: var(--text2); }
+
+    /* Deployments & Monitors Grids */
+    .deployments-grid, .monitors-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.25rem;
+    }
+    .deployment-card, .monitor-card {
+      background: var(--surface); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg); padding: 1.35rem; display: flex;
+      flex-direction: column; gap: 1rem; position: relative; transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+    .deployment-card:hover, .monitor-card:hover {
+      transform: translateY(-2px); border-color: var(--accent-light); box-shadow: var(--shadow-md);
     }
 
-    /* Mobile Responsive Optimizations */
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+    .project-info { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+    .project-name-wrap { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .project-title { font-size: 1.05rem; font-weight: 700; color: var(--text); word-break: break-word; }
+    
+    .platform-pill {
+      font-size: 0.68rem; font-weight: 700; padding: 0.15rem 0.5rem;
+      border-radius: var(--radius-sm); letter-spacing: 0.03em; text-transform: uppercase;
+    }
+    .platform-pill.render { background: rgba(70, 227, 183, 0.12); color: #46e3b7; border: 1px solid rgba(70, 227, 183, 0.3); }
+    .platform-pill.cloudflare { background: rgba(246, 130, 31, 0.12); color: #f6821f; border: 1px solid rgba(246, 130, 31, 0.3); }
+
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.75rem;
+      border-radius: 999px; font-size: 0.74rem; font-weight: 700; flex-shrink: 0;
+    }
+    .badge-live { background: var(--success-glow); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-building { background: var(--warning-glow); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); animation: pulse 1.8s infinite; }
+    .badge-failed { background: var(--danger-glow); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-canceled { background: rgba(100, 116, 139, 0.15); color: var(--text2); border: 1px solid rgba(100, 116, 139, 0.25); }
+
+    .commit-box {
+      background: rgba(24, 32, 50, 0.65); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md); padding: 0.85rem; display: flex; flex-direction: column; gap: 0.45rem;
+    }
+    .commit-meta { display: flex; align-items: center; justify-content: space-between; font-size: 0.72rem; }
+    .branch-pill {
+      font-family: 'JetBrains Mono', monospace; color: #818cf8;
+      background: rgba(99, 102, 241, 0.12); padding: 0.12rem 0.45rem; border-radius: 4px;
+    }
+    .commit-message { font-size: 0.84rem; color: var(--text); font-weight: 500; line-height: 1.35; word-break: break-word; }
+
+    .site-url-bar {
+      background: var(--surface2); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
+      padding: 0.45rem 0.75rem; font-size: 0.78rem; font-family: 'JetBrains Mono', monospace;
+      color: var(--text2); display: flex; align-items: center; gap: 0.5rem; overflow: hidden;
+    }
+    .site-url-link { color: var(--text2); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+    .site-url-link:hover { color: var(--accent-light); text-decoration: underline; }
+
+    .card-footer-actions {
+      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+      padding-top: 0.5rem; border-top: 1px solid var(--border-subtle); font-size: 0.75rem;
+    }
+
+    /* Modal dialogs */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px);
+      z-index: 1000; display: none; align-items: center; justify-content: center; padding: 1.25rem;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-box {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl);
+      max-width: 680px; width: 100%; max-height: 90vh; display: flex; flex-direction: column;
+      box-shadow: var(--shadow-lg); overflow: hidden;
+    }
+    .modal-head {
+      padding: 1.25rem 1.75rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-head h2 { font-size: 1.15rem; font-weight: 700; color: #fff; }
+    .modal-body { padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem; }
+
+    /* Admin Control Panel Specifics */
+    .cp-tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface2); overflow-x: auto; }
+    .cp-tab-btn {
+      padding: 0.75rem 1.15rem; font-size: 0.82rem; font-weight: 700; color: var(--text2);
+      border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;
+    }
+    .cp-tab-btn.active { color: #fff; border-bottom-color: var(--accent-light); background: rgba(255, 255, 255, 0.03); }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-label { font-size: 0.75rem; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; }
+    .form-input {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-md);
+      padding: 0.65rem 0.95rem; font-size: 0.85rem; color: #fff; font-family: inherit; outline: none;
+    }
+    .form-input:focus { border-color: var(--accent-light); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .form-input.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+
+    .table-container { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th, td { padding: 0.65rem 0.85rem; text-align: left; border-bottom: 1px solid var(--border-subtle); }
+    th { background: var(--surface2); color: var(--text3); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; }
+    tr:last-child td { border-bottom: none; }
+
+    /* Login Screen Overlay */
+    .login-overlay {
+      position: fixed; inset: 0; background: radial-gradient(circle at 50% 30%, #151d33 0%, #090c15 80%);
+      z-index: 2000; display: none; align-items: center; justify-content: center; padding: 1.5rem;
+    }
+    .login-overlay.active { display: flex; }
+    .login-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl);
+      padding: 2.25rem; max-width: 400px; width: 100%; box-shadow: var(--shadow-lg); display: flex;
+      flex-direction: column; gap: 1.5rem; text-align: center;
+    }
+    .login-icon {
+      width: 50px; height: 50px; border-radius: var(--radius-lg); margin: 0 auto;
+      background: linear-gradient(135deg, #4f46e5, #06b6d4); display: flex; align-items: center;
+      justify-content: center; box-shadow: 0 0 25px rgba(99, 102, 241, 0.5);
+    }
+
+    /* Toast */
+    .toast-tray { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 3000; display: flex; flex-direction: column; gap: 0.5rem; }
+    .toast-msg {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-md);
+      padding: 0.75rem 1.25rem; font-size: 0.85rem; color: var(--text); box-shadow: var(--shadow-md);
+    }
+    .toast-msg.success { border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7; }
+    .toast-msg.error { border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
+
+    /* Responsive Queries */
     @media (max-width: 768px) {
       header { padding: 0.75rem 1rem; }
-      main { padding: 1.25rem 1rem 3rem; }
+      main { padding: 1rem 0.85rem 3rem; }
       .brand-text span { display: none; }
-      .brand-text h1 { font-size: 0.95rem; }
-
-      .quick-launch-section { padding: 1rem; margin-bottom: 1.25rem; }
-      .quick-launch-grid { grid-template-columns: 1fr; gap: 0.65rem; }
-      .ql-card { min-height: 58px; }
-      .ql-card-link { padding: 0.7rem 0.85rem; }
-      .ql-copy-btn { width: 44px; }
-      .ql-empty-prompt { flex-direction: column; align-items: flex-start; }
-
-      .view-tabs-container { flex-direction: column; align-items: stretch; gap: 0.75rem; }
-      .view-tabs { width: 100%; display: flex; }
-      .view-tab { flex: 1; justify-content: center; padding: 0.6rem 0.75rem; font-size: 0.8rem; }
-      .live-indicator { justify-content: center; }
-
+      .deployments-grid, .monitors-grid { grid-template-columns: 1fr; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
-      .stat-card { padding: 1rem; }
-      .stat-value { font-size: 1.6rem; }
-
-      .controls-strip { flex-direction: column; align-items: stretch; gap: 0.85rem; padding: 1rem; }
-      .filter-group { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 0.25rem; -webkit-overflow-scrolling: touch; }
-      .filter-chip { flex-shrink: 0; }
-      .search-box { min-width: 100%; }
-
-      .deployments-grid, .monitors-grid { grid-template-columns: 1fr; gap: 1rem; }
-      .deployment-card, .monitor-card { padding: 1.15rem; }
-      .setup-tabs { grid-template-columns: 1fr; }
-      .modal-box { max-height: 92vh; }
-      .modal-content { padding: 1.25rem; }
+      .modal-box { max-height: 95vh; }
+      .modal-body { padding: 1rem; }
     }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spin { animation: spin 0.8s linear infinite; }
   </style>
 </head>
 <body>
 
+<!-- ========================================================================= -->
+<!-- LOGIN SCREEN OVERLAY -->
+<!-- ========================================================================= -->
+<div id="loginScreen" class="login-overlay">
+  <div class="login-card">
+    <div class="login-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </div>
+    <div>
+      <h2 style="font-size:1.35rem;font-weight:800;">Ops Command Center</h2>
+      <p style="font-size:0.8rem;color:var(--text3);margin-top:0.35rem;">Enter admin password to access live dashboard</p>
+    </div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)" style="display:flex;flex-direction:column;gap:1rem;text-align:left;">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" id="loginUsername" class="form-input" value="admin" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required />
+      </div>
+      <div id="loginErrorMsg" style="display:none;color:#fca5a5;font-size:0.78rem;text-align:center;"></div>
+      <button type="submit" class="btn btn-primary" style="padding:0.75rem;font-size:0.9rem;margin-top:0.5rem;">
+        Unlock Dashboard
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MAIN DASHBOARD -->
+<!-- ========================================================================= -->
 <header>
   <div class="brand">
     <div class="brand-icon">
@@ -560,20 +402,24 @@
   </div>
 
   <div class="header-actions">
-    <button id="refreshBtn" class="refresh-btn" title="Refresh Live Status">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <button id="openControlPanelBtn" onclick="openControlPanel()" class="btn btn-secondary" title="Interactive Control Panel">
+      ⚙️ <span class="hide-mobile">Control Panel</span>
+    </button>
+    <button id="refreshBtn" onclick="refreshDashboard(false)" class="btn btn-secondary" title="Refresh">
+      <svg id="refreshIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
       </svg>
-      <span>Refresh</span>
+      <span class="hide-mobile">Refresh</span>
+    </button>
+    <button onclick="handleLogout()" class="btn btn-danger btn-sm" title="Log Out">
+      🚪 Exit
     </button>
   </div>
 </header>
 
 <main>
-  <!-- ===================================================================== -->
-  <!-- QUICK LAUNCH / TINYURLS BAR -->
-  <!-- ===================================================================== -->
-  <section id="tinyUrlSection" class="quick-launch-section">
+  <!-- Quick Launch Section -->
+  <section class="quick-launch-section">
     <div class="quick-launch-header">
       <div class="ql-title-wrap">
         <div class="ql-icon">
@@ -582,876 +428,682 @@
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
           </svg>
         </div>
-        <span class="ql-title">Quick Launch (TinyURLs)</span>
-        <span class="ql-badge" id="tinyUrlCountBadge">Auto-fetch</span>
+        <span class="ql-title">Quick Launch (Projects)</span>
+        <span class="ql-badge" id="qlBadge">0 Projects</span>
       </div>
-      <div id="tinyUrlStatusText" class="ql-subtext">Connecting to TinyURL...</div>
+      <div id="qlStatus" class="ql-subtext">Fetching links from backend...</div>
     </div>
-
-    <!-- Container for buttons/cards -->
-    <div id="tinyUrlButtonsContainer" class="quick-launch-grid">
-      <div class="ql-loading">
-        <div class="loading-spinner" style="width:20px;height:20px;margin:0;"></div>
-        <span>Syncing project links from TinyURL...</span>
-      </div>
-    </div>
+    <div id="quickLaunchGrid" class="quick-launch-grid"></div>
   </section>
 
   <!-- Navigation Tabs -->
   <div class="view-tabs-container">
     <div class="view-tabs">
-      <button class="view-tab active" data-tab="deployments">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-          <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-        </svg>
-        <span>Git Deployments</span>
-        <span class="tab-badge" id="deployTabBadge">0</span>
+      <button class="view-tab active" data-tab="deployments" onclick="switchTab('deployments')">
+        <span>🚀 Git Deployments</span>
+        <span class="tab-badge" id="badgeDeployments">0</span>
       </button>
-
-      <button class="view-tab" data-tab="monitors">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-        </svg>
-        <span>Uptime Monitors</span>
-        <span class="tab-badge" id="monitorTabBadge">0</span>
+      <button class="view-tab" data-tab="monitors" onclick="switchTab('monitors')">
+        <span>📈 Uptime Monitors</span>
+        <span class="tab-badge" id="badgeMonitors">0</span>
       </button>
     </div>
-
-    <div class="live-indicator">
-      <span class="pulse-dot" id="liveDot"></span>
-      <span id="autoRefreshText">Live sync active (30s)</span>
+    <div style="font-size:0.75rem;color:var(--text3);display:flex;align-items:center;gap:0.45rem;">
+      <span style="width:7px;height:7px;border-radius:50%;background:var(--success);"></span>
+      <span id="autoSyncLabel">Auto-sync active (30s)</span>
     </div>
   </div>
 
-  <!-- ===================================================================== -->
-  <!-- TAB 1: DEPLOYMENTS VIEW -->
-  <!-- ===================================================================== -->
-  <div id="deploymentsView">
-    <!-- Deployments Stats -->
+  <!-- Deployments View -->
+  <div id="viewDeployments">
     <div class="stats-grid">
-      <div class="stat-card total">
-        <div class="stat-label">Total Services</div>
-        <div class="stat-value" id="depStatTotal">—</div>
-        <div class="stat-sub">Across all accounts</div>
-      </div>
-      <div class="stat-card live">
-        <div class="stat-label">Live & Active</div>
-        <div class="stat-value" id="depStatLive">—</div>
-        <div class="stat-sub">Healthy latest build</div>
-      </div>
-      <div class="stat-card building">
-        <div class="stat-label">In Progress</div>
-        <div class="stat-value" id="depStatBuilding">—</div>
-        <div class="stat-sub">Currently deploying</div>
-      </div>
-      <div class="stat-card failed">
-        <div class="stat-label">Failed Builds</div>
-        <div class="stat-value" id="depStatFailed">—</div>
-        <div class="stat-sub">Needs attention</div>
-      </div>
-      <div class="stat-card accounts">
-        <div class="stat-label">Accounts Synced</div>
-        <div class="stat-value" id="depStatAccounts">—</div>
-        <div class="stat-sub" id="depStatAccountsSub">Render & Cloudflare</div>
-      </div>
+      <div class="stat-card live"><div class="stat-label">Live Deployments</div><div class="stat-value" id="kpiLive">0</div><div class="stat-sub">Active & responding</div></div>
+      <div class="stat-card building"><div class="stat-label">Building / Queued</div><div class="stat-value" id="kpiBuilding">0</div><div class="stat-sub">Pipeline in progress</div></div>
+      <div class="stat-card failed"><div class="stat-label">Failed Builds</div><div class="stat-value" id="kpiFailed">0</div><div class="stat-sub">Need attention</div></div>
+      <div class="stat-card accounts"><div class="stat-label">Total Services</div><div class="stat-value" id="kpiTotal">0</div><div class="stat-sub">Across Render & Cloudflare</div></div>
     </div>
-
-    <!-- Setup Guide (Hidden when configured) -->
-    <div id="depSetupCard" class="setup-guide-card" style="display:none;">
-      <div class="setup-guide-header">
-        <div class="setup-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-          </svg>
-        </div>
-        <div>
-          <h3>Track Your Render & Cloudflare Deployments</h3>
-          <p>Connect your Render and Cloudflare accounts to see live build statuses right after every Git push.</p>
-        </div>
-      </div>
-
-      <div class="setup-tabs">
-        <div class="setup-box">
-          <h4>🟠 Render Accounts (Any number of accounts)</h4>
-          <p>Get your API key at: <strong>Render Dashboard → Account Settings → API Keys</strong>.</p>
-          <div class="code-block"># Option A: Numbered variables (Easiest in Cloudflare Pages)
-RENDER_API_KEY_1=rnd_yourKey1
-RENDER_LABEL_1=Render - Personal
-
-RENDER_API_KEY_2=rnd_yourKey2
-RENDER_LABEL_2=Render - Client Project
-
-# Option B: Comma-separated keys
-RENDER_API_KEYS=rnd_key1,rnd_key2</div>
-          <p style="font-size:0.75rem;color:var(--text3);">Services are auto-discovered automatically. No service IDs needed!</p>
-        </div>
-
-        <div class="setup-box">
-          <h4>🔵 Cloudflare Accounts (Any number of accounts)</h4>
-          <p>Get Account ID from sidebar and API Token at: <strong>My Profile → API Tokens → Edit Cloudflare Workers</strong>.</p>
-          <div class="code-block"># Option A: Numbered variables (Easiest in Cloudflare Pages)
-CF_ACCOUNT_ID_1=your_cf_account_id_1
-CF_API_TOKEN_1=your_cf_api_token_1
-CF_LABEL_1=Cloudflare - Main
-
-CF_ACCOUNT_ID_2=your_cf_account_id_2
-CF_API_TOKEN_2=your_cf_api_token_2
-CF_LABEL_2=Cloudflare - Studio</div>
-          <p style="font-size:0.75rem;color:var(--text3);">Pages projects are auto-discovered automatically!</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Filters & Search -->
-    <div class="controls-strip">
-      <div class="filter-group" id="depFilterGroup">
-        <button class="filter-chip active" data-dep-filter="all">All <span class="chip-count" id="depCountAll">0</span></button>
-        <button class="filter-chip" data-dep-filter="render">🟠 Render <span class="chip-count" id="depCountRender">0</span></button>
-        <button class="filter-chip" data-dep-filter="cloudflare">🔵 Cloudflare <span class="chip-count" id="depCountCF">0</span></button>
-        <button class="filter-chip" data-dep-filter="building">🔄 Building <span class="chip-count" id="depCountBuilding">0</span></button>
-        <button class="filter-chip" data-dep-filter="live">🟢 Live <span class="chip-count" id="depCountLive">0</span></button>
-        <button class="filter-chip" data-dep-filter="failed">🔴 Failed <span class="chip-count" id="depCountFailed">0</span></button>
-      </div>
-
-      <div class="search-box">
-        <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="text" id="depSearchInput" placeholder="Search service, commit, branch..." />
-      </div>
-    </div>
-
-    <!-- Deployments Cards Container -->
-    <div id="deploymentsContainer">
-      <div class="empty-state">
-        <div class="loading-spinner"></div>
-        <h3>Connecting to deployment providers...</h3>
-        <p>Fetching real-time build and commit status across Render and Cloudflare accounts.</p>
-      </div>
-    </div>
+    <div id="deploymentsContainer" class="deployments-grid"></div>
   </div>
 
-  <!-- ===================================================================== -->
-  <!-- TAB 2: UPTIME MONITORS VIEW -->
-  <!-- ===================================================================== -->
-  <div id="monitorsView" style="display:none;">
-    <!-- System Health Banner -->
-    <div id="healthBanner" class="system-health-banner">
-      <div class="health-status-text">
-        <div class="health-status-icon" id="healthIcon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        </div>
-        <div>
-          <div class="health-title" id="healthTitle">All Systems Operational</div>
-          <div class="health-sub" id="healthSub">All monitored endpoints are responding normally.</div>
-        </div>
-      </div>
-      <div style="font-size:0.75rem;color:var(--text3);text-align:right;">
-        Powered by UptimeRobot
-      </div>
-    </div>
-
-    <!-- Monitors Summary Stats -->
+  <!-- Monitors View -->
+  <div id="viewMonitors" style="display:none;">
     <div class="stats-grid">
-      <div class="stat-card total"><div class="stat-label">Total Monitors</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">Tracked endpoints</div></div>
-      <div class="stat-card live"><div class="stat-label">Operational (Up)</div><div class="stat-value" id="statUp">—</div><div class="stat-sub">Responding healthy</div></div>
-      <div class="stat-card failed"><div class="stat-label">Downtime / Outage</div><div class="stat-value" id="statDown">—</div><div class="stat-sub">Currently failing</div></div>
-      <div class="stat-card accounts"><div class="stat-label">Avg Response Time</div><div class="stat-value" id="statLatency">—</div><div class="stat-sub">Last 24 hours</div></div>
-      <div class="stat-card total"><div class="stat-label">30-Day Uptime</div><div class="stat-value" id="statRatio">—</div><div class="stat-sub">Overall reliability</div></div>
+      <div class="stat-card live"><div class="stat-label">Operational (UP)</div><div class="stat-value" id="kpiUp">0</div><div class="stat-sub">Healthy endpoints</div></div>
+      <div class="stat-card failed"><div class="stat-label">Down / Outage</div><div class="stat-value" id="kpiDown">0</div><div class="stat-sub">Currently failing</div></div>
+      <div class="stat-card accounts"><div class="stat-label">Total Endpoints</div><div class="stat-value" id="kpiMonitorsTotal">0</div><div class="stat-sub">Tracked by UptimeRobot</div></div>
     </div>
-
-    <!-- Filters & Search -->
-    <div class="controls-strip">
-      <div class="filter-group" id="monitorFilterGroup">
-        <button class="filter-chip active" data-filter="all">All <span class="chip-count" id="countAll">0</span></button>
-        <button class="filter-chip" data-filter="up">🟢 Up <span class="chip-count" id="countUp">0</span></button>
-        <button class="filter-chip" data-filter="down">🔴 Down <span class="chip-count" id="countDown">0</span></button>
-        <button class="filter-chip" data-filter="paused">⏸ Paused <span class="chip-count" id="countPaused">0</span></button>
-      </div>
-      <div class="search-box">
-        <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="text" id="searchInput" placeholder="Search by name or URL..." />
-      </div>
-    </div>
-
-    <!-- Monitors Grid -->
-    <div id="monitorsContainer">
-      <div class="empty-state">
-        <div class="loading-spinner"></div>
-        <h3>Connecting to UptimeRobot...</h3>
-        <p>Fetching real-time uptime status and latency metrics.</p>
-      </div>
-    </div>
+    <div id="monitorsContainer" class="monitors-grid"></div>
   </div>
 </main>
 
-<!-- Detail Modal for Uptime Monitor -->
-<div class="modal-backdrop" id="monitorModal">
+<!-- ========================================================================= -->
+<!-- INTERACTIVE CONTROL PANEL MODAL -->
+<!-- ========================================================================= -->
+<div id="controlPanelModal" class="modal-backdrop">
   <div class="modal-box">
     <div class="modal-head">
-      <div>
-        <h2 id="modalTitle">Monitor Details</h2>
-        <span id="modalSubtitle" style="font-size:0.75rem;color:var(--text3);font-family:'JetBrains Mono',monospace;"></span>
-      </div>
-      <button class="modal-close-btn" id="modalCloseBtn">✕</button>
+      <h2>⚙️ Interactive Control Panel</h2>
+      <button onclick="closeControlPanel()" class="btn btn-secondary btn-sm">✕ Close</button>
     </div>
-    <div class="modal-content" id="modalContent"></div>
+
+    <!-- Navigation Tabs inside Control Panel -->
+    <div class="cp-tabs">
+      <button class="cp-tab-btn active" onclick="switchCpTab('db')">🔌 Database</button>
+      <button class="cp-tab-btn" onclick="switchCpTab('accounts')">🏢 Accounts</button>
+      <button class="cp-tab-btn" onclick="switchCpTab('titles')">🏷️ Project Titles</button>
+      <button class="cp-tab-btn" onclick="switchCpTab('keys')">🔑 API Keys</button>
+      <button class="cp-tab-btn" onclick="switchCpTab('security')">🔒 Security</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- TAB 1: DATABASE -->
+      <div id="cpTabDb" class="cp-content">
+        <p style="font-size:0.8rem;color:var(--text2);margin-bottom:1rem;">
+          Connect your <strong>PostgreSQL Database</strong> (e.g. Neon, Render, or Supabase). All your API keys, multiple accounts, and project titles are automatically stored and persisted in PostgreSQL.
+        </p>
+
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:0.75rem;color:var(--text3);font-weight:700;">CURRENT ENGINE</div>
+            <div id="dbEngineBadge" style="font-size:0.95rem;font-weight:700;color:#38bdf8;margin-top:0.2rem;">PostgreSQL</div>
+          </div>
+          <span id="dbStatusBadge" class="status-badge badge-live">🟢 Connected</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">PostgreSQL Database URL (DATABASE_URL)</label>
+          <input type="text" id="cpDatabaseUrl" class="form-input mono" placeholder="postgresql://user:pass@ep-xyz.neon.tech/neondb" />
+        </div>
+
+        <div style="display:flex;gap:0.75rem;margin-top:1rem;">
+          <button onclick="testDbConnection()" class="btn btn-secondary">⚡ Test Connection</button>
+          <button onclick="saveDatabaseUrl()" class="btn btn-primary">Save Database URL</button>
+        </div>
+      </div>
+
+      <!-- TAB 2: ACCOUNTS -->
+      <div id="cpTabAccounts" class="cp-content" style="display:none;">
+        <p style="font-size:0.8rem;color:var(--text2);margin-bottom:1rem;">
+          Manage multiple Render and Cloudflare accounts. Services and Pages projects are automatically discovered.
+        </p>
+
+        <div class="table-container" style="margin-bottom:1.25rem;">
+          <table>
+            <thead>
+              <tr><th>Provider</th><th>Account Name</th><th>Account ID</th><th>Action</th></tr>
+            </thead>
+            <tbody id="cpAccountsTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Add Account Form -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.15rem;">
+          <h4 style="font-size:0.85rem;font-weight:700;margin-bottom:0.75rem;">+ Add New Account</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+            <div class="form-group">
+              <label class="form-label">Provider</label>
+              <select id="accNewProvider" class="form-input" style="cursor:pointer;" onchange="toggleAccFields()">
+                <option value="render">Render</option>
+                <option value="cloudflare">Cloudflare</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Account Label</label>
+              <input type="text" id="accNewName" class="form-input" placeholder="e.g. Personal Render" />
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top:0.75rem;">
+            <label class="form-label">API Key / Token</label>
+            <input type="password" id="accNewKey" class="form-input mono" placeholder="rnd_... or CF Token" />
+          </div>
+
+          <div id="accCfIdGroup" class="form-group" style="margin-top:0.75rem;display:none;">
+            <label class="form-label">Cloudflare Account ID</label>
+            <input type="text" id="accNewCfId" class="form-input mono" placeholder="From Cloudflare sidebar" />
+          </div>
+
+          <button onclick="submitNewAccount()" class="btn btn-primary" style="margin-top:1rem;">Add Account to Database</button>
+        </div>
+      </div>
+
+      <!-- TAB 3: PROJECT TITLES -->
+      <div id="cpTabTitles" class="cp-content" style="display:none;">
+        <p style="font-size:0.8rem;color:var(--text2);margin-bottom:1rem;">
+          Override project titles for your TinyURL aliases. For example, change <code>rohanrarya</code> to <strong>"My Portfolio"</strong>.
+        </p>
+
+        <div class="table-container" style="margin-bottom:1.25rem;">
+          <table>
+            <thead>
+              <tr><th>TinyURL Alias</th><th>Custom Display Name</th><th>Action</th></tr>
+            </thead>
+            <tbody id="cpTitlesTableBody"></tbody>
+          </table>
+        </div>
+
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.15rem;">
+          <h4 style="font-size:0.85rem;font-weight:700;margin-bottom:0.75rem;">+ Add / Update Title Override</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+            <div class="form-group">
+              <label class="form-label">Alias (slug)</label>
+              <input type="text" id="titleNewAlias" class="form-input mono" placeholder="e.g. rohanrarya" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Custom Display Name</label>
+              <input type="text" id="titleNewName" class="form-input" placeholder="e.g. My Portfolio" />
+            </div>
+          </div>
+          <button onclick="submitProjectTitle()" class="btn btn-primary" style="margin-top:1rem;">Save Title Override</button>
+        </div>
+      </div>
+
+      <!-- TAB 4: API KEYS -->
+      <div id="cpTabKeys" class="cp-content" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">UptimeRobot Read-Only API Key</label>
+          <input type="password" id="cpUptimeKey" class="form-input mono" placeholder="ur123456-abcdef..." />
+        </div>
+        <div class="form-group" style="margin-top:1rem;">
+          <label class="form-label">TinyURL API Token</label>
+          <input type="password" id="cpTinyKey" class="form-input mono" placeholder="Bearer token from tinyurl.com/app/settings/api" />
+        </div>
+        <button onclick="saveApiKeys()" class="btn btn-primary" style="margin-top:1.25rem;">Save Keys to Database</button>
+      </div>
+
+      <!-- TAB 5: SECURITY -->
+      <div id="cpTabSecurity" class="cp-content" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">New Admin Password</label>
+          <input type="password" id="cpNewPass" class="form-input" placeholder="Enter new password" />
+        </div>
+        <button onclick="submitChangePassword()" class="btn btn-primary" style="margin-top:1rem;">Update Password</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <div class="toast-tray" id="toastTray"></div>
 
+<!-- ========================================================================= -->
+<!-- JAVASCRIPT ENGINE (BASIC, INTUITIVE FUNCTIONS) -->
+<!-- ========================================================================= -->
 <script>
-  let activeTab = 'deployments';
-  let allDeployments = [];
-  let depFilter = 'all';
-  let allMonitors = [];
-  let monitorFilter = 'all';
-  let isBuildingActive = false;
-  let refreshTimer = null;
+  // Dynamic API Base URL resolver:
+  // - In local development: http://127.0.0.1:5000/api
+  // - On digitaltask.in: https://api-uptime.digitaltask.in/api (or /api)
+  const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://127.0.0.1:5000/api'
+    : (window.location.hostname.includes('digitaltask.in') ? 'https://api-uptime.digitaltask.in/api' : '/api');
 
+  // DOM Helpers
   const $ = id => document.getElementById(id);
+  const esc = str => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-  function toast(msg, type = 'info') {
+  function toast(msg, type = 'success') {
     const el = document.createElement('div');
-    el.className = 'toast-msg ' + type;
+    el.className = `toast-msg ${type}`;
     el.textContent = msg;
     $('toastTray').appendChild(el);
-    setTimeout(() => el.remove(), 4000);
+    setTimeout(() => el.remove(), 3500);
   }
 
-  function esc(s) {
-    if (!s) return '';
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  function getAuthToken() {
+    return localStorage.getItem('ops_token') || '';
   }
 
-  function timeAgo(dateString) {
-    if (!dateString) return 'Unknown';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
-    const now = new Date();
-    const diff = Math.floor((now - date) / 1000);
+  async function apiFetch(endpoint, options = {}) {
+    options.headers = options.headers || {};
+    const token = getAuthToken();
+    if (token) {
+      options.headers['Authorization'] = `Bearer ${token}`;
+    }
+    options.headers['Content-Type'] = 'application/json';
 
-    if (diff < 15) return 'Just now';
-    if (diff < 60) return diff + 's ago';
-    const m = Math.floor(diff / 60);
-    if (m < 60) return m + 'm ago';
-    const h = Math.floor(m / 60);
-    if (h < 24) return h + 'h ago';
-    const d = Math.floor(h / 24);
-    if (d < 30) return d + 'd ago';
-    return date.toLocaleDateString();
+    const res = await fetch(`${API_BASE}${endpoint}`, options);
+    if (res.status === 401) {
+      // Token expired or invalid
+      localStorage.removeItem('ops_token');
+      showLoginScreen();
+      throw new Error('Unauthorized');
+    }
+    return res;
   }
 
-  function formatTime(ts) {
-    if (!ts || ts === 0) return 'Never';
-    return new Date(ts * 1000).toLocaleString();
+  // Auth Functions
+  function showLoginScreen() {
+    $('loginScreen').classList.add('active');
   }
 
-  function formatDuration(seconds) {
-    if (!seconds && seconds !== 0) return '—';
-    if (seconds < 60) return seconds + 's';
-    const m = Math.floor(seconds / 60);
-    if (m < 60) return m + 'm';
-    const h = Math.floor(m / 60);
-    return h + 'h ' + (m % 60) + 'm';
+  function hideLoginScreen() {
+    $('loginScreen').classList.remove('active');
   }
 
-  // =========================================================================
-  // VIEW TABS CONTROLLER
-  // =========================================================================
-  document.querySelectorAll('.view-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.view-tab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeTab = btn.dataset.tab;
+  async function handleLogin(e) {
+    e.preventDefault();
+    const u = $('loginUsername').value.trim();
+    const p = $('loginPassword').value.trim();
+    $('loginErrorMsg').style.display = 'none';
 
-      if (activeTab === 'deployments') {
-        $('deploymentsView').style.display = 'block';
-        $('monitorsView').style.display = 'none';
-      } else {
-        $('deploymentsView').style.display = 'none';
-        $('monitorsView').style.display = 'block';
-      }
-    });
-  });
-
-  // =========================================================================
-  // DEPLOYMENTS ENGINE
-  // =========================================================================
-  async function loadDeployments(isSilent = false) {
     try {
-      const res = await fetch('/api/deployments');
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch deployments');
-
-      if (!data.configured) {
-        $('depSetupCard').style.display = 'block';
-      } else {
-        $('depSetupCard').style.display = 'none';
-      }
-
-      allDeployments = data.deployments || [];
-      const summary = data.summary || {
-        total: allDeployments.length,
-        live: allDeployments.filter(d => d.status === 'live').length,
-        building: allDeployments.filter(d => d.status === 'building').length,
-        failed: allDeployments.filter(d => d.status === 'failed').length
-      };
-
-      const accounts = data.accounts || { renderCount: 0, cloudflareCount: 0 };
-
-      // Update Deployments KPI stats
-      $('depStatTotal').textContent = summary.total;
-      $('depStatLive').textContent = summary.live;
-      $('depStatBuilding').textContent = summary.building;
-      $('depStatFailed').textContent = summary.failed;
-
-      const totalAcc = accounts.renderCount + accounts.cloudflareCount;
-      $('depStatAccounts').textContent = totalAcc > 0 ? totalAcc : '0';
-      $('depStatAccountsSub').textContent = `${accounts.renderCount} Render · ${accounts.cloudflareCount} Cloudflare`;
-
-      // Update Filter counts
-      $('depCountAll').textContent = allDeployments.length;
-      $('depCountRender').textContent = allDeployments.filter(d => d.provider === 'render').length;
-      $('depCountCF').textContent = allDeployments.filter(d => d.provider === 'cloudflare').length;
-      $('depCountBuilding').textContent = summary.building;
-      $('depCountLive').textContent = summary.live;
-      $('depCountFailed').textContent = summary.failed;
-
-      // Update Tab badge
-      $('deployTabBadge').textContent = allDeployments.length;
-      if (summary.building > 0) {
-        $('deployTabBadge').className = 'tab-badge building';
-        $('deployTabBadge').textContent = `${summary.building} Building`;
-        isBuildingActive = true;
-        $('liveDot').className = 'pulse-dot warning';
-        $('autoRefreshText').textContent = 'Fast sync active (10s) — Build in progress';
-      } else {
-        $('deployTabBadge').className = 'tab-badge';
-        isBuildingActive = false;
-        $('liveDot').className = 'pulse-dot';
-        $('autoRefreshText').textContent = 'Live sync active (30s)';
-      }
-
-      renderDeploymentsList();
-    } catch (err) {
-      $('deploymentsContainer').innerHTML = `<div class="empty-state"><h3>Unable to load deployments</h3><p>${esc(err.message)}</p></div>`;
-    }
-  }
-
-  function getFilteredDeployments() {
-    const q = ($('depSearchInput').value || '').trim().toLowerCase();
-    return allDeployments.filter(d => {
-      const matchFilter =
-        depFilter === 'all'        ? true :
-        depFilter === 'render'     ? d.provider === 'render' :
-        depFilter === 'cloudflare' ? d.provider === 'cloudflare' :
-        depFilter === 'building'   ? d.status === 'building' :
-        depFilter === 'live'       ? d.status === 'live' :
-        depFilter === 'failed'     ? d.status === 'failed' : true;
-
-      const matchSearch = !q ||
-        (d.projectName || '').toLowerCase().includes(q) ||
-        (d.accountName || '').toLowerCase().includes(q) ||
-        (d.commit && d.commit.message && d.commit.message.toLowerCase().includes(q)) ||
-        (d.commit && d.commit.branch && d.commit.branch.toLowerCase().includes(q)) ||
-        (d.commit && d.commit.hash && d.commit.hash.toLowerCase().includes(q));
-
-      return matchFilter && matchSearch;
-    });
-  }
-
-  function renderDeploymentsList() {
-    const list = getFilteredDeployments();
-    if (!list.length) {
-      if (!allDeployments.length) {
-        $('deploymentsContainer').innerHTML = `
-          <div class="empty-state">
-            <h3>No Deployments Connected</h3>
-            <p>Add your Render API key and Cloudflare tokens in environment variables to track live build statuses.</p>
-          </div>`;
-      } else {
-        $('deploymentsContainer').innerHTML = `
-          <div class="empty-state">
-            <h3>No matching deployments</h3>
-            <p>Try adjusting your search query or filter chip.</p>
-          </div>`;
-      }
-      return;
-    }
-
-    const html = list.map(d => {
-      const isRender = d.provider === 'render';
-      const isBuilding = d.status === 'building';
-      const isLive = d.status === 'live';
-      const isFailed = d.status === 'failed';
-
-      let badgeClass = 'badge-canceled';
-      let badgeIcon = '⚪';
-      if (isLive) {
-        badgeClass = 'badge-live';
-        badgeIcon = '🟢';
-      } else if (isBuilding) {
-        badgeClass = 'badge-building';
-        badgeIcon = '🔄';
-      } else if (isFailed) {
-        badgeClass = 'badge-failed';
-        badgeIcon = '🔴';
-      }
-
-      const commit = d.commit || {};
-      const commitMsg = commit.message ? esc(commit.message) : '<span class="commit-message empty">No commit message provided</span>';
-      const commitHash = commit.hash ? `#${esc(commit.hash)}` : '';
-      const branchName = commit.branch ? esc(commit.branch) : 'main';
-      const updatedTime = timeAgo(d.finishedAt || d.createdAt || d.updatedAt);
-
-      const liveUrl = d.liveUrl ? esc(d.liveUrl) : '';
-      const dashboardUrl = d.dashboardUrl ? esc(d.dashboardUrl) : '';
-
-      return `
-        <div class="deployment-card ${isBuilding ? 'is-building' : ''}">
-          <div class="card-header">
-            <div class="project-info">
-              <div class="project-name-wrap">
-                <span class="platform-pill ${isRender ? 'render' : 'cloudflare'}">
-                  ${isRender ? '🟠 Render' : '🔵 Cloudflare'}
-                </span>
-                <span class="project-title">${esc(d.projectName)}</span>
-              </div>
-              <span class="account-badge">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                ${esc(d.accountName)}
-              </span>
-            </div>
-
-            <div class="status-badge ${badgeClass}">
-              <span>${badgeIcon}</span>
-              ${esc(d.statusLabel || (isBuilding ? 'Building' : 'Live'))}
-            </div>
-          </div>
-
-          <div class="commit-box">
-            <div class="commit-meta">
-              <span class="branch-pill">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
-                ${branchName}
-              </span>
-              <span class="commit-hash">${commitHash}</span>
-            </div>
-            <div class="commit-message">${commitMsg}</div>
-          </div>
-
-          ${d.error ? `
-            <div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);padding:0.75rem 0.9rem;border-radius:var(--radius-sm);font-size:0.78rem;color:#fca5a5;line-height:1.45;">
-              <strong style="color:#ef4444;display:block;margin-bottom:0.2rem;">⚠️ Diagnostic / Action Required:</strong>
-              ${esc(d.error)}
-            </div>
-          ` : ''}
-
-          ${liveUrl ? `
-            <div class="site-url-bar">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-              <a href="${liveUrl}" target="_blank" rel="noopener" class="site-url-link">${liveUrl}</a>
-            </div>
-          ` : ''}
-
-          <div class="card-footer-actions">
-            <div class="time-stamp">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              ${isBuilding ? 'Build started ' + updatedTime : 'Deployed ' + updatedTime}
-            </div>
-
-            <div class="action-links">
-              ${liveUrl ? `<a href="${liveUrl}" target="_blank" rel="noopener" class="action-link">Open Site ↗</a>` : ''}
-              ${dashboardUrl ? `<a href="${dashboardUrl}" target="_blank" rel="noopener" class="action-link" style="color:var(--text3);">Console ↗</a>` : ''}
-            </div>
-          </div>
-        </div>`;
-    }).join('');
-
-    $('deploymentsContainer').innerHTML = '<div class="deployments-grid">' + html + '</div>';
-  }
-
-  // Filter and Search Event Listeners for Deployments
-  document.querySelectorAll('#depFilterGroup .filter-chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#depFilterGroup .filter-chip').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      depFilter = btn.dataset.depFilter;
-      renderDeploymentsList();
-    });
-  });
-  $('depSearchInput').addEventListener('input', renderDeploymentsList);
-
-  // =========================================================================
-  // UPTIME MONITORS ENGINE
-  // =========================================================================
-  function getStatusInfo(status) {
-    switch (status) {
-      case 2: return { key: 'up', label: 'Operational (UP)', badgeClass: 'badge-live' };
-      case 9: return { key: 'down', label: 'Down (Outage)', badgeClass: 'badge-failed' };
-      case 8: return { key: 'down', label: 'Seems Down', badgeClass: 'badge-building' };
-      case 0: return { key: 'paused', label: 'Paused', badgeClass: 'badge-canceled' };
-      default: return { key: 'paused', label: 'Not Checked', badgeClass: 'badge-canceled' };
-    }
-  }
-
-  function parseRatios(str) {
-    if (!str) return { d1: '100', d7: '100', d30: '100' };
-    const parts = str.split('-');
-    return {
-      d1: parseFloat(parts[0] || '100').toFixed(1),
-      d7: parseFloat(parts[1] || '100').toFixed(1),
-      d30: parseFloat(parts[2] || '100').toFixed(1)
-    };
-  }
-
-  async function loadMonitors(isSilent = false) {
-    try {
-      const res = await fetch('/api/monitors');
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch monitors');
-
-      allMonitors = data.monitors || [];
-      $('monitorTabBadge').textContent = allMonitors.length;
-
-      updateMonitorMetrics();
-      renderMonitorList();
-    } catch (err) {
-      $('monitorsContainer').innerHTML = `<div class="empty-state"><h3>Unable to load monitors</h3><p>${esc(err.message)}</p></div>`;
-    }
-  }
-
-  function updateMonitorMetrics() {
-    const total = allMonitors.length;
-    const up = allMonitors.filter(m => m.status === 2).length;
-    const down = allMonitors.filter(m => m.status === 8 || m.status === 9).length;
-    const paused = allMonitors.filter(m => m.status === 0 || m.status === 1).length;
-
-    $('statTotal').textContent = total;
-    $('statUp').textContent = up;
-    $('statDown').textContent = down;
-
-    $('countAll').textContent = total;
-    $('countUp').textContent = up;
-    $('countDown').textContent = down;
-    $('countPaused').textContent = paused;
-
-    const latencies = allMonitors.map(m => parseFloat(m.average_response_time) || 0).filter(v => v > 0);
-    const avgLatency = latencies.length ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) : 0;
-    $('statLatency').textContent = avgLatency ? avgLatency + ' ms' : '—';
-
-    const ratios = allMonitors.map(m => parseFloat(parseRatios(m.custom_uptime_ratio).d30)).filter(v => !isNaN(v));
-    const avgRatio = ratios.length ? (ratios.reduce((a, b) => a + b, 0) / ratios.length).toFixed(2) : '100.00';
-    $('statRatio').textContent = avgRatio + '%';
-
-    if (down > 0) {
-      $('healthBanner').className = 'system-health-banner degraded';
-      $('healthTitle').textContent = down + ' Service' + (down > 1 ? 's' : '') + ' Experiencing Outage';
-      $('healthSub').textContent = 'One or more of your monitored applications are currently unreachable.';
-      $('healthIcon').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-    } else {
-      $('healthBanner').className = 'system-health-banner';
-      $('healthTitle').textContent = 'All Systems Operational';
-      $('healthSub').textContent = 'All ' + up + ' monitored services are healthy and responding.';
-      $('healthIcon').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
-    }
-  }
-
-  function getFilteredMonitors() {
-    const q = ($('searchInput').value || '').trim().toLowerCase();
-    return allMonitors.filter(m => {
-      const st = getStatusInfo(m.status);
-      const matchFilter =
-        monitorFilter === 'all'    ? true :
-        monitorFilter === 'up'     ? st.key === 'up' :
-        monitorFilter === 'down'   ? st.key === 'down' :
-        monitorFilter === 'paused' ? st.key === 'paused' : true;
-
-      const matchSearch = !q ||
-        (m.friendly_name || '').toLowerCase().includes(q) ||
-        (m.url || '').toLowerCase().includes(q) ||
-        String(m.id).includes(q);
-
-      return matchFilter && matchSearch;
-    });
-  }
-
-  function renderMonitorList() {
-    const monitors = getFilteredMonitors();
-    if (!monitors.length) {
-      $('monitorsContainer').innerHTML = '<div class="empty-state"><h3>No matching monitors</h3><p>Adjust your search query or filter tab.</p></div>';
-      return;
-    }
-
-    const html = monitors.map(m => {
-      const st = getStatusInfo(m.status);
-      const ratios = parseRatios(m.custom_uptime_ratio);
-      const avgLatency = m.average_response_time ? Math.round(m.average_response_time) + ' ms' : '—';
-      const intervalText = m.interval ? ('Every ' + Math.round(m.interval / 60) + ' min') : '5 min';
-
-      const rts = m.response_times || [];
-      const sparkBars = rts.slice(-12).map(r => {
-        const h = Math.min(Math.max((r.value / 600) * 100, 15), 100);
-        return '<div class="spark-bar" style="height:' + h + '%;" title="' + r.value + ' ms"></div>';
-      }).join('');
-
-      return `
-        <div class="monitor-card" data-id="${m.id}">
-          <div class="card-header">
-            <div>
-              <div class="project-title">${esc(m.friendly_name || '(Unnamed Monitor)')}</div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text3);">ID: ${m.id}</div>
-            </div>
-            <div class="status-badge ${st.badgeClass}">
-              <span class="dot ${st.key === 'up' ? 'dot-green' : 'dot-red'}"></span>
-              ${st.label}
-            </div>
-          </div>
-
-          <div class="site-url-bar">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            <a href="${esc(m.url)}" target="_blank" rel="noopener" class="site-url-link" onclick="event.stopPropagation()">${esc(m.url)}</a>
-          </div>
-
-          <div class="meta-metrics">
-            <div class="metric-item">
-              <span class="metric-title">Check Interval</span>
-              <span class="metric-value">${intervalText}</span>
-            </div>
-            <div class="metric-item">
-              <span class="metric-title">Avg Latency (24h)</span>
-              <span class="metric-value mono">${avgLatency}</span>
-            </div>
-            <div class="metric-item">
-              <span class="metric-title">24h Uptime</span>
-              <span class="metric-value" style="color:#34d399;">${ratios.d1}%</span>
-            </div>
-            <div class="metric-item">
-              <span class="metric-title">30d Uptime</span>
-              <span class="metric-value" style="color:#a855f7;">${ratios.d30}%</span>
-            </div>
-          </div>
-
-          ${rts.length ? '<div style="display:flex;flex-direction:column;gap:3px;"><span style="font-size:0.65rem;color:var(--text3);text-transform:uppercase;font-weight:600;">Response Time Trend</span><div class="sparkline-wrap">' + sparkBars + '</div></div>' : ''}
-
-          <div class="card-footer-actions">
-            <span>7-Day: <strong class="uptime-pill">${ratios.d7}%</strong></span>
-            <span style="color:var(--accent-light);font-weight:600;">View History ↗</span>
-          </div>
-        </div>`;
-    }).join('');
-
-    $('monitorsContainer').innerHTML = '<div class="monitors-grid">' + html + '</div>';
-    document.querySelectorAll('.monitor-card').forEach(c => c.addEventListener('click', () => openModal(c.dataset.id)));
-  }
-
-  function openModal(monitorId) {
-    const m = allMonitors.find(item => String(item.id) === String(monitorId));
-    if (!m) return;
-
-    const modal = $('monitorModal');
-    modal.classList.add('open');
-    $('modalTitle').textContent = m.friendly_name || '(Unnamed Monitor)';
-    $('modalSubtitle').textContent = 'Monitor ID: ' + m.id;
-
-    const st = getStatusInfo(m.status);
-    const ratios = parseRatios(m.custom_uptime_ratio);
-    const intervalText = m.interval ? (Math.round(m.interval / 60) + ' minutes') : '5 minutes';
-    const logs = m.logs || [];
-
-    const logRows = !logs.length
-      ? '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:2rem;">No recent incident or downtime logs recorded. All checks passed!</td></tr>'
-      : logs.slice(0, 15).map(l => {
-          const isUp = l.type === 2;
-          const dotClass = isUp ? 'dot-green' : 'dot-red';
-          const reasonText = l.reason ? (l.reason.detail || l.reason.code || 'Normal') : (isUp ? 'Operational' : 'Down');
-          return `
-            <tr>
-              <td>${formatTime(l.datetime)}</td>
-              <td><span class="dot ${dotClass}"></span><strong>${isUp ? 'Online (UP)' : 'Downtime (DOWN)'}</strong></td>
-              <td>${formatDuration(l.duration)}</td>
-              <td><span style="font-family:'JetBrains Mono',monospace;color:${isUp ? '#34d399' : 'var(--danger)'};">${esc(reasonText)}</span></td>
-            </tr>`;
-        }).join('');
-
-    $('modalContent').innerHTML = `
-      <div>
-        <div class="section-header">Status & Uptime Overview</div>
-        <div class="specs-grid">
-          <div class="spec-item"><div class="spec-name">Current Status</div><div class="spec-val"><span class="status-badge ${st.badgeClass}">${st.label}</span></div></div>
-          <div class="spec-item"><div class="spec-name">Check Frequency</div><div class="spec-val">${intervalText}</div></div>
-          <div class="spec-item"><div class="spec-name">24h Uptime</div><div class="spec-val" style="color:#34d399;">${ratios.d1}%</div></div>
-          <div class="spec-item"><div class="spec-name">7-Day Uptime</div><div class="spec-val" style="color:#34d399;">${ratios.d7}%</div></div>
-          <div class="spec-item"><div class="spec-name">30-Day Uptime</div><div class="spec-val" style="color:#a855f7;">${ratios.d30}%</div></div>
-          <div class="spec-item"><div class="spec-name">Avg Latency</div><div class="spec-val mono">${m.average_response_time ? Math.round(m.average_response_time) + ' ms' : '—'}</div></div>
-        </div>
-      </div>
-
-      <div>
-        <div class="section-header">Target URL</div>
-        <div class="spec-item"><a href="${esc(m.url)}" target="_blank" rel="noopener" class="spec-val mono" style="color:var(--accent-light);text-decoration:none;">${esc(m.url)}</a></div>
-      </div>
-
-      <div>
-        <div class="section-header">Recent Incidents & Event History</div>
-        <div class="history-card">
-          <table>
-            <thead><tr><th>Timestamp</th><th>Event</th><th>Duration</th><th>Details / Reason</th></tr></thead>
-            <tbody>${logRows}</tbody>
-          </table>
-        </div>
-      </div>`;
-  }
-
-  // Filter and Search Event Listeners for Monitors
-  document.querySelectorAll('#monitorFilterGroup .filter-chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#monitorFilterGroup .filter-chip').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      monitorFilter = btn.dataset.filter;
-      renderMonitorList();
-    });
-  });
-  $('searchInput').addEventListener('input', renderMonitorList);
-  $('modalCloseBtn').addEventListener('click', () => $('monitorModal').classList.remove('open'));
-  $('monitorModal').addEventListener('click', e => { if (e.target === $('monitorModal')) $('monitorModal').classList.remove('open'); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') $('monitorModal').classList.remove('open'); });
-
-  // =========================================================================
-  // QUICK LAUNCH / TINYURLS ENGINE
-  // =========================================================================
-  let allTinyUrls = [];
-
-  function copyToClipboard(text, e) {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => {
-        toast('Copied ' + text + ' to clipboard!', 'success');
-      }).catch(() => {
-        window.prompt('Copy this link:', text);
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
       });
-    } else {
-      window.prompt('Copy this link:', text);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+
+      localStorage.setItem('ops_token', data.token);
+      hideLoginScreen();
+      toast('Welcome back! Dashboard unlocked.', 'success');
+      refreshDashboard(false);
+    } catch (err) {
+      $('loginErrorMsg').textContent = err.message;
+      $('loginErrorMsg').style.display = 'block';
     }
   }
 
-  async function loadTinyUrls(isSilent = false) {
+  function handleLogout() {
+    localStorage.removeItem('ops_token');
+    showLoginScreen();
+  }
+
+  // Dashboard Data Loading
+  async function refreshDashboard(isSilent = false) {
+    const token = getAuthToken();
+    if (!token) {
+      showLoginScreen();
+      return;
+    }
+
+    if (!isSilent) $('refreshIcon').classList.add('spin');
+
     try {
-      const res = await fetch('/api/tinyurls');
+      await Promise.allSettled([
+        loadQuickLaunch(),
+        loadDeployments(),
+        loadMonitors()
+      ]);
+      if (!isSilent) toast('Dashboard refreshed', 'success');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      if (!isSilent) $('refreshIcon').classList.remove('spin');
+    }
+  }
+
+  // 1. Quick Launch (Projects + Titles)
+  async function loadQuickLaunch() {
+    try {
+      const res = await apiFetch('/projects');
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch TinyURLs');
-
       if (!data.configured) {
-        $('tinyUrlStatusText').textContent = 'Not configured';
-        $('tinyUrlButtonsContainer').innerHTML = `
-          <div class="ql-empty-prompt">
-            <div>
-              <span>🔗 <strong>TinyURL Auto-Fetch:</strong> Add your TinyURL account API token (<code>TINYURL_API_TOKEN</code>) to auto-show 1-click launch buttons for all your projects.</span>
+        $('qlStatus').textContent = 'TinyURL token not set (Click Control Panel to configure)';
+        $('quickLaunchGrid').innerHTML = '<div style="color:var(--text3);font-size:0.8rem;padding:0.5rem 0;">No TinyURL projects configured yet.</div>';
+        return;
+      }
+
+      const links = data.links || [];
+      $('qlBadge').textContent = `${links.length} Project${links.length === 1 ? '' : 's'}`;
+      $('qlStatus').textContent = `Auto-synced (${links.length} active)`;
+
+      if (!links.length) {
+        $('quickLaunchGrid').innerHTML = '<div style="color:var(--text3);font-size:0.8rem;">0 links found in your TinyURL account.</div>';
+        return;
+      }
+
+      $('quickLaunchGrid').innerHTML = links.map(l => `
+        <div class="ql-card">
+          <a href="${esc(l.tinyUrl)}" target="_blank" rel="noopener" class="ql-card-link">
+            <div class="ql-card-top">
+              <span class="ql-project-icon">🌐</span>
+              <span class="ql-project-name">${esc(l.title)}</span>
+              <span class="ql-external-icon">↗</span>
             </div>
-            <a href="https://tinyurl.com/app/settings/api" target="_blank" rel="noopener" class="btn" style="padding:0.4rem 0.85rem;font-size:0.75rem;text-decoration:none;">Get TinyURL Token ↗</a>
-          </div>`;
+            <div class="ql-url-line">
+              <span class="ql-tiny-tag">TinyURL</span>
+              <span class="ql-url-text">${esc(l.displayUrl)}</span>
+            </div>
+          </a>
+          <button class="ql-copy-btn" onclick="copyLink('${esc(l.tinyUrl)}')" title="Copy Link">📋</button>
+        </div>
+      `).join('');
+    } catch (e) {}
+  }
+
+  function copyLink(url) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => toast('Copied ' + url, 'success'));
+    } else {
+      prompt('Copy URL:', url);
+    }
+  }
+
+  // 2. Git Deployments
+  async function loadDeployments() {
+    try {
+      const res = await apiFetch('/deployments');
+      const data = await res.json();
+      const list = data.deployments || [];
+      const sum = data.summary || { total: 0, live: 0, building: 0, failed: 0 };
+
+      $('kpiTotal').textContent = sum.total;
+      $('kpiLive').textContent = sum.live;
+      $('kpiBuilding').textContent = sum.building;
+      $('kpiFailed').textContent = sum.failed;
+      $('badgeDeployments').textContent = sum.total;
+
+      if (!list.length) {
+        $('deploymentsContainer').innerHTML = '<div style="color:var(--text3);grid-column:1/-1;text-align:center;padding:3rem;">No Render or Cloudflare accounts connected yet. Open Control Panel to add accounts.</div>';
         return;
       }
 
-      if (data.error && (!data.links || !data.links.length)) {
-        $('tinyUrlStatusText').textContent = 'API Notice';
-        $('tinyUrlButtonsContainer').innerHTML = `
-          <div class="ql-empty-prompt" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.06);color:#fca5a5;">
-            <div><strong>⚠️ TinyURL Notice:</strong> ${esc(data.error)}</div>
-            <a href="https://tinyurl.com/app/settings/api" target="_blank" rel="noopener" class="btn" style="padding:0.4rem 0.85rem;font-size:0.75rem;text-decoration:none;">Check Token ↗</a>
-          </div>`;
-        return;
-      }
+      $('deploymentsContainer').innerHTML = list.map(d => {
+        const isRender = d.provider === 'render';
+        const isLive = d.status === 'live';
+        const isBuilding = d.status === 'building';
+        const badgeClass = isLive ? 'badge-live' : (isBuilding ? 'badge-building' : 'badge-failed');
+        const badgeIcon = isLive ? '🟢' : (isBuilding ? '🔄' : '🔴');
+        const commit = d.commit || {};
 
-      allTinyUrls = data.links || [];
-      $('tinyUrlCountBadge').textContent = `${allTinyUrls.length} Active Link${allTinyUrls.length === 1 ? '' : 's'}`;
-      $('tinyUrlStatusText').textContent = `Auto-synced from TinyURL (${allTinyUrls.length})`;
-
-      if (!allTinyUrls.length) {
-        $('tinyUrlButtonsContainer').innerHTML = `
-          <div class="ql-empty-prompt">
-            <div><span>Connected to TinyURL, but 0 shortened links found in your account. Shorten a link on tinyurl.com to see it here!</span></div>
-            <a href="https://tinyurl.com/app" target="_blank" rel="noopener" class="btn" style="padding:0.4rem 0.85rem;font-size:0.75rem;text-decoration:none;">Create Short Link ↗</a>
-          </div>`;
-        return;
-      }
-
-      const html = allTinyUrls.map(item => {
         return `
-          <div class="ql-card">
-            <a href="${esc(item.tinyUrl)}" target="_blank" rel="noopener" class="ql-card-link" title="Open ${esc(item.title)} (${esc(item.tinyUrl)})">
-              <div class="ql-card-top">
-                <div class="ql-project-icon">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                  </svg>
+          <div class="deployment-card">
+            <div class="card-header">
+              <div class="project-info">
+                <div class="project-name-wrap">
+                  <span class="platform-pill ${isRender ? 'render' : 'cloudflare'}">${isRender ? 'Render' : 'Cloudflare'}</span>
+                  <span class="project-title">${esc(d.projectName)}</span>
                 </div>
-                <span class="ql-project-name">${esc(item.title)}</span>
-                <span class="ql-external-icon">↗</span>
+                <span style="font-size:0.7rem;color:var(--text3);">${esc(d.accountName)}</span>
               </div>
-              <div class="ql-url-line">
-                <span class="ql-tiny-tag">TinyURL</span>
-                <span class="ql-url-text">${esc(item.displayUrl || item.tinyUrl)}</span>
+              <span class="status-badge ${badgeClass}">${badgeIcon} ${esc(d.statusLabel)}</span>
+            </div>
+
+            <div class="commit-box">
+              <div class="commit-meta">
+                <span class="branch-pill">⑂ ${esc(commit.branch || 'main')}</span>
+                <span style="font-family:'JetBrains Mono';color:var(--text3);">${esc(commit.hash || '')}</span>
               </div>
-            </a>
-            <button class="ql-copy-btn" onclick="copyToClipboard('${esc(item.tinyUrl)}', event)" title="Copy ${esc(item.tinyUrl)}">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
-            </button>
-          </div>`;
+              <div class="commit-message">${esc(commit.message || 'No commit message')}</div>
+            </div>
+
+            ${d.liveUrl ? `
+              <div class="site-url-bar">
+                <span>🔗</span>
+                <a href="${esc(d.liveUrl)}" target="_blank" rel="noopener" class="site-url-link">${esc(d.liveUrl)}</a>
+              </div>
+            ` : ''}
+
+            <div class="card-footer-actions">
+              <span style="color:var(--text3);">${d.updatedAt ? new Date(d.updatedAt).toLocaleTimeString() : 'Live'}</span>
+              ${d.dashboardUrl ? `<a href="${esc(d.dashboardUrl)}" target="_blank" rel="noopener" style="color:var(--accent-light);text-decoration:none;font-weight:600;">Console ↗</a>` : ''}
+            </div>
+          </div>
+        `;
       }).join('');
+    } catch (e) {}
+  }
 
-      $('tinyUrlButtonsContainer').innerHTML = html;
+  // 3. Monitors
+  async function loadMonitors() {
+    try {
+      const res = await apiFetch('/monitors');
+      const data = await res.json();
+      const monitors = data.monitors || [];
+
+      const up = monitors.filter(m => m.status === 2).length;
+      const down = monitors.filter(m => m.status === 8 || m.status === 9).length;
+
+      $('kpiMonitorsTotal').textContent = monitors.length;
+      $('kpiUp').textContent = up;
+      $('kpiDown').textContent = down;
+      $('badgeMonitors').textContent = monitors.length;
+
+      if (!monitors.length) {
+        $('monitorsContainer').innerHTML = '<div style="color:var(--text3);grid-column:1/-1;text-align:center;padding:3rem;">No monitors found. Check UptimeRobot key in Control Panel.</div>';
+        return;
+      }
+
+      $('monitorsContainer').innerHTML = monitors.map(m => {
+        const isUp = m.status === 2;
+        return `
+          <div class="monitor-card">
+            <div class="card-header">
+              <span class="project-title">${esc(m.friendly_name)}</span>
+              <span class="status-badge ${isUp ? 'badge-live' : 'badge-failed'}">${isUp ? '🟢 UP' : '🔴 DOWN'}</span>
+            </div>
+            <div class="site-url-bar">
+              <a href="${esc(m.url)}" target="_blank" rel="noopener" class="site-url-link">${esc(m.url)}</a>
+            </div>
+            <div class="card-footer-actions">
+              <span style="color:var(--text3);">Check: Every ${m.interval / 60}m</span>
+              <span style="font-family:'JetBrains Mono';color:#38bdf8;">${m.average_response_time ? Math.round(m.average_response_time) + ' ms' : '—'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {}
+  }
+
+  // Tab Switching
+  function switchTab(tab) {
+    document.querySelectorAll('.view-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    $('viewDeployments').style.display = tab === 'deployments' ? 'block' : 'none';
+    $('viewMonitors').style.display = tab === 'monitors' ? 'block' : 'none';
+  }
+
+  // =========================================================================
+  // CONTROL PANEL FUNCTIONS
+  // =========================================================================
+  async function openControlPanel() {
+    $('controlPanelModal').classList.add('open');
+    switchCpTab('db');
+    loadControlPanelData();
+  }
+
+  function closeControlPanel() {
+    $('controlPanelModal').classList.remove('open');
+  }
+
+  function switchCpTab(tab) {
+    const tabs = ['db', 'accounts', 'titles', 'keys', 'security'];
+    tabs.forEach(t => {
+      const el = $(`cpTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+      if (el) el.style.display = t === tab ? 'block' : 'none';
+    });
+    document.querySelectorAll('.cp-tab-btn').forEach((btn, idx) => {
+      btn.classList.toggle('active', tabs[idx] === tab);
+    });
+  }
+
+  function toggleAccFields() {
+    const isCf = $('accNewProvider').value === 'cloudflare';
+    $('accCfIdGroup').style.display = isCf ? 'block' : 'none';
+  }
+
+  async function loadControlPanelData() {
+    try {
+      const res = await apiFetch('/admin/overview');
+      const data = await res.json();
+
+      // Database
+      $('dbEngineBadge').textContent = (data.database.engine || 'postgresql').toUpperCase();
+      $('cpDatabaseUrl').value = data.database.url || '';
+
+      // API Keys
+      $('cpUptimeKey').value = data.keys.uptimerobot_api_key || '';
+      $('cpTinyKey').value = data.keys.tinyurl_api_token || '';
+
+      // Accounts Table
+      $('cpAccountsTableBody').innerHTML = (data.accounts || []).map(a => `
+        <tr>
+          <td><span class="platform-pill ${a.provider}">${esc(a.provider)}</span></td>
+          <td><strong>${esc(a.account_name)}</strong></td>
+          <td><code style="font-size:0.72rem;">${esc(a.account_id || '—')}</code></td>
+          <td><button onclick="deleteAccount(${a.id})" class="btn btn-danger btn-sm">Delete</button></td>
+        </tr>
+      `).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);">No accounts yet.</td></tr>';
+
+      // Project Titles Table
+      $('cpTitlesTableBody').innerHTML = (data.titles || []).map(t => `
+        <tr>
+          <td><code style="color:#818cf8;">${esc(t.alias)}</code></td>
+          <td><strong>${esc(t.custom_title)}</strong></td>
+          <td><button onclick="deleteTitle(${t.id})" class="btn btn-danger btn-sm">Delete</button></td>
+        </tr>
+      `).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--text3);">No custom title overrides yet.</td></tr>';
+    } catch (e) {}
+  }
+
+  async function testDbConnection() {
+    const url = $('cpDatabaseUrl').value.trim();
+    if (!url) return alert('Please enter a Database URL first');
+    try {
+      const res = await apiFetch('/admin/test-db', {
+        method: 'POST',
+        body: JSON.stringify({ database_url: url })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Connection failed');
+      toast(data.message, 'success');
     } catch (err) {
-      $('tinyUrlStatusText').textContent = 'Sync error';
-      $('tinyUrlButtonsContainer').innerHTML = `<div class="ql-loading" style="color:#fca5a5;"><span>Unable to load TinyURLs: ${esc(err.message)}</span></div>`;
+      toast(err.message, 'error');
     }
   }
 
-  // =========================================================================
-  // MASTER REFRESH CONTROLLER
-  // =========================================================================
-  async function refreshAll(isSilent = false) {
-    if (!isSilent) {
-      $('refreshBtn').firstElementChild?.classList.add('spin');
+  async function saveDatabaseUrl() {
+    const url = $('cpDatabaseUrl').value.trim();
+    try {
+      const res = await apiFetch('/admin/settings', {
+        method: 'POST',
+        body: JSON.stringify({ database_url: url })
+      });
+      const data = await res.json();
+      toast(data.message || 'Database URL saved!', 'success');
+    } catch (e) {
+      toast('Failed to save', 'error');
     }
-
-    await Promise.allSettled([
-      loadDeployments(isSilent),
-      loadMonitors(isSilent),
-      loadTinyUrls(isSilent)
-    ]);
-
-    if (!isSilent) {
-      $('refreshBtn').firstElementChild?.classList.remove('spin');
-      toast('Refreshed live status', 'success');
-    }
-
-    // Schedule next auto-refresh (10s if any build is in progress, otherwise 30s)
-    if (refreshTimer) clearTimeout(refreshTimer);
-    const interval = isBuildingActive ? 10000 : 30000;
-    refreshTimer = setTimeout(() => refreshAll(true), interval);
   }
 
-  $('refreshBtn').addEventListener('click', () => refreshAll(false));
+  async function submitNewAccount() {
+    const provider = $('accNewProvider').value;
+    const name = $('accNewName').value.trim();
+    const key = $('accNewKey').value.trim();
+    const cfId = $('accNewCfId').value.trim();
+
+    if (!name || !key) return alert('Name and API Key are required');
+
+    try {
+      const res = await apiFetch('/admin/accounts', {
+        method: 'POST',
+        body: JSON.stringify({ provider, account_name: name, api_key: key, account_id: cfId })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      toast('Account added!', 'success');
+      $('accNewName').value = '';
+      $('accNewKey').value = '';
+      $('accNewCfId').value = '';
+      loadControlPanelData();
+      refreshDashboard(true);
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  async function deleteAccount(id) {
+    if (!confirm('Are you sure you want to remove this account?')) return;
+    try {
+      await apiFetch(`/admin/accounts/${id}`, { method: 'DELETE' });
+      toast('Account deleted', 'success');
+      loadControlPanelData();
+      refreshDashboard(true);
+    } catch (e) {
+      toast('Failed to delete', 'error');
+    }
+  }
+
+  async function submitProjectTitle() {
+    const alias = $('titleNewAlias').value.trim();
+    const title = $('titleNewName').value.trim();
+    if (!alias || !title) return alert('Alias and Custom Title are required');
+
+    try {
+      const res = await apiFetch('/admin/titles', {
+        method: 'POST',
+        body: JSON.stringify({ alias, custom_title: title })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      toast('Title override saved!', 'success');
+      $('titleNewAlias').value = '';
+      $('titleNewName').value = '';
+      loadControlPanelData();
+      refreshDashboard(true);
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  async function deleteTitle(id) {
+    try {
+      await apiFetch(`/admin/titles/${id}`, { method: 'DELETE' });
+      toast('Title override removed', 'success');
+      loadControlPanelData();
+      refreshDashboard(true);
+    } catch (e) {
+      toast('Failed to delete', 'error');
+    }
+  }
+
+  async function saveApiKeys() {
+    const uptimerobot_api_key = $('cpUptimeKey').value.trim();
+    const tinyurl_api_token = $('cpTinyKey').value.trim();
+
+    try {
+      await apiFetch('/admin/settings', {
+        method: 'POST',
+        body: JSON.stringify({ uptimerobot_api_key, tinyurl_api_token })
+      });
+      toast('API keys saved to database!', 'success');
+      refreshDashboard(true);
+    } catch (e) {
+      toast('Failed to save API keys', 'error');
+    }
+  }
+
+  async function submitChangePassword() {
+    const p = $('cpNewPass').value.trim();
+    if (p.length < 4) return alert('Password must be at least 4 characters');
+
+    try {
+      const res = await apiFetch('/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ new_password: p })
+      });
+      const data = await res.json();
+      toast(data.message, 'success');
+      $('cpNewPass').value = '';
+    } catch (e) {
+      toast('Failed to update password', 'error');
+    }
+  }
 
   // Initial Boot
-  refreshAll(false);
+  if (getAuthToken()) {
+    refreshDashboard(false);
+  } else {
+    showLoginScreen();
+  }
+
+  // Auto-refresh every 30 seconds
+  setInterval(() => {
+    if (getAuthToken()) refreshDashboard(true);
+  }, 30000);
 </script>
 </body>
 </html>

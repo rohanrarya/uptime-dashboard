@@ -1,147 +1,112 @@
-# 🚀 Ops & Uptime Dashboard
+# 🚀 Ops Command Center
 
-A unified, real-time command center for your applications. Tracks:
-1. **Live Git Deployments**: Real-time build status (Building 🔄, Live 🟢, Failed 🔴), commit messages, branch, and live preview URLs across **multiple Render and Cloudflare accounts**.
-2. **Uptime & Latency Monitors**: 24/7 endpoint ping status, latency sparklines, and incident history powered by UptimeRobot.
-3. **100% Mobile Responsive**: Clean dark theme optimized for desktop, tablets, and mobile smartphones.
+A secure, unified operations dashboard tracking **Live Git Deployments (Render & Cloudflare)**, **Uptime Monitors (UptimeRobot)**, and **1-Click Quick Launch Links (TinyURL with Custom Titles)**.
 
----
-
-## ⚡ Key Highlights
-
-- **Multi-Account Support**: Connect unlimited Render and Cloudflare accounts simultaneously.
-- **Zero-Manual-Setup Auto Discovery**: No need to copy-paste service IDs or project names. Give the dashboard an API key, and it auto-discovers all your services and Pages projects automatically!
-- **Fast Build Polling**: When any service is actively building, the dashboard switches to 10-second fast polling so you see the exact moment your `git push` goes live.
-- **Edge Powered**: Deploys as a lightweight Cloudflare Pages Worker (`_worker.js`) with zero cold starts.
+- **Backend**: Python Flask hosted on **Vercel** (`api/index.py`).
+- **Frontend**: Pure Static HTML/CSS/JS hosted on **Cloudflare Pages** (`public/index.html`).
+- **Database**: **PostgreSQL** (Neon, Render, or Supabase) with automatic schema setup and `.env` seeding.
+- **Security**: Protected by Admin Login authentication.
+- **Interactive Control Panel**: Manage API keys, accounts, custom titles, and database URLs right from the UI!
+- **100% Mobile & Tablet Responsive**.
 
 ---
 
-## 🛠️ How to Deploy on Cloudflare Pages (via Git)
+## 📁 Project Architecture
 
-### 1. Push to GitHub
-Commit and push this repo to your GitHub account:
-```bash
-git add .
-git commit -m "feat: add multi-account deployment tracker"
-git push origin main
+```text
+uptime-dashboard/
+├── api/
+│   ├── index.py          # 🐍 Python Flask Backend API Server
+│   └── db.py             # 🔌 PostgreSQL database connection & table manager
+├── public/
+│   └── index.html        # 🌐 Pure Static Frontend with Admin Login & Control Panel
+├── requirements.txt      # Python dependencies for Vercel
+├── vercel.json           # Vercel serverless routing
+├── run.py                # 1-Command Local Development Server
+├── .env.example          # Environment variables reference
+└── README.md
 ```
 
-### 2. Connect Repo in Cloudflare Pages
-1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → **Pages** → **Connect to Git**
-2. Select your `uptime-dashboard` repo
-3. Build Settings:
+---
+
+## 🚀 Deployment Guide
+
+### Step 1: Deploy Backend to Vercel
+
+1. Log in to [vercel.com](https://vercel.com) using your GitHub account (`rohanrarya`).
+2. Click **"Add New Project"** → Import your **`uptime-dashboard`** repository.
+3. In **Environment Variables**, add:
+   - `ADMIN_PASSWORD` = Your desired admin password (e.g. `MyStrongPassword123`)
+   - `DATABASE_URL` = Your PostgreSQL connection string (from Neon, Render, or Supabase)
+   - `UPTIMEROBOT_API_KEY` = Your UptimeRobot read-only key
+   - `TINYURL_API_TOKEN` = Your TinyURL API token
+   - *(Optional)* `RENDER_API_KEY`, `CF_ACCOUNT_ID`, `CF_API_TOKEN`
+4. Click **Deploy**. Vercel will build and assign you a live backend URL (e.g., `https://uptime-dashboard.vercel.app`).
+
+---
+
+### Step 2: Deploy Frontend to Cloudflare Pages
+
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**.
+2. Select repository: **`uptime-dashboard`**.
+3. Set Build Configuration:
    - **Framework preset**: `None`
-   - **Build command**: *(leave empty)*
+   - **Build command**: *(leave completely empty)*
    - **Build output directory**: `public`
 4. Click **Save and Deploy**.
 
 ---
 
-## 🔑 Environment Variables Setup
+### Step 3: Configure Subdomain `uptime.digitaltask.in`
 
-Go to: **Cloudflare Pages → Your Project → Settings → Environment Variables**.
+To direct `uptime.digitaltask.in` to this new dashboard:
 
-Add the variables for whichever services you want to track:
+#### 1. Disable the Old Cloudflare Worker Route:
+- Go to Cloudflare Dashboard → Select **`digitaltask.in`** domain.
+- Navigate to **Workers Routes** (in the sidebar under Workers & Pages).
+- If there is a route matching `uptime.digitaltask.in/*`, click **Disable** or **Delete**.
 
-### 1. Uptime Monitoring (UptimeRobot)
-| Variable Name | Value | Where to get it |
-| :--- | :--- | :--- |
-| `UPTIMEROBOT_API_KEY` | `ur...` | [UptimeRobot → My Settings → API Settings](https://uptimerobot.com/dashboard#mySettings) → **Read-Only API Key** |
+#### 2. Attach Subdomain to Cloudflare Pages:
+- In Cloudflare Dashboard → **Workers & Pages** → Click your **`uptime-dashboard`** Pages project.
+- Go to the **Custom Domains** tab → Click **Set up a custom domain**.
+- Type: **`uptime.digitaltask.in`** and click **Continue** → **Activate domain**.
+- Cloudflare will configure the DNS CNAME automatically!
 
----
-
-### 2. Multiple Render Accounts (Live Git Deployments)
-All services on each account are **auto-discovered** automatically!
-
-**Where to get Render API Key:**
-Go to [dashboard.render.com](https://dashboard.render.com) → Top right profile icon → **Account Settings** → **API Keys** → **Create API Key**.
-
-#### For 1 Render Account:
-```
-RENDER_API_KEY = rnd_your_api_key
-RENDER_LABEL   = Render - Main
-```
-
-#### For Multiple Render Accounts (Account 1, Account 2, Account 3, etc.):
-```
-RENDER_API_KEY_1 = rnd_first_account_key
-RENDER_LABEL_1   = Render - Personal (Aniruddh / PostPulse)
-
-RENDER_API_KEY_2 = rnd_second_account_key
-RENDER_LABEL_2   = Render - Client / Studio
-```
-*(Or use comma-separated: `RENDER_API_KEYS = rnd_key1,rnd_key2`)*
-
----
-
-### 3. Multiple Cloudflare Accounts (Live Pages Deployments)
-All Pages projects on each account are **auto-discovered** automatically!
-
-**Where to get Cloudflare Credentials:**
-- **Account ID**: Shown on the right sidebar of [Cloudflare Dashboard](https://dash.cloudflare.com) on any overview page.
-- **API Token**: Go to [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens) → **Create Token** → Select template **"Edit Cloudflare Workers"** (grants read access to Pages & Workers).
-
-#### For 1 Cloudflare Account:
-```
-CF_ACCOUNT_ID = your_account_id
-CF_API_TOKEN  = your_api_token
-CF_LABEL      = Cloudflare - Main
-```
-
-#### For Multiple Cloudflare Accounts (Account 1, Account 2, etc.):
-```
-CF_ACCOUNT_ID_1 = your_first_account_id
-CF_API_TOKEN_1  = your_first_api_token
-CF_LABEL_1      = Cloudflare - Personal
-
-CF_ACCOUNT_ID_2 = your_second_account_id
-CF_API_TOKEN_2  = your_second_api_token
-CF_LABEL_2      = Cloudflare - Studio
-```
-
----
-
-### 4. TinyURL Quick Launch (1-Click Project Redirects)
-Auto-fetches your shortened links, custom aliases, and project titles from TinyURL.
-
-**Where to get TinyURL API Token:**
-Log in to [tinyurl.com](https://tinyurl.com) → Top right profile icon → **API Settings** (or go to [tinyurl.com/app/settings/api](https://tinyurl.com/app/settings/api)) → Click **"Create API Token"** → Copy token.
-
-```
-TINYURL_API_TOKEN = your_tinyurl_api_token
-```
+#### 3. Route Backend API via `api-uptime.digitaltask.in`:
+- In Cloudflare Dashboard → **digitaltask.in** → **DNS** → **Records** → Click **Add record**:
+  - **Type**: `CNAME`
+  - **Name**: `api-uptime`
+  - **Target**: `cname.vercel-dns.com`
+  - **Proxy status**: DNS only (Grey cloud)
+- In Vercel Dashboard → Your project → **Settings** → **Domains** → Add **`api-uptime.digitaltask.in`**.
+- Now your frontend and backend run seamlessly together under your own domain!
 
 ---
 
 ## 💻 Local Development
 
-1. Copy `.env.example` to `.env` and paste your keys:
+You can run both frontend and backend locally with a single command:
+
+1. Install dependencies:
    ```bash
-   cp .env.example .env
+   pip install -r requirements.txt
    ```
 
-2. Start the local server:
+2. Run the server:
    ```bash
-   node server.js
+   python run.py
    ```
-   Or double-click `start.bat`.
 
-3. Open [http://localhost:3000](http://localhost:3000)
+3. Open your browser at: [http://127.0.0.1:5000](http://127.0.0.1:5000)
+   - Default login: Username: `admin` | Password: `admin123` (or whatever you set in `ADMIN_PASSWORD`).
 
 ---
 
-## ✏️ Making Changes to the UI
+## ⚙️ Interactive Control Panel Features
 
-If you edit `public/index.html` or `lib/deployments.js`, rebuild the worker files before committing:
-
-```bash
-node build-worker.js
-```
-
-Then commit and push:
-```bash
-git add .
-git commit -m "update dashboard"
-git push origin main
-```
-Cloudflare Pages will auto-deploy your updates within seconds!
+Click the **⚙️ Control Panel** button in the dashboard header to:
+- **🔌 PostgreSQL Database**: View connection health, update `DATABASE_URL`, and click **Test Connection**.
+- **🏢 Multi-Account Manager**: Add/Delete unlimited Render and Cloudflare accounts without redeploying.
+- **🏷️ Project Titles & TinyURL**: Assign friendly names to any alias (e.g., `rohanrarya` ➔ `My Portfolio`).
+- **🔑 Service Keys**: Update UptimeRobot & TinyURL tokens on the fly.
+- **🔒 Security**: Change admin password.
