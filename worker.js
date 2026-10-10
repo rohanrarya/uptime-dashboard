@@ -607,12 +607,13 @@ async function fetchTinyUrls(env) {
     };
   }
 
+  // Official TinyURL OpenAPI v2 endpoints: /urls/{type} where type is 'available' or 'archived'
   const endpoints = [
-    'https://api.tinyurl.com/urls/active',
-    'https://api.tinyurl.com/urls/all',
-    'https://api.tinyurl.com/urls'
+    'https://api.tinyurl.com/urls/available',
+    'https://api.tinyurl.com/urls/archived'
   ];
 
+  let collectedLinks = [];
   let lastError = null;
 
   for (const endpoint of endpoints) {
@@ -631,18 +632,21 @@ async function fetchTinyUrls(env) {
         if (res.status === 401) {
           hint = 'Invalid TinyURL API Token. Please verify your token.';
         } else if (res.status === 403) {
-          hint = 'Permission denied. Ensure your TinyURL account plan supports API URL listing.';
-        } else if (res.status === 404) {
-          // Try next endpoint
+          hint = 'Permission denied. Ensure your TinyURL account supports API URL listing.';
+        } else if (res.status === 422 || res.status === 404) {
           lastError = `HTTP ${res.status}: ${errText.slice(0, 100)}`;
           continue;
         }
 
-        return {
-          configured: true,
-          links: [],
-          error: hint || `TinyURL API error (HTTP ${res.status}): ${errText.slice(0, 140)}`
-        };
+        // If this is the first endpoint and it fails with auth/permission error, return error
+        if (!collectedLinks.length && (res.status === 401 || res.status === 403)) {
+          return {
+            configured: true,
+            links: [],
+            error: hint || `TinyURL API error (HTTP ${res.status}): ${errText.slice(0, 140)}`
+          };
+        }
+        continue;
       }
 
       const json = await res.json();
@@ -658,16 +662,18 @@ async function fetchTinyUrls(env) {
         rawList = [json.data];
       }
 
-      const links = rawList.map((item, idx) => {
+      rawList.forEach((item, idx) => {
         const domain = item.domain || 'tinyurl.com';
         const alias = item.alias || '';
         const shortUrl = item.tiny_url || (alias ? `https://${domain}/${alias}` : '');
         const targetUrl = item.url || '';
-        
+
+        // If duplicate shortUrl, don't re-add
+        if (collectedLinks.some(l => l.tinyUrl === shortUrl)) return;
+
         // Derive clean title from description, alias, or target hostname
         let title = item.description || item.title || '';
         if (!title && alias) {
-          // Convert 'post-pulse' or 'aniruddh_aroma' into clean title
           title = alias
             .replace(/[-_]+/g, ' ')
             .replace(/\b\w/g, c => c.toUpperCase());
@@ -677,12 +683,12 @@ async function fetchTinyUrls(env) {
             const parsed = new URL(targetUrl);
             title = parsed.hostname.replace('.onrender.com', '').replace('.pages.dev', '');
           } catch {
-            title = `Link ${idx + 1}`;
+            title = `Link ${collectedLinks.length + 1}`;
           }
         }
 
-        return {
-          id: item.id || `tiny-${idx}`,
+        collectedLinks.push({
+          id: item.id || `tiny-${alias || idx}`,
           title: title || 'Project Link',
           alias: alias,
           tinyUrl: shortUrl,
@@ -690,23 +696,39 @@ async function fetchTinyUrls(env) {
           targetUrl: targetUrl,
           tags: item.tags || [],
           createdAt: item.created_at || null
-        };
+        });
       });
 
-      return {
-        configured: true,
-        links: links,
-        count: links.length
-      };
+      // If 'available' succeeded, we have the active links!
+      if (endpoint.includes('available')) {
+        break;
+      }
     } catch (err) {
       lastError = err.message;
     }
   }
 
+  if (collectedLinks.length > 0) {
+    return {
+      configured: true,
+      links: collectedLinks,
+      count: collectedLinks.length
+    };
+  }
+
+  // If 0 links found but no fatal auth error, it means the account has 0 available links
+  if (!lastError || lastError.includes('404')) {
+    return {
+      configured: true,
+      links: [],
+      count: 0
+    };
+  }
+
   return {
     configured: true,
     links: [],
-    error: `Failed to contact TinyURL API: ${lastError || 'Network Error'}`
+    error: `TinyURL API notice: ${lastError}`
   };
 }
 
