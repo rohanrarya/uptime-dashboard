@@ -3,6 +3,8 @@ const fs = require('fs');
 const htmlContent = fs.readFileSync('public/index.html', 'utf8');
 const deploymentsJs = fs.readFileSync('lib/deployments.js', 'utf8')
   .replace(/if \(typeof module !== 'undefined'[\s\S]*$/, ''); // strip CommonJS exports
+const tinyurlJs = fs.readFileSync('lib/tinyurl.js', 'utf8')
+  .replace(/if \(typeof module !== 'undefined'[\s\S]*$/, ''); // strip CommonJS exports
 
 // Escape backticks and dollar signs for safe template literal sitting
 const escapedHtml = htmlContent
@@ -12,12 +14,14 @@ const escapedHtml = htmlContent
 
 const workerCode = `// =============================================================================
 // Cloudflare Worker / Pages - Ops & Uptime Dashboard
-// Real-time Git Deployments (Render & Cloudflare) + UptimeRobot Monitors
+// Real-time Git Deployments + UptimeRobot Monitors + TinyURL Quick Launch
 // =============================================================================
 
 const UPTIMEROBOT_API_BASE = 'https://api.uptimerobot.com/v2';
 
 ${deploymentsJs}
+
+${tinyurlJs}
 
 export default {
   async fetch(request, env, ctx) {
@@ -43,7 +47,8 @@ export default {
         configured: Boolean(apiKey && apiKey.length > 0),
         deploymentsConfigured: Boolean(depConfig.render.length > 0 || depConfig.cloudflare.length > 0),
         renderAccountsCount: depConfig.render.length,
-        cfAccountsCount: depConfig.cloudflare.length
+        cfAccountsCount: depConfig.cloudflare.length,
+        tinyUrlConfigured: Boolean(env.TINYURL_API_TOKEN || env.TINYURL_API_KEY || env.TINYURL_TOKEN)
       });
     }
 
@@ -111,7 +116,17 @@ export default {
       }
     }
 
-    // 4. Default: Serve the single-page dashboard HTML
+    // 4. API: Fetch TinyURL links
+    if (pathname === '/api/tinyurls') {
+      try {
+        const data = await fetchTinyUrls(env);
+        return jsonResponse(data, 200);
+      } catch (err) {
+        return jsonResponse({ error: 'Failed to fetch TinyURLs', detail: err.message }, 500);
+      }
+    }
+
+    // 5. Default: Serve the single-page dashboard HTML
     return new Response(DASHBOARD_HTML, {
       headers: {
         'Content-Type': 'text/html; charset=UTF-8',

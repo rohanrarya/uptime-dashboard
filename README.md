@@ -101,6 +101,18 @@ CF_LABEL_2      = Cloudflare - Studio
 
 ---
 
+### 4. TinyURL Quick Launch (1-Click Project Redirects)
+Auto-fetches your shortened links, custom aliases, and project titles from TinyURL.
+
+**Where to get TinyURL API Token:**
+Log in to [tinyurl.com](https://tinyurl.com) → Top right profile icon → **API Settings** (or go to [tinyurl.com/app/settings/api](https://tinyurl.com/app/settings/api)) → Click **"Create API Token"** → Copy token.
+
+```
+TINYURL_API_TOKEN = your_tinyurl_api_token
+```
+
+---
+
 ## 💻 Local Development
 
 1. Copy `.env.example` to `.env` and paste your keys:
