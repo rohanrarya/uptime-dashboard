@@ -1314,38 +1314,51 @@
           </table>
         </div>
 
-        <!-- Direct Title Editor for TinyURL -->
-        <div class="cp-card-box">
-          <h4 style="font-size:0.85rem;font-weight:700;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;color:#fff;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-            <span>Rename Existing Project</span>
-          </h4>
+        <!-- Project & Custom Link Editor -->
+        <div class="cp-card-box" id="editProjectCard" style="transition:all 0.3s ease;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;flex-wrap:wrap;gap:0.5rem;">
+            <h4 style="font-size:0.88rem;font-weight:700;display:flex;align-items:center;gap:0.4rem;color:#fff;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <span>Edit Project Title & Target URL</span>
+            </h4>
+            <span id="editProjectTypeBadge" class="status-badge badge-paused" style="font-size:0.68rem;padding:0.15rem 0.5rem;">Select Project</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom:0.85rem;">
+            <label class="form-label">Select Project or Custom Link</label>
+            <select id="titleProjectSelect" class="form-input mono" onchange="onProjectSelectChange()" style="cursor:pointer;">
+              <option value="">-- Loading projects... --</option>
+            </select>
+            <input type="hidden" id="titleNewAlias" />
+            <input type="hidden" id="titleDbId" />
+          </div>
+
           <div class="cp-grid-2">
             <div class="form-group">
-              <label class="form-label">Select Project</label>
-              <select id="titleProjectSelect" class="form-input mono" onchange="onProjectSelectChange()" style="cursor:pointer;">
-                <option value="">-- Loading projects... --</option>
-              </select>
-              <!-- Hidden alias input populated automatically -->
-              <input type="hidden" id="titleNewAlias" />
+              <label class="form-label">Display Title</label>
+              <input type="text" id="titleNewName" class="form-input" placeholder="e.g. Post Pulse or My Portfolio" onkeydown="if(event.key==='Enter') submitProjectTitle()" />
             </div>
             <div class="form-group">
-              <label class="form-label">New Display Title</label>
-              <div class="cp-input-btn-row">
-                <input type="text" id="titleNewName" class="form-input" placeholder="e.g. My Portfolio" style="flex:1;" onkeydown="if(event.key==='Enter') submitProjectTitle()" />
-                <button type="button" onclick="submitProjectTitle()" class="btn btn-primary cp-action-btn" style="font-size:0.82rem;padding:0.6rem 1.15rem;white-space:nowrap;display:inline-flex;align-items:center;gap:0.35rem;">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  <span>Save Title</span>
-                </button>
-              </div>
+              <label class="form-label">Target Destination URL</label>
+              <input type="url" id="titleTargetUrl" class="form-input mono" placeholder="https://example.com" onkeydown="if(event.key==='Enter') submitProjectTitle()" />
             </div>
           </div>
-          <div id="manualSlugToggleWrap" style="margin-top:0.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.4rem;">
-            <span id="titleTinyUrlStatus" style="font-size:0.72rem;color:var(--text3);"></span>
-            <button type="button" onclick="toggleManualSlugInput()" style="background:none;border:none;color:var(--text3);font-size:0.72rem;cursor:pointer;text-decoration:underline;">
-              + Enter custom slug manually (advanced)
-            </button>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.6rem;margin-top:0.85rem;">
+            <div id="manualSlugToggleWrap" style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+              <span id="titleTinyUrlStatus" style="font-size:0.72rem;color:var(--text3);"></span>
+              <button type="button" onclick="toggleManualSlugInput()" style="background:none;border:none;color:var(--text3);font-size:0.72rem;cursor:pointer;text-decoration:underline;">
+                + Custom slug (advanced)
+              </button>
+            </div>
+            <div class="cp-btn-group" style="margin-left:auto;">
+              <button type="button" onclick="submitProjectTitle()" class="btn btn-primary cp-btn-mobile-full" style="font-size:0.82rem;padding:0.6rem 1.25rem;display:inline-flex;align-items:center;gap:0.35rem;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Save Project</span>
+              </button>
+            </div>
           </div>
+
           <div id="manualSlugInputWrap" style="display:none;margin-top:0.75rem;padding-top:0.75rem;border-top:1px dashed var(--border);">
             <div class="form-group">
               <label class="form-label">Manual Slug (Alias)</label>
@@ -1729,19 +1742,26 @@
       }
 
       $('quickLaunchGrid').innerHTML = links.map(l => {
-        const destUrl = l.targetUrl || l.tinyUrl;
+        let destUrl = (l.targetUrl && l.targetUrl !== '#') ? l.targetUrl : (l.tinyUrl && l.tinyUrl !== '#' ? l.tinyUrl : '');
+        if (!destUrl && l.alias && l.alias.includes('.')) {
+          destUrl = (l.alias.startsWith('http://') || l.alias.startsWith('https://')) ? l.alias : ('https://' + l.alias);
+        }
+        if (!destUrl) {
+          destUrl = '#';
+        }
         const isCustom = Boolean(l.isCustomLink);
+        const displayHost = (destUrl && destUrl !== '#') ? destUrl.replace(/^https?:\/\//, '') : (l.displayUrl && l.displayUrl !== '#' ? l.displayUrl : l.title);
         return `
         <div class="ql-card">
           <a href="${esc(destUrl)}" target="_blank" rel="noopener" class="ql-card-link">
             <div class="ql-card-top">
               <svg class="ql-project-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
               <span class="ql-project-name">${esc(l.title)}</span>
-              <span class="ql-external-icon">↗</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ql-external-icon"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             </div>
             <div class="ql-url-line">
               <span class="ql-tiny-tag" style="${isCustom ? 'background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);' : ''}">${isCustom ? 'Custom' : 'TinyURL'}</span>
-              <span class="ql-url-text">${esc(l.displayUrl)}</span>
+              <span class="ql-url-text">${esc(displayHost)}</span>
             </div>
           </a>
           <button class="ql-copy-btn" onclick="copyLink('${esc(destUrl)}')" title="Copy Link">
@@ -2124,6 +2144,17 @@
           $('titleNewAlias').value = first.alias;
           const firstOverride = overridesMap[(first.alias || '').toLowerCase().trim()];
           $('titleNewName').value = firstOverride ? firstOverride.title : (first.title || '');
+          let firstTarget = (first.targetUrl && first.targetUrl !== '#') ? first.targetUrl : (first.tinyUrl && first.tinyUrl !== '#' ? first.tinyUrl : '');
+          if (!firstTarget && first.alias && first.alias.includes('.')) {
+            firstTarget = (first.alias.startsWith('http://') || first.alias.startsWith('https://')) ? first.alias : ('https://' + first.alias);
+          }
+          if ($('titleTargetUrl')) $('titleTargetUrl').value = firstTarget || '';
+          if ($('titleDbId')) $('titleDbId').value = first.db_id || (firstOverride ? firstOverride.id : '');
+          if ($('editProjectTypeBadge')) {
+            const isCustom = Boolean(first.isCustomLink);
+            $('editProjectTypeBadge').textContent = isCustom ? 'CUSTOM LINK' : 'TINYURL PROJECT';
+            $('editProjectTypeBadge').className = isCustom ? 'status-badge badge-live' : 'status-badge badge-paused';
+          }
         }
       }
 
@@ -2134,7 +2165,13 @@
         const isCustomLink = Boolean(l.isCustomLink);
         const isRenamed = Boolean(override);
         const displayTitle = isRenamed ? override.title : l.title;
-        const linkUrl = l.targetUrl || l.tinyUrl;
+        let linkUrl = (l.targetUrl && l.targetUrl !== '#') ? l.targetUrl : (l.tinyUrl && l.tinyUrl !== '#' ? l.tinyUrl : '');
+        if (!linkUrl && l.alias && l.alias.includes('.')) {
+          linkUrl = (l.alias.startsWith('http://') || l.alias.startsWith('https://')) ? l.alias : ('https://' + l.alias);
+        }
+        if (!linkUrl) {
+          linkUrl = '#';
+        }
         const dbId = l.db_id || (override ? override.id : null);
 
         let badgeHtml = '';
@@ -2144,18 +2181,21 @@
           badgeHtml = '<span style="font-size:0.62rem;font-weight:700;padding:0.05rem 0.35rem;border-radius:999px;background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3);">RENAMED</span>';
         }
 
+        const displayTarget = (linkUrl && linkUrl !== '#') ? linkUrl.replace(/^https?:\/\//, '') : (l.alias || '—');
+        const displayProject = l.displayUrl && l.displayUrl !== '#' ? l.displayUrl : (linkUrl !== '#' ? displayTarget : l.alias);
+
         return `
           <tr>
             <td>
               <div style="display:flex;align-items:center;gap:0.45rem;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent-light);"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                <a href="${esc(linkUrl)}" target="_blank" rel="noopener" class="site-url-link" style="font-weight:700;">${esc(l.displayUrl)}</a>
+                <a href="${esc(linkUrl)}" target="_blank" rel="noopener" class="site-url-link" style="font-weight:700;">${esc(displayProject)}</a>
               </div>
             </td>
             <td>
-              <span style="font-size:0.75rem;color:var(--text3);font-family:'JetBrains Mono';max-width:200px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(l.targetUrl || linkUrl || '')}">
-                ${esc(l.targetUrl ? l.targetUrl.replace(/^https?:\/\//, '') : (linkUrl ? linkUrl.replace(/^https?:\/\//, '') : '—'))}
-              </span>
+              <a href="${esc(linkUrl)}" target="_blank" rel="noopener" style="font-size:0.75rem;color:var(--text3);font-family:'JetBrains Mono';max-width:220px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;" title="${esc(linkUrl)}">
+                ${esc(displayTarget)}
+              </a>
             </td>
             <td>
               <div style="display:flex;align-items:center;gap:0.45rem;">
@@ -2165,9 +2205,9 @@
             </td>
             <td style="text-align:right;">
               <div style="display:inline-flex;gap:0.35rem;">
-                <button type="button" onclick="selectProjectForRename('${esc(l.alias)}', '${esc(displayTitle)}')" class="btn btn-secondary btn-sm" style="font-size:0.75rem;padding:0.25rem 0.6rem;display:inline-flex;align-items:center;gap:0.3rem;">
+                <button type="button" onclick="selectProjectForEdit('${esc(l.alias)}', '${esc(displayTitle)}', '${esc(linkUrl !== '#' ? linkUrl : '')}', ${dbId || 'null'}, ${isCustomLink})" class="btn btn-secondary btn-sm" style="font-size:0.75rem;padding:0.25rem 0.6rem;display:inline-flex;align-items:center;gap:0.3rem;">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                  <span>${isCustomLink ? 'Edit' : 'Rename'}</span>
+                  <span>Edit</span>
                 </button>
                 ${isCustomLink && dbId ? `
                   <button type="button" onclick="deleteTitle(${dbId})" class="btn btn-danger btn-sm" style="font-size:0.75rem;padding:0.25rem 0.5rem;" title="Delete custom link">
@@ -2195,24 +2235,88 @@
     const aliasLower = (alias || '').toLowerCase().trim();
     const override = cachedOverridesMap[aliasLower];
     const found = cachedTinyProjects.find(l => (l.alias || '').toLowerCase() === aliasLower);
-    if (override) {
-      $('titleNewName').value = override.title;
-    } else if (found) {
-      $('titleNewName').value = found.title || '';
+
+    let displayTitle = '';
+    let targetUrl = '';
+    let dbId = '';
+    let isCustom = false;
+
+    if (found) {
+      isCustom = Boolean(found.isCustomLink);
+      displayTitle = found.title || '';
+      targetUrl = (found.targetUrl && found.targetUrl !== '#') ? found.targetUrl : (found.tinyUrl && found.tinyUrl !== '#' ? found.tinyUrl : '');
+      if (!targetUrl && found.alias && found.alias.includes('.')) {
+        targetUrl = (found.alias.startsWith('http://') || found.alias.startsWith('https://')) ? found.alias : ('https://' + found.alias);
+      }
+      dbId = found.db_id || '';
     }
-    $('titleNewName').focus();
-    $('titleNewName').select();
+    if (override) {
+      displayTitle = override.title || displayTitle;
+      if (override.target_url && override.target_url !== '#') targetUrl = override.target_url;
+      if (override.id) dbId = override.id;
+    }
+
+    $('titleNewName').value = displayTitle;
+    if ($('titleTargetUrl')) $('titleTargetUrl').value = targetUrl;
+    if ($('titleDbId')) $('titleDbId').value = dbId;
+
+    if ($('editProjectTypeBadge')) {
+      $('editProjectTypeBadge').textContent = isCustom ? 'CUSTOM LINK' : 'TINYURL PROJECT';
+      $('editProjectTypeBadge').className = isCustom ? 'status-badge badge-live' : 'status-badge badge-paused';
+    }
+    if ($('titleTinyUrlStatus')) {
+      $('titleTinyUrlStatus').textContent = isCustom 
+        ? (targetUrl ? `Direct URL: ${targetUrl}` : 'Direct Custom Link') 
+        : `TinyURL slug: ${alias}`;
+    }
   }
 
-  function selectProjectForRename(alias, currentTitle) {
+  function selectProjectForEdit(alias, currentTitle, targetUrl, dbId, isCustomLink) {
     const select = $('titleProjectSelect');
     if (select) {
       select.value = alias;
     }
     $('titleNewAlias').value = alias;
-    $('titleNewName').value = currentTitle;
-    $('titleNewName').focus();
-    $('titleNewName').select();
+    if ($('titleDbId')) $('titleDbId').value = dbId || '';
+    $('titleNewName').value = currentTitle || '';
+
+    let cleanTarget = targetUrl || '';
+    if (cleanTarget === '#') cleanTarget = '';
+    if (!cleanTarget && alias && alias.includes('.')) {
+      cleanTarget = (alias.startsWith('http://') || alias.startsWith('https://')) ? alias : ('https://' + alias);
+    }
+    if ($('titleTargetUrl')) {
+      $('titleTargetUrl').value = cleanTarget;
+    }
+
+    if ($('editProjectTypeBadge')) {
+      $('editProjectTypeBadge').textContent = isCustomLink ? 'CUSTOM LINK' : 'TINYURL PROJECT';
+      $('editProjectTypeBadge').className = isCustomLink ? 'status-badge badge-live' : 'status-badge badge-paused';
+    }
+
+    // Scroll smoothly to edit form & highlight it
+    const card = $('editProjectCard');
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      card.style.borderColor = 'var(--accent-light)';
+      card.style.boxShadow = '0 0 16px var(--accent-glow)';
+      setTimeout(() => {
+        card.style.borderColor = 'var(--border-subtle)';
+        card.style.boxShadow = 'var(--shadow-sm)';
+      }, 1500);
+    }
+
+    if (!cleanTarget && $('titleTargetUrl')) {
+      $('titleTargetUrl').focus();
+    } else {
+      $('titleNewName').focus();
+      $('titleNewName').select();
+    }
+  }
+
+  // Alias for backward compatibility
+  function selectProjectForRename(alias, currentTitle) {
+    selectProjectForEdit(alias, currentTitle, '', null, false);
   }
 
   function toggleManualSlugInput() {
@@ -2232,6 +2336,8 @@
       $('titleNewAlias').value = alias;
     }
     const title = $('titleNewName').value.trim();
+    let targetUrl = $('titleTargetUrl') ? $('titleTargetUrl').value.trim() : '';
+    const dbId = $('titleDbId') ? $('titleDbId').value.trim() : '';
 
     if (!title) {
       toast('Please enter a display title', 'error');
@@ -2239,19 +2345,31 @@
       return;
     }
     if (!alias) {
-      toast('Please select a project to rename', 'error');
+      toast('Please select a project to edit', 'error');
       return;
     }
 
+    if (targetUrl && targetUrl !== '#' && !targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+      targetUrl = 'https://' + targetUrl;
+      if ($('titleTargetUrl')) $('titleTargetUrl').value = targetUrl;
+    }
+
     try {
+      const payload = {
+        alias: alias,
+        custom_title: title
+      };
+      if (targetUrl) payload.target_url = targetUrl;
+      if (dbId) payload.id = dbId;
+
       const res = await apiFetch('/admin/titles', {
         method: 'POST',
-        body: JSON.stringify({ alias, custom_title: title })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      toast(`Title updated to "${title}"!`, 'success');
+      toast(`Saved "${title}" successfully!`, 'success');
       loadTitlesTable();
       refreshDashboard(true);
     } catch (err) {

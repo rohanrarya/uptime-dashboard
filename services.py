@@ -401,15 +401,25 @@ def fetch_tinyurl_projects(force=False):
     for t in titles_list:
         c_alias = (t.get('alias') or '').lower().strip()
         if c_alias not in matched_aliases:
-            target = t.get('target_url') or ''
+            target = (t.get('target_url') or '').strip()
+            if not target or target == '#':
+                if c_alias.startswith('http://') or c_alias.startswith('https://'):
+                    target = c_alias
+                elif '.' in c_alias:
+                    target = f"https://{c_alias}"
+                else:
+                    target = '#'
+
+            clean_display = target.replace('https://', '').replace('http://', '') if target and target != '#' else (t.get('alias') or 'Custom Link')
+
             links.append({
                 'id': f"custom-{t['id']}",
                 'db_id': t['id'],
                 'title': t.get('custom_title') or t.get('alias'),
                 'alias': t.get('alias'),
                 'tinyUrl': target if target else '#',
-                'displayUrl': target.replace('https://', '').replace('http://', '') if target else t.get('alias'),
-                'targetUrl': target,
+                'displayUrl': clean_display,
+                'targetUrl': target if target != '#' else '',
                 'isCustomLink': True
             })
 

@@ -619,13 +619,45 @@ def get_all_project_titles():
         cur.execute("SELECT id, alias, custom_title, target_url FROM project_titles ORDER BY id ASC;")
         rows = cur.fetchall()
         titles = []
+        needs_repair = []
         for r in rows:
+            t_id = r['id'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[0]
+            raw_alias = r['alias'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[1]
+            raw_title = r['custom_title'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[2]
+            raw_target = r['target_url'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[3]
+
+            target_url = (raw_target or '').strip()
+            alias_str = (raw_alias or '').strip()
+
+            # Auto-repair / fallback if target_url is missing or '#' but alias looks like a host or URL
+            if not target_url or target_url == '#':
+                if alias_str.startswith('http://') or alias_str.startswith('https://'):
+                    target_url = alias_str
+                    needs_repair.append((target_url, t_id))
+                elif '.' in alias_str and not alias_str.endswith('.'):
+                    target_url = f"https://{alias_str}"
+                    needs_repair.append((target_url, t_id))
+
             titles.append({
-                'id': r['id'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[0],
-                'alias': r['alias'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[1],
-                'custom_title': r['custom_title'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[2],
-                'target_url': r['target_url'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[3]
+                'id': t_id,
+                'alias': alias_str,
+                'custom_title': raw_title,
+                'target_url': target_url
             })
+
+        # Self-heal any repaired records in database
+        if needs_repair:
+            try:
+                for rep_url, rep_id in needs_repair:
+                    if engine == 'postgres':
+                        cur.execute("UPDATE project_titles SET target_url = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s;", (rep_url, rep_id))
+                    else:
+                        cur.execute("UPDATE project_titles SET target_url = ?, updated_at = datetime('now') WHERE id = ?;", (rep_url, rep_id))
+                if engine != 'postgres':
+                    conn.commit()
+            except Exception:
+                pass
+
         _titles_cache = titles
         _titles_cache_ts = now
         return titles
@@ -638,6 +670,15 @@ def set_project_title(alias, custom_title, target_url=None):
     global _titles_cache
     _titles_cache = None
 
+    alias = (alias or '').strip().lower()
+    custom_title = (custom_title or '').strip()
+    if target_url:
+        target_url = target_url.strip()
+        if target_url and target_url != '#' and not (target_url.startswith('http://') or target_url.startswith('https://')):
+            target_url = f"https://{target_url}"
+    else:
+        target_url = None
+
     conn, engine = get_connection()
     cur = conn.cursor()
     try:
@@ -646,15 +687,73 @@ def set_project_title(alias, custom_title, target_url=None):
                 INSERT INTO project_titles (alias, custom_title, target_url, updated_at)
                 VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
                 ON CONFLICT (alias) DO UPDATE 
-                SET custom_title = EXCLUDED.custom_title, target_url = EXCLUDED.target_url, updated_at = CURRENT_TIMESTAMP;
+                SET custom_title = EXCLUDED.custom_title, 
+                    target_url = CASE 
+                        WHEN EXCLUDED.target_url IS NOT NULL AND EXCLUDED.target_url <> '' AND EXCLUDED.target_url <> '#' THEN EXCLUDED.target_url 
+                        ELSE project_titles.target_url 
+                    END,
+                    updated_at = CURRENT_TIMESTAMP;
             """, (alias, custom_title, target_url))
         else:
             cur.execute("""
                 INSERT INTO project_titles (alias, custom_title, target_url, updated_at)
                 VALUES (?, ?, ?, datetime('now'))
                 ON CONFLICT(alias) DO UPDATE 
-                SET custom_title = excluded.custom_title, target_url = excluded.target_url, updated_at = datetime('now');
+                SET custom_title = excluded.custom_title, 
+                    target_url = CASE 
+                        WHEN excluded.target_url IS NOT NULL AND excluded.target_url <> '' AND excluded.target_url <> '#' THEN excluded.target_url 
+                        ELSE project_titles.target_url 
+                    END,
+                    updated_at = datetime('now');
             """, (alias, custom_title, target_url))
+            conn.commit()
+        return True
+    finally:
+        cur.close()
+        conn.close()
+
+
+def update_project_title_by_id(title_id, custom_title, target_url=None):
+    global _titles_cache
+    _titles_cache = None
+
+    custom_title = (custom_title or '').strip()
+    if target_url:
+        target_url = target_url.strip()
+        if target_url and target_url != '#' and not (target_url.startswith('http://') or target_url.startswith('https://')):
+            target_url = f"https://{target_url}"
+    else:
+        target_url = None
+
+    conn, engine = get_connection()
+    cur = conn.cursor()
+    try:
+        if engine == 'postgres':
+            if target_url:
+                cur.execute("""
+                    UPDATE project_titles 
+                    SET custom_title = %s, target_url = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = %s;
+                """, (custom_title, target_url, title_id))
+            else:
+                cur.execute("""
+                    UPDATE project_titles 
+                    SET custom_title = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = %s;
+                """, (custom_title, title_id))
+        else:
+            if target_url:
+                cur.execute("""
+                    UPDATE project_titles 
+                    SET custom_title = ?, target_url = ?, updated_at = datetime('now')
+                    WHERE id = ?;
+                """, (custom_title, target_url, title_id))
+            else:
+                cur.execute("""
+                    UPDATE project_titles 
+                    SET custom_title = ?, updated_at = datetime('now')
+                    WHERE id = ?;
+                """, (custom_title, title_id))
             conn.commit()
         return True
     finally:
