@@ -1,6 +1,6 @@
 # =============================================================================
 # Ops Command Center — Python Flask API Backend
-# Runs on Vercel (Serverless) and locally with python api/index.py
+# Runs on Vercel (Serverless) and locally with python app.py
 # Handles: Auth, PostgreSQL DB, Render, Cloudflare, UptimeRobot, TinyURL
 # =============================================================================
 
@@ -8,23 +8,51 @@ import os
 import sys
 import json
 import secrets
+import hmac
+import hashlib
+import time
 import requests
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from werkzeug.security import check_password_hash
 
-# Ensure api directory is in python path
-sys.path.append(os.path.dirname(__file__))
 import db
 
-app = Flask(__name__)
-# Enable CORS for all domains so Cloudflare Pages (or custom domain) can fetch data
+app = Flask(__name__, template_folder='templates')
+# Enable CORS for all domains so custom domain can fetch data seamlessly
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# Active session tokens (in-memory cache for fast validation)
-ACTIVE_TOKENS = {}
+# Secret key for stateless HMAC auth tokens across serverless cold starts
+AUTH_SECRET = os.environ.get('SECRET_KEY') or os.environ.get('ADMIN_PASSWORD') or 'ops-control-center-auth-token-salt-2026'
+
+def generate_token(username):
+    """Generates a tamper-proof stateless token valid for 7 days."""
+    expires_at = int(time.time()) + (7 * 86400)
+    payload = f"{username}:{expires_at}"
+    sig = hmac.new(AUTH_SECRET.encode('utf-8'), payload.encode('utf-8'), hashlib.sha256).hexdigest()
+    return f"{payload}:{sig}"
+
+def validate_token(token):
+    """Validates token integrity and expiry without requiring shared memory or DB lookups."""
+    if not token or ':' not in token:
+        return None
+    parts = token.split(':')
+    if len(parts) != 3:
+        return None
+    username, expires_at_str, sig = parts
+    try:
+        expires_at = int(expires_at_str)
+    except (ValueError, TypeError):
+        return None
+    if time.time() > expires_at:
+        return None
+    payload = f"{username}:{expires_at}"
+    expected_sig = hmac.new(AUTH_SECRET.encode('utf-8'), payload.encode('utf-8'), hashlib.sha256).hexdigest()
+    if hmac.compare_digest(sig, expected_sig):
+        return username
+    return None
 
 # Initialize Database and Auto-sync .env on startup
 try:
@@ -48,14 +76,9 @@ def require_auth(f):
         elif request.args.get('token'):
             token = request.args.get('token').strip()
 
-        if not token or token not in ACTIVE_TOKENS:
+        username = validate_token(token)
+        if not username:
             return jsonify({'error': 'Unauthorized', 'message': 'Please login to access this panel.'}), 401
-        
-        # Check token expiration (7 days)
-        token_data = ACTIVE_TOKENS[token]
-        if datetime.utcnow() > token_data['expires_at']:
-            del ACTIVE_TOKENS[token]
-            return jsonify({'error': 'Session expired', 'message': 'Please login again.'}), 401
             
         return f(*args, **kwargs)
     return decorated
@@ -79,20 +102,12 @@ def login():
         # Fallback to check default if DB was not seeded yet
         default_pass = os.environ.get('ADMIN_PASSWORD', 'admin123')
         if password == default_pass:
-            token = secrets.token_hex(24)
-            ACTIVE_TOKENS[token] = {
-                'username': 'admin',
-                'expires_at': datetime.utcnow() + timedelta(days=7)
-            }
+            token = generate_token('admin')
             return jsonify({'success': True, 'token': token, 'username': 'admin'})
         return jsonify({'error': 'Invalid username or password'}), 401
 
     if check_password_hash(user['password_hash'], password):
-        token = secrets.token_hex(24)
-        ACTIVE_TOKENS[token] = {
-            'username': user['username'],
-            'expires_at': datetime.utcnow() + timedelta(days=7)
-        }
+        token = generate_token(user['username'])
         return jsonify({'success': True, 'token': token, 'username': user['username']})
     else:
         return jsonify({'error': 'Invalid username or password'}), 401
@@ -102,8 +117,9 @@ def login():
 def verify_token():
     auth_header = request.headers.get('Authorization', '')
     token = auth_header.replace('Bearer ', '').strip() if auth_header.startswith('Bearer ') else ''
-    if token and token in ACTIVE_TOKENS:
-        return jsonify({'valid': True, 'username': ACTIVE_TOKENS[token]['username']})
+    username = validate_token(token)
+    if username:
+        return jsonify({'valid': True, 'username': username})
     return jsonify({'valid': False}), 401
 
 
@@ -529,44 +545,25 @@ def test_db_connection():
 
 
 # =============================================================================
-# Frontend Serving (Root & Static Assets)
+# Frontend Template Serving
 # =============================================================================
 @app.route('/')
+@app.route('/dashboard')
 def serve_index():
-    candidates = [
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public', 'index.html'),
-        os.path.join(os.path.dirname(__file__), '..', 'public', 'index.html'),
-        os.path.join(os.path.dirname(__file__), 'public', 'index.html'),
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), 'index.html'),
-        os.path.join(os.path.dirname(__file__), 'index.html'),
-        os.path.join(os.getcwd(), 'public', 'index.html'),
-        os.path.join(os.getcwd(), 'index.html'),
-        'public/index.html',
-        'index.html'
-    ]
-    for c in candidates:
-        if os.path.exists(c):
-            with open(c, 'r', encoding='utf-8') as f:
-                return f.read(), 200, {'Content-Type': 'text/html; charset=utf-8'}
-    return jsonify({'status': 'Ops Command Center API is running!'})
+    try:
+        return render_template('index.html')
+    except Exception:
+        # Fallback direct file read if template engine cannot find path
+        for p in ['templates/index.html', 'api/templates/index.html', '../templates/index.html']:
+            if os.path.exists(p):
+                with open(p, 'r', encoding='utf-8') as f:
+                    return f.read(), 200, {'Content-Type': 'text/html; charset=utf-8'}
+        return jsonify({'status': 'Ops Command Center API is running!'})
 
 @app.route('/<path:path>')
-def serve_static(path):
+def catch_all(path):
     if path.startswith('api/'):
         return jsonify({'error': 'Endpoint not found'}), 404
-
-    candidates = [
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public', path),
-        os.path.join(os.path.dirname(__file__), '..', 'public', path),
-        os.path.join(os.path.dirname(__file__), path),
-        os.path.join(os.getcwd(), 'public', path),
-        os.path.join(os.getcwd(), path),
-        path
-    ]
-    for c in candidates:
-        if os.path.exists(c) and os.path.isfile(c):
-            return send_from_directory(os.path.dirname(c), os.path.basename(c))
-
     return serve_index()
 
 # =============================================================================

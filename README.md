@@ -2,36 +2,35 @@
 
 A secure, unified operations dashboard tracking **Live Git Deployments (Render & Cloudflare)**, **Uptime Monitors (UptimeRobot)**, and **1-Click Quick Launch Links (TinyURL with Custom Titles)**.
 
-- **Backend**: Python Flask hosted on **Vercel** (`api/index.py`).
-- **Frontend**: Pure Static HTML/CSS/JS hosted on **Cloudflare Pages** (`public/index.html`).
-- **Database**: **PostgreSQL** (Neon, Render, or Supabase) with automatic schema setup and `.env` seeding.
+- **Main Application**: Python Flask (`app.py`) with built-in template rendering (`templates/index.html`).
+- **Database**: **PostgreSQL** (`db.py` - Neon, Render, or Supabase) with automatic schema setup and `.env` seeding.
 - **Security**: Protected by Admin Login authentication.
 - **Interactive Control Panel**: Manage API keys, accounts, custom titles, and database URLs right from the UI!
+- **Hosted on**: **Vercel** with custom domain **`uptime.digitaltask.in`**.
 - **100% Mobile & Tablet Responsive**.
 
 ---
 
-## 📁 Project Architecture
+## 📁 Clean Project Architecture
 
 ```text
 uptime-dashboard/
-├── api/
-│   ├── index.py          # 🐍 Python Flask Backend API Server
-│   └── db.py             # 🔌 PostgreSQL database connection & table manager
-├── public/
-│   └── index.html        # 🌐 Pure Static Frontend with Admin Login & Control Panel
-├── requirements.txt      # Python dependencies for Vercel
-├── vercel.json           # Vercel serverless routing
-├── run.py                # 1-Command Local Development Server
-├── .env.example          # Environment variables reference
+├── app.py              # 🐍 Main Flask Application (API & Template Router)
+├── db.py               # 🔌 PostgreSQL database connection & table manager
+├── templates/
+│   └── index.html      # 🌐 Built-in Flask HTML Template (Admin Login & Control Panel)
+├── requirements.txt    # Python dependencies for Vercel
+├── vercel.json         # Vercel serverless configuration
+├── .env.example        # Environment variables reference
+├── .gitignore
 └── README.md
 ```
 
 ---
 
-## 🚀 Deployment Guide
+## 🚀 Deployment Guide (Vercel)
 
-### Step 1: Deploy Backend to Vercel
+### Step 1: Deploy to Vercel
 
 1. Log in to [vercel.com](https://vercel.com) using your GitHub account (`rohanrarya`).
 2. Click **"Add New Project"** → Import your **`uptime-dashboard`** repository.
@@ -41,64 +40,45 @@ uptime-dashboard/
    - `UPTIMEROBOT_API_KEY` = Your UptimeRobot read-only key
    - `TINYURL_API_TOKEN` = Your TinyURL API token
    - *(Optional)* `RENDER_API_KEY`, `CF_ACCOUNT_ID`, `CF_API_TOKEN`
-4. Click **Deploy**. Vercel will build and assign you a live backend URL (e.g., `https://uptime-dashboard.vercel.app`).
+4. Click **Deploy**. Vercel will build and assign you a live URL.
 
 ---
 
-### Step 2: Deploy Frontend to Cloudflare Pages
+### Step 2: Configure Subdomain `uptime.digitaltask.in`
 
-1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**.
-2. Select repository: **`uptime-dashboard`**.
-3. Set Build Configuration:
-   - **Framework preset**: `None`
-   - **Build command**: *(leave completely empty)*
-   - **Build output directory**: `public`
-4. Click **Save and Deploy**.
+To point your subdomain **`uptime.digitaltask.in`** to this dashboard:
 
----
+1. **In Cloudflare DNS**:
+   - Go to Cloudflare Dashboard → **`digitaltask.in`** → **DNS** → **Records**.
+   - Edit the **`uptime`** CNAME record:
+     - **Name**: `uptime`
+     - **Target**: `cname.vercel-dns.com`
+     - **Proxy status**: DNS only (Grey cloud)
+   - *(Delete the unnecessary `api-uptime` record if you created one earlier)*.
 
-### Step 3: Configure Subdomain `uptime.digitaltask.in`
-
-To direct `uptime.digitaltask.in` to this new dashboard:
-
-#### 1. Disable the Old Cloudflare Worker Route:
-- Go to Cloudflare Dashboard → Select **`digitaltask.in`** domain.
-- Navigate to **Workers Routes** (in the sidebar under Workers & Pages).
-- If there is a route matching `uptime.digitaltask.in/*`, click **Disable** or **Delete**.
-
-#### 2. Attach Subdomain to Cloudflare Pages:
-- In Cloudflare Dashboard → **Workers & Pages** → Click your **`uptime-dashboard`** Pages project.
-- Go to the **Custom Domains** tab → Click **Set up a custom domain**.
-- Type: **`uptime.digitaltask.in`** and click **Continue** → **Activate domain**.
-- Cloudflare will configure the DNS CNAME automatically!
-
-#### 3. Route Backend API via `api-uptime.digitaltask.in`:
-- In Cloudflare Dashboard → **digitaltask.in** → **DNS** → **Records** → Click **Add record**:
-  - **Type**: `CNAME`
-  - **Name**: `api-uptime`
-  - **Target**: `cname.vercel-dns.com`
-  - **Proxy status**: DNS only (Grey cloud)
-- In Vercel Dashboard → Your project → **Settings** → **Domains** → Add **`api-uptime.digitaltask.in`**.
-- Now your frontend and backend run seamlessly together under your own domain!
+2. **In Vercel**:
+   - Go to your project in Vercel → **Settings** → **Domains**.
+   - Add **`uptime.digitaltask.in`**.
+   - Vercel will verify the DNS record and turn **Green**!
 
 ---
 
 ## 💻 Local Development
 
-You can run both frontend and backend locally with a single command:
+Run the entire application locally on your PC with a single command:
 
 1. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-2. Run the server:
+2. Start the app:
    ```bash
-   python run.py
+   python app.py
    ```
 
-3. Open your browser at: [http://127.0.0.1:5000](http://127.0.0.1:5000)
-   - Default login: Username: `admin` | Password: `admin123` (or whatever you set in `ADMIN_PASSWORD`).
+3. Open your browser at: [http://127.0.0.1:5000](http://127.0.0.1:5000)  
+   Log in with **Username**: `admin` | **Password**: your password (default: `admin123`).
 
 ---
 
