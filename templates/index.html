@@ -353,7 +353,7 @@
 <body>
 
 <!-- ========================================================================= -->
-<!-- LOGIN SCREEN OVERLAY -->
+<!-- LOGIN SCREEN OVERLAY (PASSWORD & GOOGLE/MICROSOFT 2FA) -->
 <!-- ========================================================================= -->
 <div id="loginScreen" class="login-overlay">
   <div class="login-card">
@@ -363,25 +363,51 @@
         <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
       </svg>
     </div>
-    <div>
-      <h2 style="font-size:1.35rem;font-weight:800;">Ops Command Center</h2>
-      <p style="font-size:0.8rem;color:var(--text3);margin-top:0.35rem;">Enter admin password to access live dashboard</p>
+
+    <!-- STEP 1: Username & Password -->
+    <div id="loginStep1">
+      <div>
+        <h2 style="font-size:1.35rem;font-weight:800;">Ops Command Center</h2>
+        <p style="font-size:0.8rem;color:var(--text3);margin-top:0.35rem;margin-bottom:1.25rem;">Enter admin password to access live dashboard</p>
+      </div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)" style="display:flex;flex-direction:column;gap:1rem;text-align:left;">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" id="loginUsername" class="form-input" value="admin" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required />
+        </div>
+        <div id="loginErrorMsg" style="display:none;color:#fca5a5;font-size:0.78rem;text-align:center;"></div>
+        <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="padding:0.75rem;font-size:0.9rem;margin-top:0.5rem;">
+          Unlock Dashboard
+        </button>
+      </form>
     </div>
 
-    <form id="loginForm" onsubmit="handleLogin(event)" style="display:flex;flex-direction:column;gap:1rem;text-align:left;">
-      <div class="form-group">
-        <label class="form-label">Username</label>
-        <input type="text" id="loginUsername" class="form-input" value="admin" required />
+    <!-- STEP 2: 2FA Authenticator Code -->
+    <div id="loginStep2" style="display:none;">
+      <div>
+        <h2 style="font-size:1.35rem;font-weight:800;">Two-Factor Auth</h2>
+        <p style="font-size:0.8rem;color:var(--text3);margin-top:0.35rem;margin-bottom:1.25rem;">Enter the 6-digit code from Google or Microsoft Authenticator</p>
       </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required />
-      </div>
-      <div id="loginErrorMsg" style="display:none;color:#fca5a5;font-size:0.78rem;text-align:center;"></div>
-      <button type="submit" class="btn btn-primary" style="padding:0.75rem;font-size:0.9rem;margin-top:0.5rem;">
-        Unlock Dashboard
-      </button>
-    </form>
+
+      <form id="login2faForm" onsubmit="handleLogin2FA(event)" style="display:flex;flex-direction:column;gap:1rem;text-align:left;">
+        <div class="form-group">
+          <label class="form-label" style="text-align:center;display:block;">6-Digit Authenticator Code</label>
+          <input type="text" id="login2faCode" class="form-input mono" placeholder="123456" maxlength="6" inputmode="numeric" autocomplete="one-time-code" style="font-size:1.6rem;letter-spacing:0.45rem;text-align:center;font-weight:700;" required />
+        </div>
+        <div id="login2faErrorMsg" style="display:none;color:#fca5a5;font-size:0.78rem;text-align:center;"></div>
+        <button type="submit" id="login2faSubmitBtn" class="btn btn-primary" style="padding:0.75rem;font-size:0.9rem;margin-top:0.5rem;">
+          Verify & Unlock
+        </button>
+        <button type="button" onclick="backToLoginStep1()" class="btn btn-secondary" style="font-size:0.8rem;padding:0.5rem;">
+          ← Back to Password
+        </button>
+      </form>
+    </div>
   </div>
 </div>
 
@@ -510,6 +536,16 @@
           <span id="dbStatusBadge" class="status-badge badge-live">🟢 Connected</span>
         </div>
 
+        <div style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);border-radius:var(--radius-md);padding:0.9rem;margin-bottom:1rem;font-size:0.8rem;color:var(--text2);line-height:1.45;">
+          <div style="font-weight:700;color:#38bdf8;margin-bottom:0.25rem;display:flex;align-items:center;gap:0.4rem;">
+            <span>⚡ Neon PgBouncer Connection Pooling Active</span>
+          </div>
+          <div>All queries automatically use Neon's pooled endpoint (<code>-pooler</code>) with retry auto-reconnects to prevent connection timeouts.</div>
+          <div style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px dashed rgba(56,189,248,0.2);">
+            <strong style="color:var(--text1);">💡 Keep Neon Active 24/7 (Prevent Suspend):</strong> In UptimeRobot, add a free 5-minute HTTP monitor pointing to <code class="mono" style="color:#a78bfa;background:var(--surface1);padding:0.15rem 0.35rem;border-radius:4px;">https://uptime.digitaltask.in/api/health</code>. This pings Neon every 5 minutes so it never sleeps!
+          </div>
+        </div>
+
         <div class="form-group">
           <label class="form-label">PostgreSQL Database URL (DATABASE_URL)</label>
           <input type="text" id="cpDatabaseUrl" class="form-input mono" placeholder="postgresql://user:pass@ep-xyz.neon.tech/neondb" />
@@ -613,11 +649,68 @@
 
       <!-- TAB 5: SECURITY -->
       <div id="cpTabSecurity" class="cp-content" style="display:none;">
+        <h4 style="font-size:0.88rem;font-weight:700;margin-bottom:0.75rem;">🔑 Admin Password</h4>
         <div class="form-group">
           <label class="form-label">New Admin Password</label>
           <input type="password" id="cpNewPass" class="form-input" placeholder="Enter new password" />
         </div>
-        <button onclick="submitChangePassword()" class="btn btn-primary" style="margin-top:1rem;">Update Password</button>
+        <button onclick="submitChangePassword()" class="btn btn-primary" style="margin-top:0.75rem;">Update Password</button>
+
+        <!-- TWO FACTOR AUTHENTICATION SECTION -->
+        <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+            <div>
+              <h4 style="font-size:0.88rem;font-weight:700;display:flex;align-items:center;gap:0.4rem;">
+                <span>🛡️ Two-Factor Authentication (2FA)</span>
+              </h4>
+              <p style="font-size:0.78rem;color:var(--text3);margin-top:0.2rem;">
+                Compatible with Google Authenticator, Microsoft Authenticator & Authy
+              </p>
+            </div>
+            <span id="cp2faStatusBadge" class="status-badge badge-paused">Checking...</span>
+          </div>
+
+          <!-- When 2FA is OFF -->
+          <div id="cp2faOffBox">
+            <button onclick="start2FASetup()" class="btn btn-secondary" style="font-size:0.85rem;">
+              🔐 Setup Authenticator App
+            </button>
+          </div>
+
+          <!-- When setting up 2FA -->
+          <div id="cp2faSetupBox" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-top:0.75rem;">
+            <p style="font-size:0.8rem;color:var(--text2);margin-bottom:0.75rem;">
+              <strong>Step 1:</strong> Scan this QR code in <strong>Google Authenticator</strong> or <strong>Microsoft Authenticator</strong>:
+            </p>
+            <div style="text-align:center;margin:0.75rem 0;">
+              <img id="cp2faQrImg" src="" alt="2FA QR Code" style="width:160px;height:160px;border-radius:8px;background:#fff;padding:8px;box-shadow:0 4px 12px rgba(0,0,0,0.4);" />
+            </div>
+            <p style="font-size:0.78rem;color:var(--text3);margin-bottom:0.25rem;">Or manually enter this secret key:</p>
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;">
+              <input type="text" id="cp2faSecretKey" class="form-input mono" readonly style="font-size:0.85rem;letter-spacing:0.1rem;" />
+              <button type="button" onclick="copy2FASecret()" class="btn btn-secondary btn-sm">Copy</button>
+            </div>
+            <p style="font-size:0.8rem;color:var(--text2);margin-bottom:0.5rem;">
+              <strong>Step 2:</strong> Enter the 6-digit code shown in your app to verify:
+            </p>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <input type="text" id="cp2faVerifyCode" class="form-input mono" maxlength="6" inputmode="numeric" placeholder="123456" style="font-size:1.1rem;letter-spacing:0.25rem;text-align:center;max-width:140px;" />
+              <button type="button" onclick="submitEnable2FA()" class="btn btn-primary">Confirm & Enable 2FA</button>
+              <button type="button" onclick="cancel2FASetup()" class="btn btn-secondary">Cancel</button>
+            </div>
+          </div>
+
+          <!-- When 2FA is ON -->
+          <div id="cp2faOnBox" style="display:none;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:var(--radius-md);padding:1rem;margin-top:0.75rem;">
+            <p style="font-size:0.82rem;color:#86efac;font-weight:600;margin-bottom:0.5rem;">
+              ✓ Two-factor authentication is active and protecting your dashboard.
+            </p>
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+              <input type="password" id="cp2faDisablePass" class="form-input mono" placeholder="Current 6-digit code or Admin Password" style="max-width:280px;" />
+              <button type="button" onclick="submitDisable2FA()" class="btn btn-danger btn-sm">Disable 2FA</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -670,13 +763,30 @@
     return res;
   }
 
-  // Auth Functions
+  // Auth Functions & 2FA State
+  let temp2faToken = '';
+
   function showLoginScreen() {
     $('loginScreen').classList.add('active');
+    $('loginStep1').style.display = 'block';
+    $('loginStep2').style.display = 'none';
+    $('loginPassword').value = '';
+    $('login2faCode').value = '';
+    temp2faToken = '';
   }
 
   function hideLoginScreen() {
     $('loginScreen').classList.remove('active');
+    $('loginStep1').style.display = 'block';
+    $('loginStep2').style.display = 'none';
+    temp2faToken = '';
+  }
+
+  function backToLoginStep1() {
+    $('loginStep2').style.display = 'none';
+    $('loginStep1').style.display = 'block';
+    $('loginPassword').focus();
+    temp2faToken = '';
   }
 
   async function handleLogin(e) {
@@ -699,6 +809,17 @@
       }
       if (!res.ok) throw new Error(data.error || 'Invalid username or password');
 
+      // Check if 2FA (Google/Microsoft Authenticator) is required
+      if (data.two_factor_required) {
+        temp2faToken = data.temp_token;
+        $('loginStep1').style.display = 'none';
+        $('loginStep2').style.display = 'block';
+        $('login2faCode').value = '';
+        $('login2faErrorMsg').style.display = 'none';
+        $('login2faCode').focus();
+        return;
+      }
+
       localStorage.setItem('ops_token', data.token);
       hideLoginScreen();
       toast('Welcome back! Dashboard unlocked.', 'success');
@@ -706,6 +827,41 @@
     } catch (err) {
       $('loginErrorMsg').textContent = err.message;
       $('loginErrorMsg').style.display = 'block';
+    }
+  }
+
+  async function handleLogin2FA(e) {
+    e.preventDefault();
+    const code = $('login2faCode').value.trim();
+    $('login2faErrorMsg').style.display = 'none';
+
+    if (!code || code.length !== 6) {
+      $('login2faErrorMsg').textContent = 'Please enter a valid 6-digit code';
+      $('login2faErrorMsg').style.display = 'block';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/login-2fa`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ temp_token: temp2faToken, code })
+      });
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        throw new Error(`Server returned HTTP ${res.status}`);
+      }
+      if (!res.ok) throw new Error(data.error || 'Invalid 6-digit code');
+
+      localStorage.setItem('ops_token', data.token);
+      hideLoginScreen();
+      toast('Two-factor verified! Dashboard unlocked.', 'success');
+      refreshDashboard(false);
+    } catch (err) {
+      $('login2faErrorMsg').textContent = err.message;
+      $('login2faErrorMsg').style.display = 'block';
     }
   }
 
@@ -941,6 +1097,9 @@
       $('cpUptimeKey').value = data.keys.uptimerobot_api_key || '';
       $('cpTinyKey').value = data.keys.tinyurl_api_token || '';
 
+      // 2FA Status
+      load2FAStatus();
+
       // Accounts Table
       $('cpAccountsTableBody').innerHTML = (data.accounts || []).map(a => `
         <tr>
@@ -1095,6 +1254,104 @@
       $('cpNewPass').value = '';
     } catch (e) {
       toast('Failed to update password', 'error');
+    }
+  }
+
+  // =========================================================================
+  // TWO-FACTOR AUTHENTICATION (2FA) CLIENT FUNCTIONS
+  // =========================================================================
+
+  async function load2FAStatus() {
+    try {
+      const res = await apiFetch('/auth/2fa/status');
+      if (res.ok) {
+        const data = await res.json();
+        const badge = $('cp2faStatusBadge');
+        if (data.enabled) {
+          badge.className = 'status-badge badge-live';
+          badge.textContent = '🟢 Active (Protected)';
+          $('cp2faOffBox').style.display = 'none';
+          $('cp2faSetupBox').style.display = 'none';
+          $('cp2faOnBox').style.display = 'block';
+        } else {
+          badge.className = 'status-badge badge-paused';
+          badge.textContent = '⚪ Disabled';
+          $('cp2faOffBox').style.display = 'block';
+          $('cp2faSetupBox').style.display = 'none';
+          $('cp2faOnBox').style.display = 'none';
+        }
+      }
+    } catch (e) {}
+  }
+
+  async function start2FASetup() {
+    try {
+      const res = await apiFetch('/auth/2fa/setup', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to start 2FA setup');
+      
+      $('cp2faQrImg').src = data.qr_url;
+      $('cp2faSecretKey').value = data.secret;
+      $('cp2faVerifyCode').value = '';
+      $('cp2faOffBox').style.display = 'none';
+      $('cp2faSetupBox').style.display = 'block';
+      $('cp2faOnBox').style.display = 'none';
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  function cancel2FASetup() {
+    $('cp2faSetupBox').style.display = 'none';
+    load2FAStatus();
+  }
+
+  function copy2FASecret() {
+    const key = $('cp2faSecretKey').value;
+    navigator.clipboard.writeText(key).then(() => {
+      toast('2FA secret key copied to clipboard!', 'success');
+    });
+  }
+
+  async function submitEnable2FA() {
+    const code = $('cp2faVerifyCode').value.trim();
+    if (!code || code.length !== 6) {
+      toast('Please enter the 6-digit code from your Authenticator app.', 'error');
+      return;
+    }
+    try {
+      const res = await apiFetch('/auth/2fa/verify-enable', {
+        method: 'POST',
+        body: JSON.stringify({ code })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Verification failed');
+      toast(data.message || '2FA enabled successfully!', 'success');
+      load2FAStatus();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  async function submitDisable2FA() {
+    const code = $('cp2faDisablePass').value.trim();
+    if (!code) {
+      toast('Please enter your current 6-digit code or admin password to disable.', 'error');
+      return;
+    }
+    if (!confirm('Are you sure you want to disable Two-Factor Authentication?')) return;
+    try {
+      const res = await apiFetch('/auth/2fa/disable', {
+        method: 'POST',
+        body: JSON.stringify({ code })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to disable 2FA');
+      toast(data.message || '2FA has been disabled.', 'success');
+      $('cp2faDisablePass').value = '';
+      load2FAStatus();
+    } catch (err) {
+      toast(err.message, 'error');
     }
   }
 

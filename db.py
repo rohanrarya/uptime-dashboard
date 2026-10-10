@@ -10,33 +10,63 @@ from datetime import datetime
 # Determine database driver
 DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
 
+def get_pooled_db_url(raw_url):
+    """
+    Ensures connection pooling for Neon PostgreSQL (via PgBouncer -pooler endpoint).
+    Also normalizes legacy postgres:// scheme to postgresql://.
+    """
+    if not raw_url:
+        return raw_url
+    url = raw_url.strip()
+    if url.startswith('postgres://'):
+        url = url.replace('postgres://', 'postgresql://', 1)
+    
+    # Automatically enable Neon Connection Pooling (PgBouncer) if not already using -pooler
+    if 'neon.tech' in url and '-pooler' not in url:
+        url = re.sub(r'(@[a-zA-Z0-9-]+)(\.[a-zA-Z0-9-]+\.aws\.neon\.tech)', r'\1-pooler\2', url)
+    
+    return url
+
+
 def get_connection():
     """
-    Returns a database connection.
+    Returns a database connection with auto-retry and connection pooling.
     Uses PostgreSQL if DATABASE_URL is set, otherwise falls back to local SQLite.
     """
-    db_url = os.environ.get('DATABASE_URL', '').strip()
+    raw_url = os.environ.get('DATABASE_URL', '').strip()
     
-    if db_url and (db_url.startswith('postgres://') or db_url.startswith('postgresql://')):
-        # Fix legacy postgres:// URI for modern drivers
-        if db_url.startswith('postgres://'):
-            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+    if raw_url and (raw_url.startswith('postgres://') or raw_url.startswith('postgresql://')):
+        db_url = get_pooled_db_url(raw_url)
         
-        try:
-            import psycopg2
-            from psycopg2.extras import RealDictCursor
-            conn = psycopg2.connect(db_url, cursor_factory=RealDictCursor)
-            conn.autocommit = True
-            return conn, 'postgres'
-        except Exception as e:
+        # Retry up to 3 times to allow suspended Neon databases to wake up smoothly
+        for attempt in range(3):
             try:
-                import psycopg
-                from psycopg.rows import dict_row
-                conn = psycopg.connect(db_url, row_factory=dict_row)
+                import psycopg2
+                from psycopg2.extras import RealDictCursor
+                conn = psycopg2.connect(
+                    db_url,
+                    cursor_factory=RealDictCursor,
+                    connect_timeout=15,
+                    keepalives=1,
+                    keepalives_idle=30,
+                    keepalives_interval=10,
+                    keepalives_count=5
+                )
                 conn.autocommit = True
                 return conn, 'postgres'
-            except Exception as inner_e:
-                print(f"[DB Warning] Could not connect to PostgreSQL: {e} | {inner_e}. Falling back to SQLite.")
+            except Exception as e:
+                if attempt < 2:
+                    import time
+                    time.sleep(1.0)
+                    continue
+                try:
+                    import psycopg
+                    from psycopg.rows import dict_row
+                    conn = psycopg.connect(db_url, row_factory=dict_row)
+                    conn.autocommit = True
+                    return conn, 'postgres'
+                except Exception as inner_e:
+                    print(f"[DB Warning] Could not connect to PostgreSQL: {e} | {inner_e}. Falling back to SQLite.")
     
     # Fallback to local SQLite database (use /tmp on serverless environments like Vercel)
     import sqlite3
