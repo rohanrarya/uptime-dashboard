@@ -170,6 +170,7 @@ def get_config():
         'tinyUrlConfigured': bool(db.get_setting('tinyurl_api_token')),
         'renderAccountsCount': len([a for a in accounts if a['provider'] == 'render']),
         'cfAccountsCount': len([a for a in accounts if a['provider'] == 'cloudflare']),
+        'vercelAccountsCount': len([a for a in accounts if a['provider'] == 'vercel']),
         'databaseType': engine,
         'databaseConnected': True
     })
@@ -178,7 +179,7 @@ def get_config():
 @app.route('/api/deployments', methods=['GET'])
 @require_auth
 def get_deployments():
-    """Aggregates all deployments across Render and Cloudflare accounts."""
+    """Aggregates all deployments across Render, Cloudflare, and Vercel accounts."""
     force = request.args.get('force') in ['1', 'true', 'yes']
     return jsonify(services.get_all_deployments(force=force))
 

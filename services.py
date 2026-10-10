@@ -7,7 +7,7 @@
 import os
 import time
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import db
 
@@ -264,8 +264,167 @@ def fetch_cloudflare_deployments(accounts):
     return deployments
 
 
+# =============================================================================
+# Vercel Projects & Deployments Fetcher
+# =============================================================================
+
+def fetch_vercel_deployments(accounts):
+    """Fetches projects and latest production deployments from Vercel accounts."""
+    vercel_accounts = [a for a in accounts if a['provider'] == 'vercel' and a['is_active']]
+    deployments = []
+    session = get_http_session()
+
+    for acc in vercel_accounts:
+        token = acc.get('api_key')
+        team_id = (acc.get('account_id') or '').strip()
+        acc_name = acc.get('account_name', 'Vercel')
+
+        if not token:
+            continue
+
+        try:
+            url = 'https://api.vercel.com/v9/projects?limit=50'
+            if team_id:
+                url += f'&teamId={team_id}'
+
+            r = session.get(
+                url,
+                headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},
+                timeout=10
+            )
+
+            if r.status_code == 200:
+                data = r.json()
+                projects = data.get('projects') or []
+                for p in projects:
+                    p_name = p.get('name', 'Unnamed Project')
+                    
+                    targets = p.get('targets') or {}
+                    prod_dep = targets.get('production')
+                    latest_deps = p.get('latestDeployments') or []
+                    dep = prod_dep or (latest_deps[0] if latest_deps else {})
+
+                    raw_st = (dep.get('readyState') or dep.get('state') or 'READY').upper()
+                    if raw_st == 'READY':
+                        status = 'live'
+                        status_label = 'Live'
+                    elif any(w in raw_st for w in ['BUILD', 'INIT', 'QUEUE']):
+                        status = 'building'
+                        status_label = 'Building'
+                    elif any(w in raw_st for w in ['ERR', 'FAIL', 'CANCEL']):
+                        status = 'failed'
+                        status_label = 'Failed'
+                    else:
+                        status = 'live'
+                        status_label = raw_st.capitalize()
+
+                    # Domain / URL resolution
+                    dep_url = dep.get('url') or ''
+                    live_url = ''
+                    aliases = dep.get('alias') or p.get('alias') or []
+                    if isinstance(aliases, list) and aliases:
+                        first_alias = aliases[0]
+                        if isinstance(first_alias, str):
+                            live_url = f"https://{first_alias}"
+                        elif isinstance(first_alias, dict) and first_alias.get('domain'):
+                            live_url = f"https://{first_alias['domain']}"
+
+                    if not live_url and dep_url:
+                        live_url = f"https://{dep_url}"
+                    elif not live_url:
+                        live_url = f"https://{p_name}.vercel.app"
+
+                    # Console URL
+                    if team_id:
+                        dash_url = f"https://vercel.com/{team_id}/{p_name}"
+                    else:
+                        dash_url = f"https://vercel.com/~/projects/{p_name}"
+
+                    # Framework / Service Type
+                    framework = p.get('framework')
+                    service_type = 'Next.js' if framework == 'nextjs' else (framework.capitalize() if framework else 'Vercel')
+
+                    # Commit metadata
+                    meta = dep.get('meta') or {}
+                    commit_msg = (
+                        meta.get('githubCommitMessage') or 
+                        meta.get('gitlabCommitMessage') or 
+                        meta.get('bitbucketCommitMessage') or 
+                        meta.get('commitMessage') or 
+                        'Production deployment'
+                    ).split('\n')[0]
+
+                    commit_hash = (
+                        meta.get('githubCommitSha') or 
+                        meta.get('gitlabCommitSha') or 
+                        meta.get('bitbucketCommitSha') or 
+                        meta.get('commitSha') or 
+                        meta.get('sha') or 
+                        ''
+                    )[:7]
+
+                    branch = (
+                        meta.get('githubCommitRef') or 
+                        meta.get('gitlabCommitRef') or 
+                        meta.get('bitbucketCommitRef') or 
+                        meta.get('branch') or 
+                        'main'
+                    )
+
+                    # Updated At
+                    raw_ts = dep.get('ready') or dep.get('createdAt') or p.get('updatedAt')
+                    updated_at = raw_ts
+                    if isinstance(raw_ts, (int, float)):
+                        if raw_ts > 10000000000:
+                            updated_at = datetime.fromtimestamp(raw_ts / 1000.0, tz=timezone.utc).isoformat()
+                        else:
+                            updated_at = datetime.fromtimestamp(raw_ts, tz=timezone.utc).isoformat()
+
+                    deployments.append({
+                        'id': f"vercel-{p_name}",
+                        'provider': 'vercel',
+                        'accountName': acc_name,
+                        'projectName': p_name,
+                        'serviceType': service_type,
+                        'liveUrl': live_url,
+                        'dashboardUrl': dash_url,
+                        'status': status,
+                        'statusLabel': status_label,
+                        'commit': {
+                            'message': commit_msg,
+                            'hash': commit_hash,
+                            'branch': branch
+                        },
+                        'updatedAt': updated_at
+                    })
+            else:
+                deployments.append({
+                    'id': f"vercel-err-{acc['id']}",
+                    'provider': 'vercel',
+                    'accountName': acc_name,
+                    'projectName': 'Vercel Connection Error',
+                    'serviceType': 'API Error',
+                    'status': 'failed',
+                    'statusLabel': f'HTTP {r.status_code}',
+                    'error': f"Vercel API returned {r.status_code}: {r.text[:120]}"
+                })
+        except Exception as e:
+            deployments.append({
+                'id': f"vercel-err-{acc['id']}",
+                'provider': 'vercel',
+                'accountName': acc_name,
+                'projectName': 'Network Error',
+                'serviceType': 'Error',
+                'status': 'failed',
+                'statusLabel': 'Failed',
+                'error': str(e)
+            })
+
+    return deployments
+
+
 def get_all_deployments(force=False):
-    """Aggregates deployments from all configured Render and Cloudflare accounts in parallel with caching."""
+    """Aggregates deployments from all configured Render, Cloudflare, and Vercel accounts in parallel with caching."""
     global _deployments_cache, _deployments_cache_ts
     now = time.time()
     if not force and _deployments_cache and (now - _deployments_cache_ts < 20):
@@ -273,14 +432,16 @@ def get_all_deployments(force=False):
 
     accounts = db.get_all_accounts()
 
-    # Query Render and Cloudflare concurrently
-    with ThreadPoolExecutor(max_workers=2) as executor:
+    # Query Render, Cloudflare, and Vercel concurrently
+    with ThreadPoolExecutor(max_workers=3) as executor:
         f_render = executor.submit(fetch_render_deployments, accounts)
         f_cf = executor.submit(fetch_cloudflare_deployments, accounts)
+        f_vercel = executor.submit(fetch_vercel_deployments, accounts)
         render_deps = f_render.result()
         cf_deps = f_cf.result()
+        vercel_deps = f_vercel.result()
 
-    all_deps = render_deps + cf_deps
+    all_deps = render_deps + cf_deps + vercel_deps
     result = {
         'deployments': all_deps,
         'summary': {

@@ -333,6 +333,7 @@
     }
     .platform-pill.render { background: rgba(70, 227, 183, 0.12); color: #46e3b7; border: 1px solid rgba(70, 227, 183, 0.3); }
     .platform-pill.cloudflare { background: rgba(246, 130, 31, 0.12); color: #f6821f; border: 1px solid rgba(246, 130, 31, 0.3); }
+    .platform-pill.vercel { background: rgba(255, 255, 255, 0.12); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.28); }
 
     .status-badge {
       display: inline-flex;
@@ -1087,7 +1088,7 @@
       <div class="stat-card live"><div class="stat-label">Live Deployments</div><div class="stat-value" id="kpiLive">0</div><div class="stat-sub">Active & responding</div></div>
       <div class="stat-card building"><div class="stat-label">Building / Queued</div><div class="stat-value" id="kpiBuilding">0</div><div class="stat-sub">Pipeline in progress</div></div>
       <div class="stat-card failed"><div class="stat-label">Failed Builds</div><div class="stat-value" id="kpiFailed">0</div><div class="stat-sub">Need attention</div></div>
-      <div class="stat-card accounts"><div class="stat-label">Total Services</div><div class="stat-value" id="kpiTotal">0</div><div class="stat-sub">Across Render & Cloudflare</div></div>
+      <div class="stat-card accounts"><div class="stat-label">Total Services</div><div class="stat-value" id="kpiTotal">0</div><div class="stat-sub">Across Render, Cloudflare & Vercel</div></div>
     </div>
     <div id="deploymentsContainer" class="deployments-grid"></div>
   </div>
@@ -1203,13 +1204,13 @@
       <!-- TAB 2: ACCOUNTS -->
       <div id="cpTabAccounts" class="cp-content" style="display:none;">
         <p style="font-size:0.8rem;color:var(--text2);margin-bottom:1rem;">
-          Manage multiple Render and Cloudflare accounts. Services and Pages projects are automatically discovered.
+          Manage multiple Render, Cloudflare, and Vercel accounts. Services, Pages, and Vercel projects are automatically discovered.
         </p>
 
         <div class="table-container" style="margin-bottom:1.25rem;">
           <table>
             <thead>
-              <tr><th>Provider</th><th>Account Name</th><th>Account ID</th><th>Action</th></tr>
+              <tr><th>Provider</th><th>Account Name</th><th>Account ID / Team</th><th>Action</th></tr>
             </thead>
             <tbody id="cpAccountsTableBody"></tbody>
           </table>
@@ -1224,6 +1225,7 @@
               <select id="accNewProvider" class="form-input" style="cursor:pointer;" onchange="toggleAccFields()">
                 <option value="render">Render</option>
                 <option value="cloudflare">Cloudflare</option>
+                <option value="vercel">Vercel</option>
               </select>
             </div>
             <div class="form-group">
@@ -1233,13 +1235,14 @@
           </div>
 
           <div class="form-group" style="margin-top:0.75rem;">
-            <label class="form-label">API Key / Token</label>
-            <input type="password" id="accNewKey" class="form-input mono" placeholder="rnd_... or CF Token" />
+            <label class="form-label" id="accKeyLabel">API Key / Access Token</label>
+            <input type="password" id="accNewKey" class="form-input mono" placeholder="rnd_... or CF / Vercel Token" />
           </div>
 
           <div id="accCfIdGroup" class="form-group" style="margin-top:0.75rem;display:none;">
-            <label class="form-label">Cloudflare Account ID</label>
-            <input type="text" id="accNewCfId" class="form-input mono" placeholder="From Cloudflare sidebar" />
+            <label class="form-label" id="accExtraLabel">Account ID</label>
+            <input type="text" id="accNewCfId" class="form-input mono" placeholder="From dashboard sidebar" />
+            <span id="accExtraHint" style="font-size:0.7rem;color:var(--text3);margin-top:0.25rem;display:block;"></span>
           </div>
 
           <button onclick="submitNewAccount()" class="btn btn-primary cp-btn-mobile-full" style="margin-top:1rem;">Add Account to Database</button>
@@ -1800,12 +1803,20 @@
       $('badgeDeployments').textContent = sum.total;
 
       if (!list.length) {
-        $('deploymentsContainer').innerHTML = '<div style="color:var(--text3);grid-column:1/-1;text-align:center;padding:3rem;">No Render or Cloudflare accounts connected yet. Open Control Panel to add accounts.</div>';
+        $('deploymentsContainer').innerHTML = '<div style="color:var(--text3);grid-column:1/-1;text-align:center;padding:3rem;">No Render, Cloudflare, or Vercel accounts connected yet. Open Control Panel to add accounts.</div>';
         return;
       }
 
       $('deploymentsContainer').innerHTML = list.map(d => {
         const isRender = d.provider === 'render';
+        const isCloudflare = d.provider === 'cloudflare';
+        const isVercel = d.provider === 'vercel';
+
+        let platformName = 'Vercel';
+        let platformClass = 'vercel';
+        if (isRender) { platformName = 'Render'; platformClass = 'render'; }
+        else if (isCloudflare) { platformName = 'Cloudflare'; platformClass = 'cloudflare'; }
+
         const isLive = d.status === 'live';
         const isBuilding = d.status === 'building';
         const badgeClass = isLive ? 'badge-live' : (isBuilding ? 'badge-building' : 'badge-failed');
@@ -1817,7 +1828,7 @@
             <div class="card-header">
               <div class="project-info">
                 <div class="project-name-wrap">
-                  <span class="platform-pill ${isRender ? 'render' : 'cloudflare'}">${isRender ? 'Render' : 'Cloudflare'}</span>
+                  <span class="platform-pill ${platformClass}">${platformName}</span>
                   <span class="project-title">${esc(d.projectName)}</span>
                 </div>
                 <span style="font-size:0.7rem;color:var(--text3);">${esc(d.accountName)}</span>
@@ -1935,8 +1946,39 @@
   }
 
   function toggleAccFields() {
-    const isCf = $('accNewProvider').value === 'cloudflare';
-    $('accCfIdGroup').style.display = isCf ? 'block' : 'none';
+    const prov = $('accNewProvider').value;
+    const extraGroup = $('accCfIdGroup');
+    const extraLabel = $('accExtraLabel');
+    const extraInput = $('accNewCfId');
+    const extraHint = $('accExtraHint');
+    const keyLabel = $('accKeyLabel');
+    const keyInput = $('accNewKey');
+    const nameInput = $('accNewName');
+
+    if (prov === 'cloudflare') {
+      extraGroup.style.display = 'block';
+      if (extraLabel) extraLabel.textContent = 'Cloudflare Account ID (Required)';
+      extraInput.placeholder = 'From Cloudflare dashboard sidebar';
+      if (extraHint) extraHint.textContent = 'Found on your Cloudflare dashboard right sidebar.';
+      if (keyLabel) keyLabel.textContent = 'Cloudflare API Token';
+      keyInput.placeholder = 'API Token with Pages Read permission';
+      nameInput.placeholder = 'e.g. My Cloudflare';
+    } else if (prov === 'vercel') {
+      extraGroup.style.display = 'block';
+      if (extraLabel) extraLabel.textContent = 'Vercel Team ID or Slug (Optional)';
+      extraInput.placeholder = 'Leave blank for Personal, or enter team_... / slug';
+      if (extraHint) extraHint.textContent = 'Leave empty for personal accounts. Required for Team accounts.';
+      if (keyLabel) keyLabel.textContent = 'Vercel Access Token';
+      keyInput.placeholder = 'Access Token (from vercel.com/account/tokens)';
+      nameInput.placeholder = 'e.g. Personal Vercel or Work Team';
+    } else {
+      // render
+      extraGroup.style.display = 'none';
+      if (extraHint) extraHint.textContent = '';
+      if (keyLabel) keyLabel.textContent = 'Render API Key';
+      keyInput.placeholder = 'rnd_... API key from Render Settings';
+      nameInput.placeholder = 'e.g. Personal Render';
+    }
   }
 
   async function loadControlPanelData() {
