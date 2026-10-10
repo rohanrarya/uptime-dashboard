@@ -94,7 +94,26 @@ def init_db():
                     id SERIAL PRIMARY KEY,
                     username VARCHAR(50) UNIQUE NOT NULL,
                     password_hash TEXT NOT NULL,
+                    role VARCHAR(20) DEFAULT 'admin',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            # Ensure role column exists if table was previously created
+            try:
+                cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'admin';")
+            except Exception:
+                pass
+
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS sessions (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(50) NOT NULL,
+                    token_hash VARCHAR(64) UNIQUE NOT NULL,
+                    device_info TEXT,
+                    ip_address VARCHAR(50),
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """)
             cur.execute("""
@@ -131,7 +150,26 @@ def init_db():
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE NOT NULL,
                     password_hash TEXT NOT NULL,
+                    role TEXT DEFAULT 'admin',
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            try:
+                cur.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'admin';")
+                conn.commit()
+            except Exception:
+                pass
+
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL,
+                    token_hash TEXT UNIQUE NOT NULL,
+                    device_info TEXT,
+                    ip_address TEXT,
+                    is_active INTEGER DEFAULT 1,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    last_active DATETIME DEFAULT CURRENT_TIMESTAMP
                 );
             """)
             cur.execute("""
@@ -186,11 +224,11 @@ def sync_env_to_db():
             default_pass = os.environ.get('ADMIN_PASSWORD', 'admin123').strip()
             hashed = generate_password_hash(default_pass)
             if engine == 'postgres':
-                cur.execute("INSERT INTO users (username, password_hash) VALUES (%s, %s);", ('admin', hashed))
+                cur.execute("INSERT INTO users (username, password_hash, role) VALUES (%s, %s, %s);", ('admin', hashed, 'admin'))
             else:
-                cur.execute("INSERT INTO users (username, password_hash) VALUES (?, ?);", ('admin', hashed))
+                cur.execute("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?);", ('admin', hashed, 'admin'))
                 conn.commit()
-            print("[DB Sync] Initialized default admin user.")
+            print("[DB Sync] Initialized default admin user with administrative privilege.")
 
         # Helper to get setting from DB
         def get_db_setting(key):
@@ -496,15 +534,16 @@ def get_user(username='admin'):
         cur = conn.cursor()
         try:
             if engine == 'postgres':
-                cur.execute("SELECT id, username, password_hash FROM users WHERE username = %s;", (username,))
+                cur.execute("SELECT id, username, password_hash, COALESCE(role, 'admin') as role FROM users WHERE username = %s;", (username,))
             else:
-                cur.execute("SELECT id, username, password_hash FROM users WHERE username = ?;", (username,))
+                cur.execute("SELECT id, username, password_hash, role FROM users WHERE username = ?;", (username,))
             r = cur.fetchone()
             if r:
                 return {
                     'id': r['id'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[0],
                     'username': r['username'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[1],
-                    'password_hash': r['password_hash'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[2]
+                    'password_hash': r['password_hash'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[2],
+                    'role': (r['role'] if isinstance(r, dict) or hasattr(r, '__getitem__') else (r[3] if len(r) > 3 else 'admin')) or 'admin'
                 }
             return None
         finally:
@@ -513,6 +552,72 @@ def get_user(username='admin'):
     except Exception as e:
         print(f"[DB Warning] Could not query user '{username}': {e}")
         return None
+
+
+def get_all_users():
+    """Returns all registered users with administrative or viewer roles."""
+    conn, engine = get_connection()
+    cur = conn.cursor()
+    try:
+        if engine == 'postgres':
+            cur.execute("SELECT id, username, COALESCE(role, 'admin') as role, created_at FROM users ORDER BY id ASC;")
+        else:
+            cur.execute("SELECT id, username, role, created_at FROM users ORDER BY id ASC;")
+        rows = cur.fetchall()
+        users = []
+        for r in rows:
+            users.append({
+                'id': r['id'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[0],
+                'username': r['username'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[1],
+                'role': (r['role'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[2]) or 'admin',
+                'created_at': str(r['created_at'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[3])
+            })
+        return users
+    finally:
+        cur.close()
+        conn.close()
+
+
+def create_user(username, password, role='viewer'):
+    """Creates a new user in the database with administrative or viewer role."""
+    from werkzeug.security import generate_password_hash
+    conn, engine = get_connection()
+    cur = conn.cursor()
+    try:
+        hashed = generate_password_hash(password)
+        if engine == 'postgres':
+            cur.execute("""
+                INSERT INTO users (username, password_hash, role) 
+                VALUES (%s, %s, %s) RETURNING id;
+            """, (username, hashed, role))
+            new_id = cur.fetchone()['id']
+        else:
+            cur.execute("""
+                INSERT INTO users (username, password_hash, role) 
+                VALUES (?, ?, ?);
+            """, (username, hashed, role))
+            conn.commit()
+            new_id = cur.lastrowid
+        return new_id
+    finally:
+        cur.close()
+        conn.close()
+
+
+def delete_user(user_id):
+    """Deletes a user by ID."""
+    conn, engine = get_connection()
+    cur = conn.cursor()
+    try:
+        if engine == 'postgres':
+            cur.execute("DELETE FROM users WHERE id = %s;", (user_id,))
+        else:
+            cur.execute("DELETE FROM users WHERE id = ?;", (user_id,))
+            conn.commit()
+        return True
+    finally:
+        cur.close()
+        conn.close()
 
 
 def update_admin_password(new_password):
@@ -530,3 +635,146 @@ def update_admin_password(new_password):
     finally:
         cur.close()
         conn.close()
+
+
+# =============================================================================
+# Device & Session Tracking (1-Click Logout)
+# =============================================================================
+
+def create_session(username, token_hash, device_info, ip_address):
+    """Logs active device session."""
+    conn, engine = get_connection()
+    cur = conn.cursor()
+    try:
+        if engine == 'postgres':
+            cur.execute("""
+                INSERT INTO sessions (username, token_hash, device_info, ip_address, is_active) 
+                VALUES (%s, %s, %s, %s, TRUE) RETURNING id;
+            """, (username, token_hash, device_info, ip_address))
+            sid = cur.fetchone()['id']
+        else:
+            cur.execute("""
+                INSERT INTO sessions (username, token_hash, device_info, ip_address, is_active) 
+                VALUES (?, ?, ?, ?, 1);
+            """, (username, token_hash, device_info, ip_address))
+            conn.commit()
+            sid = cur.lastrowid
+        return sid
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_active_sessions(username=None):
+    """Returns active device sessions with info and timestamps."""
+    conn, engine = get_connection()
+    cur = conn.cursor()
+    try:
+        query = "SELECT id, username, token_hash, device_info, ip_address, is_active, created_at, last_active FROM sessions WHERE is_active = TRUE" if engine == 'postgres' else "SELECT id, username, token_hash, device_info, ip_address, is_active, created_at, last_active FROM sessions WHERE is_active = 1"
+        params = ()
+        if username:
+            query += " AND username = %s" if engine == 'postgres' else " AND username = ?"
+            params = (username,)
+        query += " ORDER BY last_active DESC;"
+        
+        cur.execute(query, params)
+        rows = cur.fetchall()
+        sessions = []
+        for r in rows:
+            sessions.append({
+                'id': r['id'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[0],
+                'username': r['username'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[1],
+                'token_hash': r['token_hash'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[2],
+                'device_info': r['device_info'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[3],
+                'ip_address': r['ip_address'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[4],
+                'created_at': str(r['created_at'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[6]),
+                'last_active': str(r['last_active'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[7])
+            })
+        return sessions
+    finally:
+        cur.close()
+        conn.close()
+
+
+def revoke_session(session_id):
+    """Revokes a specific session (1-click logout for a device)."""
+    conn, engine = get_connection()
+    cur = conn.cursor()
+    try:
+        if engine == 'postgres':
+            cur.execute("UPDATE sessions SET is_active = FALSE WHERE id = %s;", (session_id,))
+        else:
+            cur.execute("UPDATE sessions SET is_active = 0 WHERE id = ?;", (session_id,))
+            conn.commit()
+        return True
+    finally:
+        cur.close()
+        conn.close()
+
+
+def revoke_all_other_sessions(username, current_token_hash=None):
+    """Revokes all sessions for a user except the current one."""
+    conn, engine = get_connection()
+    cur = conn.cursor()
+    try:
+        if current_token_hash:
+            if engine == 'postgres':
+                cur.execute("UPDATE sessions SET is_active = FALSE WHERE username = %s AND token_hash != %s;", (username, current_token_hash))
+            else:
+                cur.execute("UPDATE sessions SET is_active = 0 WHERE username = ? AND token_hash != ?;", (username, current_token_hash))
+                conn.commit()
+        else:
+            if engine == 'postgres':
+                cur.execute("UPDATE sessions SET is_active = FALSE WHERE username = %s;", (username,))
+            else:
+                cur.execute("UPDATE sessions SET is_active = 0 WHERE username = ?;", (username,))
+                conn.commit()
+        return True
+    finally:
+        cur.close()
+        conn.close()
+
+
+def is_session_active(token_hash):
+    """Checks if a session token is still active and has not been logged out."""
+    if not token_hash:
+        return False
+    try:
+        conn, engine = get_connection()
+        cur = conn.cursor()
+        try:
+            if engine == 'postgres':
+                cur.execute("SELECT is_active FROM sessions WHERE token_hash = %s;", (token_hash,))
+            else:
+                cur.execute("SELECT is_active FROM sessions WHERE token_hash = ?;", (token_hash,))
+            r = cur.fetchone()
+            if r:
+                val = r['is_active'] if isinstance(r, dict) or hasattr(r, '__getitem__') else r[0]
+                return bool(val)
+            return True
+        finally:
+            cur.close()
+            conn.close()
+    except Exception:
+        return True
+
+
+def update_session_activity(token_hash):
+    """Updates the last_active timestamp for a session."""
+    if not token_hash:
+        return
+    try:
+        conn, engine = get_connection()
+        cur = conn.cursor()
+        try:
+            if engine == 'postgres':
+                cur.execute("UPDATE sessions SET last_active = CURRENT_TIMESTAMP WHERE token_hash = %s;", (token_hash,))
+            else:
+                cur.execute("UPDATE sessions SET last_active = datetime('now') WHERE token_hash = ?;", (token_hash,))
+                conn.commit()
+        finally:
+            cur.close()
+            conn.close()
+    except Exception:
+        pass
+

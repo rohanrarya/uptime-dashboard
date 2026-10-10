@@ -34,16 +34,26 @@ except Exception as e:
 # Auth Guard Decorator
 # =============================================================================
 
+def get_client_info():
+    """Extracts User-Agent and client IP from HTTP request."""
+    ua = request.headers.get('User-Agent', '')
+    forwarded = request.headers.get('X-Forwarded-For', '')
+    ip = forwarded.split(',')[0].strip() if forwarded else (request.remote_addr or 'Unknown IP')
+    return ua, ip
+
+
+def get_current_token():
+    """Extracts Bearer token from request."""
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        return auth_header.split(' ', 1)[1].strip()
+    return request.args.get('token', '').strip()
+
+
 def require_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        auth_header = request.headers.get('Authorization', '')
-        token = ''
-        if auth_header.startswith('Bearer '):
-            token = auth_header.split(' ', 1)[1].strip()
-        elif request.args.get('token'):
-            token = request.args.get('token').strip()
-
+        token = get_current_token()
         username = auth_service.validate_token(token)
         if not username:
             return jsonify({'error': 'Unauthorized', 'message': 'Please login to access this panel.'}), 401
@@ -58,22 +68,32 @@ def require_auth(f):
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
-    """Step 1 Login: verifies password and checks 2FA status."""
+    """Step 1 Login: verifies password, tracks device, and checks 2FA status."""
     data = request.get_json(silent=True) or {}
     username = data.get('username', 'admin').strip()
     password = data.get('password', '').strip()
-    result, code = auth_service.authenticate_user(username, password)
+    ua, ip = get_client_info()
+    result, code = auth_service.authenticate_user(username, password, ua, ip)
     return jsonify(result), code
 
 
 @app.route('/api/auth/login-2fa', methods=['POST'])
 def login_2fa():
-    """Step 2 Login: verifies 6-digit Authenticator code."""
+    """Step 2 Login: verifies 6-digit Authenticator code and registers active device."""
     data = request.get_json(silent=True) or {}
     temp_token = data.get('temp_token', '').strip()
     code = data.get('code', '').strip()
-    result, status_code = auth_service.verify_2fa_and_login(temp_token, code)
+    ua, ip = get_client_info()
+    result, status_code = auth_service.verify_2fa_and_login(temp_token, code, ua, ip)
     return jsonify(result), status_code
+
+
+@app.route('/api/auth/logout', methods=['POST'])
+def logout():
+    """1-Click Logout: revokes the active device session."""
+    token = get_current_token()
+    result, code = auth_service.logout_session(token)
+    return jsonify(result), code
 
 
 @app.route('/api/auth/verify', methods=['GET'])
@@ -282,6 +302,67 @@ def test_db_connection():
     data = request.get_json(silent=True) or {}
     test_url = data.get('database_url', '').strip()
     result, code = services.test_postgresql_connection(test_url)
+    return jsonify(result), code
+
+
+# =============================================================================
+# HTTP Routes: User Administration & Active Devices
+# =============================================================================
+
+@app.route('/api/admin/users', methods=['GET'])
+@require_auth
+def get_users():
+    """Returns all registered users stored in database."""
+    result, code = auth_service.list_users()
+    return jsonify(result), code
+
+
+@app.route('/api/admin/users', methods=['POST'])
+@require_auth
+def add_user():
+    """Adds a new user with administrative or viewer privileges."""
+    data = request.get_json(silent=True) or {}
+    username = data.get('username', '').strip()
+    password = data.get('password', '').strip()
+    role = data.get('role', 'viewer').strip()
+    result, code = auth_service.add_user(username, password, role)
+    return jsonify(result), code
+
+
+@app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
+@require_auth
+def delete_user(user_id):
+    """Deletes a user account (prevents deleting current user or last admin)."""
+    current_token = get_current_token()
+    current_username = auth_service.validate_token(current_token) or 'admin'
+    result, code = auth_service.remove_user(user_id, current_username)
+    return jsonify(result), code
+
+
+@app.route('/api/admin/sessions', methods=['GET'])
+@require_auth
+def get_sessions():
+    """Returns active logged-in devices and sessions."""
+    current_token = get_current_token()
+    result, code = auth_service.list_active_sessions(current_token)
+    return jsonify(result), code
+
+
+@app.route('/api/admin/sessions/<int:session_id>', methods=['DELETE'])
+@require_auth
+def delete_session(session_id):
+    """Revokes a specific device session (1-click logout)."""
+    result, code = auth_service.logout_device(session_id)
+    return jsonify(result), code
+
+
+@app.route('/api/admin/sessions/logout-others', methods=['POST'])
+@require_auth
+def logout_other_sessions():
+    """1-Click Logout for all other devices."""
+    current_token = get_current_token()
+    current_username = auth_service.validate_token(current_token) or 'admin'
+    result, code = auth_service.logout_all_other_devices(current_username, current_token)
     return jsonify(result), code
 
 

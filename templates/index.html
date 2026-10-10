@@ -276,23 +276,25 @@
     .modal-backdrop.open { display: flex; }
     .modal-box {
       background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl);
-      max-width: 680px; width: 100%; max-height: 90vh; display: flex; flex-direction: column;
+      max-width: 760px; width: 100%; max-height: 90vh; display: flex; flex-direction: column;
       box-shadow: var(--shadow-lg); overflow: hidden;
     }
     .modal-head {
       padding: 1.25rem 1.75rem; border-bottom: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
     }
-    .modal-head h2 { font-size: 1.15rem; font-weight: 700; color: #fff; }
+    .modal-head h2 { font-size: 1.15rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem; }
     .modal-body { padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem; }
 
     /* Admin Control Panel Specifics */
     .cp-tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface2); overflow-x: auto; }
     .cp-tab-btn {
-      padding: 0.75rem 1.15rem; font-size: 0.82rem; font-weight: 700; color: var(--text2);
+      padding: 0.75rem 1rem; font-size: 0.82rem; font-weight: 700; color: var(--text2);
       border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 0.45rem; transition: all 0.15s ease;
     }
-    .cp-tab-btn.active { color: #fff; border-bottom-color: var(--accent-light); background: rgba(255, 255, 255, 0.03); }
+    .cp-tab-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.02); }
+    .cp-tab-btn.active { color: #fff; border-bottom-color: var(--accent-light); background: rgba(255, 255, 255, 0.04); }
 
     .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
     .form-label { font-size: 0.75rem; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -429,7 +431,11 @@
 
   <div class="header-actions">
     <button id="openControlPanelBtn" onclick="openControlPanel()" class="btn btn-secondary" title="Interactive Control Panel">
-      ⚙️ <span class="hide-mobile">Control Panel</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+      <span class="hide-mobile">Control Panel</span>
     </button>
     <button id="refreshBtn" onclick="refreshDashboard(false)" class="btn btn-secondary" title="Refresh">
       <svg id="refreshIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -437,8 +443,13 @@
       </svg>
       <span class="hide-mobile">Refresh</span>
     </button>
-    <button onclick="handleLogout()" class="btn btn-danger btn-sm" title="Log Out">
-      🚪 Exit
+    <button onclick="handleLogout()" class="btn btn-danger btn-sm" title="Log Out" style="display:inline-flex;align-items:center;gap:0.35rem;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+      </svg>
+      <span>Exit</span>
     </button>
   </div>
 </header>
@@ -466,11 +477,20 @@
   <div class="view-tabs-container">
     <div class="view-tabs">
       <button class="view-tab active" data-tab="deployments" onclick="switchTab('deployments')">
-        <span>🚀 Git Deployments</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+          <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+          <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
+          <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
+        </svg>
+        <span>Git Deployments</span>
         <span class="tab-badge" id="badgeDeployments">0</span>
       </button>
       <button class="view-tab" data-tab="monitors" onclick="switchTab('monitors')">
-        <span>📈 Uptime Monitors</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+        <span>Uptime Monitors</span>
         <span class="tab-badge" id="badgeMonitors">0</span>
       </button>
     </div>
@@ -508,17 +528,53 @@
 <div id="controlPanelModal" class="modal-backdrop">
   <div class="modal-box">
     <div class="modal-head">
-      <h2>⚙️ Interactive Control Panel</h2>
-      <button onclick="closeControlPanel()" class="btn btn-secondary btn-sm">✕ Close</button>
+      <h2>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color:var(--accent-light);">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span>Interactive Control Panel</span>
+      </h2>
+      <button onclick="closeControlPanel()" class="btn btn-secondary btn-sm" style="display:inline-flex;align-items:center;gap:0.3rem;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        <span>Close</span>
+      </button>
     </div>
 
     <!-- Navigation Tabs inside Control Panel -->
     <div class="cp-tabs">
-      <button class="cp-tab-btn active" onclick="switchCpTab('db')">🔌 Database</button>
-      <button class="cp-tab-btn" onclick="switchCpTab('accounts')">🏢 Accounts</button>
-      <button class="cp-tab-btn" onclick="switchCpTab('titles')">🏷️ Project Titles</button>
-      <button class="cp-tab-btn" onclick="switchCpTab('keys')">🔑 API Keys</button>
-      <button class="cp-tab-btn" onclick="switchCpTab('security')">🔒 Security</button>
+      <button class="cp-tab-btn active" data-tab="db" onclick="switchCpTab('db')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+        <span>Database</span>
+      </button>
+      <button class="cp-tab-btn" data-tab="accounts" onclick="switchCpTab('accounts')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+        <span>Accounts</span>
+      </button>
+      <button class="cp-tab-btn" data-tab="titles" onclick="switchCpTab('titles')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+        <span>Titles</span>
+      </button>
+      <button class="cp-tab-btn" data-tab="keys" onclick="switchCpTab('keys')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"></circle><path d="m21 2-9.6 9.6"></path><path d="m15.5 7.5 3 3"></path></svg>
+        <span>API Keys</span>
+      </button>
+      <button class="cp-tab-btn" data-tab="security" onclick="switchCpTab('security')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <span>Security & 2FA</span>
+      </button>
+      <button class="cp-tab-btn" data-tab="users" onclick="switchCpTab('users')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <span>Users</span>
+        <span id="cpTotalUsersBadge" class="tab-badge" style="margin-left:0.2rem;padding:0.05rem 0.4rem;font-size:0.68rem;">0</span>
+      </button>
+      <button class="cp-tab-btn" data-tab="sessions" onclick="switchCpTab('sessions')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        <span>Active Devices</span>
+      </button>
     </div>
 
     <div class="modal-body">
@@ -533,16 +589,19 @@
             <div style="font-size:0.75rem;color:var(--text3);font-weight:700;">CURRENT ENGINE</div>
             <div id="dbEngineBadge" style="font-size:0.95rem;font-weight:700;color:#38bdf8;margin-top:0.2rem;">PostgreSQL</div>
           </div>
-          <span id="dbStatusBadge" class="status-badge badge-live">🟢 Connected</span>
+          <span id="dbStatusBadge" class="status-badge badge-live">
+            <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block;margin-right:0.35rem;"></span>Connected
+          </span>
         </div>
 
         <div style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);border-radius:var(--radius-md);padding:0.9rem;margin-bottom:1rem;font-size:0.8rem;color:var(--text2);line-height:1.45;">
           <div style="font-weight:700;color:#38bdf8;margin-bottom:0.25rem;display:flex;align-items:center;gap:0.4rem;">
-            <span>⚡ Neon PgBouncer Connection Pooling Active</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#38bdf8;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            <span>Neon PgBouncer Connection Pooling Active</span>
           </div>
           <div>All queries automatically use Neon's pooled endpoint (<code>-pooler</code>) with retry auto-reconnects to prevent connection timeouts.</div>
           <div style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px dashed rgba(56,189,248,0.2);">
-            <strong style="color:var(--text1);">💡 Keep Neon Active 24/7 (Prevent Suspend):</strong> In UptimeRobot, add a free 5-minute HTTP monitor pointing to <code class="mono" style="color:#a78bfa;background:var(--surface1);padding:0.15rem 0.35rem;border-radius:4px;">https://uptime.digitaltask.in/api/health</code>. This pings Neon every 5 minutes so it never sleeps!
+            <strong style="color:var(--text1);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#fbbf24;vertical-align:-2px;margin-right:3px;"><line x1="9" y1="18" x2="15" y2="18"></line><line x1="10" y1="22" x2="14" y2="22"></line><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"></path></svg>Keep Neon Active 24/7 (Prevent Suspend):</strong> In UptimeRobot, add a free 5-minute HTTP monitor pointing to <code class="mono" style="color:#a78bfa;background:var(--surface1);padding:0.15rem 0.35rem;border-radius:4px;">https://uptime.digitaltask.in/api/health</code>. This pings Neon every 5 minutes so it never sleeps!
           </div>
         </div>
 
@@ -552,7 +611,10 @@
         </div>
 
         <div style="display:flex;gap:0.75rem;margin-top:1rem;">
-          <button onclick="testDbConnection()" class="btn btn-secondary">⚡ Test Connection</button>
+          <button onclick="testDbConnection()" class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:0.35rem;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            <span>Test Connection</span>
+          </button>
           <button onclick="saveDatabaseUrl()" class="btn btn-primary">Save Database URL</button>
         </div>
       </div>
@@ -649,7 +711,10 @@
 
       <!-- TAB 5: SECURITY -->
       <div id="cpTabSecurity" class="cp-content" style="display:none;">
-        <h4 style="font-size:0.88rem;font-weight:700;margin-bottom:0.75rem;">🔑 Admin Password</h4>
+        <h4 style="font-size:0.88rem;font-weight:700;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"></circle><path d="m21 2-9.6 9.6"></path><path d="m15.5 7.5 3 3"></path></svg>
+          <span>Admin Password</span>
+        </h4>
         <div class="form-group">
           <label class="form-label">New Admin Password</label>
           <input type="password" id="cpNewPass" class="form-input" placeholder="Enter new password" />
@@ -661,7 +726,8 @@
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
             <div>
               <h4 style="font-size:0.88rem;font-weight:700;display:flex;align-items:center;gap:0.4rem;">
-                <span>🛡️ Two-Factor Authentication (2FA)</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent-light);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <span>Two-Factor Authentication (2FA)</span>
               </h4>
               <p style="font-size:0.78rem;color:var(--text3);margin-top:0.2rem;">
                 Compatible with Google Authenticator, Microsoft Authenticator & Authy
@@ -672,8 +738,9 @@
 
           <!-- When 2FA is OFF -->
           <div id="cp2faOffBox">
-            <button onclick="start2FASetup()" class="btn btn-secondary" style="font-size:0.85rem;">
-              🔐 Setup Authenticator App
+            <button onclick="start2FASetup()" class="btn btn-secondary" style="font-size:0.85rem;display:inline-flex;align-items:center;gap:0.4rem;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span>Setup Authenticator App</span>
             </button>
           </div>
 
@@ -702,14 +769,96 @@
 
           <!-- When 2FA is ON -->
           <div id="cp2faOnBox" style="display:none;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:var(--radius-md);padding:1rem;margin-top:0.75rem;">
-            <p style="font-size:0.82rem;color:#86efac;font-weight:600;margin-bottom:0.5rem;">
-              ✓ Two-factor authentication is active and protecting your dashboard.
-            </p>
+            <div style="display:flex;align-items:center;gap:0.4rem;color:#86efac;font-size:0.82rem;font-weight:600;margin-bottom:0.5rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Two-factor authentication is active and protecting your dashboard.</span>
+            </div>
             <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
               <input type="password" id="cp2faDisablePass" class="form-input mono" placeholder="Current 6-digit code or Admin Password" style="max-width:280px;" />
               <button type="button" onclick="submitDisable2FA()" class="btn btn-danger btn-sm">Disable 2FA</button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- TAB 6: USERS MANAGEMENT -->
+      <div id="cpTabUsers" class="cp-content" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+          <div>
+            <h4 style="font-size:0.88rem;font-weight:700;color:#fff;">Users & Access Roles</h4>
+            <p style="font-size:0.78rem;color:var(--text3);margin-top:0.2rem;">
+              Manage users stored in PostgreSQL. Admins have access to Control Panel; Viewers have read-only access.
+            </p>
+          </div>
+          <span style="font-size:0.75rem;font-weight:700;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:0.25rem 0.65rem;border-radius:999px;border:1px solid rgba(99,102,241,0.3);">
+            Total Users: <span id="cpUsersCountText">0</span>
+          </span>
+        </div>
+
+        <div class="table-container" style="margin-bottom:1.25rem;">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Created At</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="cpUsersTableBody">
+              <tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1.5rem;">Loading users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Add User Form -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;">
+          <h5 style="font-size:0.82rem;font-weight:700;color:var(--accent-light);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.04em;">
+            + Add New User
+          </h5>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:0.75rem;">
+            <div class="form-group">
+              <label class="form-label">Username</label>
+              <input type="text" id="userNewUsername" class="form-input" placeholder="e.g. rohan or ops_viewer" autocomplete="off" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input type="password" id="userNewPassword" class="form-input" placeholder="Min. 4 characters" autocomplete="new-password" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Role</label>
+              <select id="userNewRole" class="form-input" style="cursor:pointer;">
+                <option value="viewer">Viewer (Read-only)</option>
+                <option value="admin">Administrator (Full Access)</option>
+              </select>
+            </div>
+          </div>
+          <button type="button" onclick="submitAddUser()" class="btn btn-primary" style="margin-top:0.85rem;font-size:0.82rem;padding:0.6rem 1.1rem;display:inline-flex;align-items:center;gap:0.35rem;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Add User</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 7: ACTIVE DEVICES & SESSIONS -->
+      <div id="cpTabSessions" class="cp-content" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
+          <div>
+            <h4 style="font-size:0.88rem;font-weight:700;color:#fff;">Logged Devices & Active Sessions</h4>
+            <p style="font-size:0.78rem;color:var(--text3);margin-top:0.2rem;">
+              Track devices currently authenticated. 1-click revoke any session or log out all other devices.
+            </p>
+          </div>
+          <button onclick="logoutAllOtherDevices()" class="btn btn-danger btn-sm" style="font-size:0.78rem;display:inline-flex;align-items:center;gap:0.35rem;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+            <span>Logout All Other Devices</span>
+          </button>
+        </div>
+
+        <div id="cpSessionsList" style="display:flex;flex-direction:column;gap:0.5rem;">
+          <div style="text-align:center;color:var(--text3);padding:2rem;">Loading active sessions...</div>
         </div>
       </div>
     </div>
@@ -801,11 +950,15 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: u, password: p })
       });
+      const rawText = await res.text();
       let data = {};
       try {
-        data = await res.json();
+        data = JSON.parse(rawText);
       } catch (jsonErr) {
-        throw new Error(`Server returned HTTP ${res.status}. Vercel is initializing or building backend functions.`);
+        if (res.status === 405 || !rawText) {
+          throw new Error('405 Method Not Allowed: Domain is still pointing to Cloudflare Pages instead of Vercel. Please remove custom domain from Cloudflare Pages or set CNAME to DNS only.');
+        }
+        throw new Error(`Server returned HTTP ${res.status}. Initializing backend.`);
       }
       if (!res.ok) throw new Error(data.error || 'Invalid username or password');
 
@@ -847,9 +1000,10 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ temp_token: temp2faToken, code })
       });
+      const rawText = await res.text();
       let data = {};
       try {
-        data = await res.json();
+        data = JSON.parse(rawText);
       } catch (jsonErr) {
         throw new Error(`Server returned HTTP ${res.status}`);
       }
@@ -865,7 +1019,10 @@
     }
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    try {
+      await apiFetch('/auth/logout', { method: 'POST' });
+    } catch (e) {}
     localStorage.removeItem('ops_token');
     showLoginScreen();
   }
@@ -919,7 +1076,7 @@
         <div class="ql-card">
           <a href="${esc(l.tinyUrl)}" target="_blank" rel="noopener" class="ql-card-link">
             <div class="ql-card-top">
-              <span class="ql-project-icon">🌐</span>
+              <svg class="ql-project-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
               <span class="ql-project-name">${esc(l.title)}</span>
               <span class="ql-external-icon">↗</span>
             </div>
@@ -928,7 +1085,9 @@
               <span class="ql-url-text">${esc(l.displayUrl)}</span>
             </div>
           </a>
-          <button class="ql-copy-btn" onclick="copyLink('${esc(l.tinyUrl)}')" title="Copy Link">📋</button>
+          <button class="ql-copy-btn" onclick="copyLink('${esc(l.tinyUrl)}')" title="Copy Link">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+          </button>
         </div>
       `).join('');
     } catch (e) {}
@@ -966,7 +1125,7 @@
         const isLive = d.status === 'live';
         const isBuilding = d.status === 'building';
         const badgeClass = isLive ? 'badge-live' : (isBuilding ? 'badge-building' : 'badge-failed');
-        const badgeIcon = isLive ? '🟢' : (isBuilding ? '🔄' : '🔴');
+        const dotColor = isLive ? '#22c55e' : (isBuilding ? '#fbbf24' : '#ef4444');
         const commit = d.commit || {};
 
         return `
@@ -979,12 +1138,12 @@
                 </div>
                 <span style="font-size:0.7rem;color:var(--text3);">${esc(d.accountName)}</span>
               </div>
-              <span class="status-badge ${badgeClass}">${badgeIcon} ${esc(d.statusLabel)}</span>
+              <span class="status-badge ${badgeClass}"><span style="width:7px;height:7px;border-radius:50%;background:${dotColor};display:inline-block;margin-right:0.35rem;"></span>${esc(d.statusLabel)}</span>
             </div>
 
             <div class="commit-box">
               <div class="commit-meta">
-                <span class="branch-pill">⑂ ${esc(commit.branch || 'main')}</span>
+                <span class="branch-pill"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:2px;vertical-align:-1px;"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>${esc(commit.branch || 'main')}</span>
                 <span style="font-family:'JetBrains Mono';color:var(--text3);">${esc(commit.hash || '')}</span>
               </div>
               <div class="commit-message">${esc(commit.message || 'No commit message')}</div>
@@ -992,7 +1151,7 @@
 
             ${d.liveUrl ? `
               <div class="site-url-bar">
-                <span>🔗</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text3);"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                 <a href="${esc(d.liveUrl)}" target="_blank" rel="noopener" class="site-url-link">${esc(d.liveUrl)}</a>
               </div>
             ` : ''}
@@ -1033,7 +1192,7 @@
           <div class="monitor-card">
             <div class="card-header">
               <span class="project-title">${esc(m.friendly_name)}</span>
-              <span class="status-badge ${isUp ? 'badge-live' : 'badge-failed'}">${isUp ? '🟢 UP' : '🔴 DOWN'}</span>
+              <span class="status-badge ${isUp ? 'badge-live' : 'badge-failed'}"><span style="width:7px;height:7px;border-radius:50%;background:${isUp ? '#22c55e' : '#ef4444'};display:inline-block;margin-right:0.35rem;"></span>${isUp ? 'UP' : 'DOWN'}</span>
             </div>
             <div class="site-url-bar">
               <a href="${esc(m.url)}" target="_blank" rel="noopener" class="site-url-link">${esc(m.url)}</a>
@@ -1069,14 +1228,17 @@
   }
 
   function switchCpTab(tab) {
-    const tabs = ['db', 'accounts', 'titles', 'keys', 'security'];
+    const tabs = ['db', 'accounts', 'titles', 'keys', 'security', 'users', 'sessions'];
     tabs.forEach(t => {
       const el = $(`cpTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
       if (el) el.style.display = t === tab ? 'block' : 'none';
     });
-    document.querySelectorAll('.cp-tab-btn').forEach((btn, idx) => {
-      btn.classList.toggle('active', tabs[idx] === tab);
+    document.querySelectorAll('.cp-tab-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
     });
+    if (tab === 'security') load2FAStatus();
+    if (tab === 'users') loadUsersList();
+    if (tab === 'sessions') loadSessionsList();
   }
 
   function toggleAccFields() {
@@ -1097,8 +1259,9 @@
       $('cpUptimeKey').value = data.keys.uptimerobot_api_key || '';
       $('cpTinyKey').value = data.keys.tinyurl_api_token || '';
 
-      // 2FA Status
+      // 2FA Status & Users Count
       load2FAStatus();
+      loadUsersList();
 
       // Accounts Table
       $('cpAccountsTableBody').innerHTML = (data.accounts || []).map(a => `
@@ -1269,13 +1432,13 @@
         const badge = $('cp2faStatusBadge');
         if (data.enabled) {
           badge.className = 'status-badge badge-live';
-          badge.textContent = '🟢 Active (Protected)';
+          badge.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block;margin-right:0.35rem;"></span>Active (Protected)';
           $('cp2faOffBox').style.display = 'none';
           $('cp2faSetupBox').style.display = 'none';
           $('cp2faOnBox').style.display = 'block';
         } else {
           badge.className = 'status-badge badge-paused';
-          badge.textContent = '⚪ Disabled';
+          badge.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:#94a3b8;display:inline-block;margin-right:0.35rem;"></span>Disabled';
           $('cp2faOffBox').style.display = 'block';
           $('cp2faSetupBox').style.display = 'none';
           $('cp2faOnBox').style.display = 'none';
@@ -1350,6 +1513,197 @@
       toast(data.message || '2FA has been disabled.', 'success');
       $('cp2faDisablePass').value = '';
       load2FAStatus();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  // =========================================================================
+  // USERS MANAGEMENT CLIENT FUNCTIONS
+  // =========================================================================
+  async function loadUsersList() {
+    try {
+      const res = await apiFetch('/admin/users');
+      const data = await res.json();
+      const users = data.users || [];
+      
+      const countEl = $('cpUsersCountText');
+      if (countEl) countEl.textContent = users.length;
+      const badgeEl = $('cpTotalUsersBadge');
+      if (badgeEl) badgeEl.textContent = users.length;
+      
+      const tbody = $('cpUsersTableBody');
+      if (!tbody) return;
+
+      if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1.5rem;">No users found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = users.map(u => {
+        const isAdmin = u.role === 'admin';
+        return `
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:0.5rem;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text3);">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <strong style="color:var(--text1);">${esc(u.username)}</strong>
+              </div>
+            </td>
+            <td>
+              <span class="platform-pill ${isAdmin ? 'render' : 'cloudflare'}" style="font-size:0.7rem;text-transform:uppercase;">
+                ${esc(u.role || 'viewer')}
+              </span>
+            </td>
+            <td style="font-size:0.75rem;color:var(--text3);font-family:'JetBrains Mono';">
+              ${u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}
+            </td>
+            <td>
+              <button onclick="deleteUser(${u.id}, '${esc(u.username)}')" class="btn btn-danger btn-sm" style="padding:0.25rem 0.55rem;font-size:0.75rem;display:inline-flex;align-items:center;gap:0.3rem;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                <span>Delete</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      console.warn('loadUsersList error:', e);
+    }
+  }
+
+  async function submitAddUser() {
+    const username = $('userNewUsername').value.trim();
+    const password = $('userNewPassword').value.trim();
+    const role = $('userNewRole').value;
+
+    if (!username || !password) {
+      toast('Username and password are required', 'error');
+      return;
+    }
+    if (password.length < 4) {
+      toast('Password must be at least 4 characters', 'error');
+      return;
+    }
+
+    try {
+      const res = await apiFetch('/admin/users', {
+        method: 'POST',
+        body: JSON.stringify({ username, password, role })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create user');
+      toast(data.message || 'User created successfully!', 'success');
+      $('userNewUsername').value = '';
+      $('userNewPassword').value = '';
+      loadUsersList();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  async function deleteUser(id, username) {
+    if (!confirm(`Are you sure you want to permanently delete user "${username}"?`)) return;
+    try {
+      const res = await apiFetch(`/admin/users/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete user');
+      toast(data.message || 'User deleted', 'success');
+      loadUsersList();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  // =========================================================================
+  // LOGGED DEVICE & SESSION TRACKING CLIENT FUNCTIONS
+  // =========================================================================
+  async function loadSessionsList() {
+    try {
+      const res = await apiFetch('/admin/sessions');
+      const data = await res.json();
+      const sessions = data.sessions || [];
+      const listEl = $('cpSessionsList');
+      if (!listEl) return;
+
+      if (!sessions.length) {
+        listEl.innerHTML = '<div style="text-align:center;color:var(--text3);padding:2rem;">No active device sessions found.</div>';
+        return;
+      }
+
+      listEl.innerHTML = sessions.map(s => {
+        const isCurrent = s.is_current;
+        const isMobile = (s.device_info || '').toLowerCase().includes('phone') || (s.device_info || '').toLowerCase().includes('android');
+        const iconSvg = isMobile 
+          ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#a78bfa;"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>`
+          : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#38bdf8;"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>`;
+
+        return `
+          <div style="background:var(--surface2);border:1px solid ${isCurrent ? 'rgba(99,102,241,0.5)' : 'var(--border)'};border-radius:var(--radius-md);padding:0.9rem;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:0.75rem;min-width:200px;">
+              <div style="width:36px;height:36px;border-radius:8px;background:var(--surface1);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);">
+                ${iconSvg}
+              </div>
+              <div>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                  <strong style="font-size:0.86rem;color:var(--text1);">${esc(s.device_info || 'Unknown Device')}</strong>
+                  ${isCurrent ? '<span style="font-size:0.65rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:999px;background:rgba(99,102,241,0.2);color:#a5b4fc;border:1px solid rgba(99,102,241,0.4);">THIS DEVICE</span>' : ''}
+                </div>
+                <div style="font-size:0.72rem;color:var(--text3);margin-top:0.15rem;display:flex;gap:0.6rem;font-family:'JetBrains Mono';">
+                  <span>IP: ${esc(s.ip_address || '—')}</span>
+                  <span>•</span>
+                  <span>Active: ${s.last_active ? new Date(s.last_active).toLocaleString() : 'Just now'}</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <button onclick="revokeSession(${s.id}, ${isCurrent})" class="btn ${isCurrent ? 'btn-secondary' : 'btn-danger'} btn-sm" style="font-size:0.75rem;padding:0.35rem 0.65rem;display:inline-flex;align-items:center;gap:0.3rem;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>${isCurrent ? 'Log Out (Current)' : 'Revoke Device'}</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      console.warn('loadSessionsList error:', e);
+    }
+  }
+
+  async function revokeSession(id, isCurrent) {
+    if (!confirm(isCurrent ? 'Log out of this device?' : 'Are you sure you want to log out this device?')) return;
+    try {
+      const res = await apiFetch(`/admin/sessions/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to revoke session');
+      toast(data.message || 'Session revoked', 'success');
+      if (isCurrent) {
+        handleLogout();
+      } else {
+        loadSessionsList();
+      }
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  async function logoutAllOtherDevices() {
+    if (!confirm('Log out all other logged-in devices? (Your current device will remain logged in)')) return;
+    try {
+      const res = await apiFetch('/admin/sessions/logout-others', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to logout other devices');
+      toast(data.message || 'All other devices logged out!', 'success');
+      loadSessionsList();
     } catch (err) {
       toast(err.message, 'error');
     }
