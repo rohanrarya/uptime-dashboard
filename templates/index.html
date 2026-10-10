@@ -268,6 +268,15 @@
       padding-top: 0.5rem; border-top: 1px solid var(--border-subtle); font-size: 0.75rem;
     }
 
+    /* Global Box-Sizing & Word Wrap Rules */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    code, pre, .mono {
+      word-break: break-all;
+      overflow-wrap: anywhere;
+    }
+
     /* Modal dialogs */
     .modal-backdrop {
       position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(10px);
@@ -277,37 +286,66 @@
     .modal-box {
       background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl);
       max-width: 840px; width: 100%; max-height: 90vh; display: flex; flex-direction: column;
-      box-shadow: var(--shadow-lg); overflow: hidden;
+      box-shadow: var(--shadow-lg); overflow: hidden; position: relative;
     }
     .modal-head {
-      padding: 1.25rem 1.75rem; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.15rem 1.5rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-shrink: 0;
     }
-    .modal-head h2 { font-size: 1.15rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem; }
+    .modal-head h2 {
+      font-size: 1.1rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;
+      margin: 0; min-width: 0;
+    }
+    .modal-head h2 span {
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
     .modal-body {
       padding: 1.5rem; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 1.25rem;
-      scrollbar-width: thin;
+      scrollbar-width: thin; flex: 1; min-height: 0; width: 100%;
     }
 
-    /* Admin Control Panel Specifics - Eliminate Ugly Horizontal Scrollbar */
+    /* Admin Control Panel Specifics */
+    .cp-content {
+      width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;
+    }
     .cp-tabs {
       display: flex; border-bottom: 1px solid var(--border); background: var(--surface2);
       overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
-      padding: 0 0.5rem; gap: 0.15rem;
+      -webkit-overflow-scrolling: touch; scroll-behavior: smooth;
+      padding: 0 0.5rem; gap: 0.15rem; flex-shrink: 0;
     }
     .cp-tabs::-webkit-scrollbar {
-      display: none;
-      width: 0;
-      height: 0;
+      display: none; width: 0; height: 0;
     }
     .cp-tab-btn {
       padding: 0.75rem 0.85rem; font-size: 0.8rem; font-weight: 700; color: var(--text2);
       border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;
       display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.15s ease;
-      flex-shrink: 0;
+      flex-shrink: 0; user-select: none; -webkit-tap-highlight-color: transparent;
     }
     .cp-tab-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
     .cp-tab-btn.active { color: #fff; border-bottom-color: var(--accent-light); background: rgba(255, 255, 255, 0.06); }
+
+    /* Control Panel Responsive Grid & Layout Helpers */
+    .cp-card-box {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-md);
+      padding: 1.15rem; box-sizing: border-box; width: 100%; max-width: 100%;
+    }
+    .cp-grid-2 {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; width: 100%;
+    }
+    .cp-grid-3 {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; width: 100%;
+    }
+    .cp-btn-group {
+      display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; width: 100%;
+    }
+    .cp-input-btn-row {
+      display: flex; gap: 0.5rem; width: 100%;
+    }
+    .cp-header-actions {
+      display: inline-flex; gap: 0.45rem; align-items: center;
+    }
 
     /* Custom Sleek Dark Scrollbars across the entire app */
     * {
@@ -329,18 +367,20 @@
       background: rgba(255, 255, 255, 0.3);
     }
 
-    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; width: 100%; max-width: 100%; }
     .form-label { font-size: 0.75rem; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; }
     .form-input {
       background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-md);
       padding: 0.65rem 0.95rem; font-size: 0.85rem; color: #fff; font-family: inherit; outline: none;
+      width: 100%; max-width: 100%; box-sizing: border-box;
     }
     .form-input:focus { border-color: var(--accent-light); box-shadow: 0 0 0 3px var(--accent-glow); }
     .form-input.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
 
     .table-container {
-      border: 1px solid var(--border); border-radius: var(--radius-md); overflow-x: auto;
-      scrollbar-width: thin;
+      width: 100%; max-width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md);
+      overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+      box-sizing: border-box;
     }
     .table-container::-webkit-scrollbar {
       height: 5px;
@@ -349,9 +389,9 @@
       background: rgba(255, 255, 255, 0.15);
       border-radius: 999px;
     }
-    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 520px; }
     th, td { padding: 0.65rem 0.85rem; text-align: left; border-bottom: 1px solid var(--border-subtle); }
-    th { background: var(--surface2); color: var(--text3); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; }
+    th { background: var(--surface2); color: var(--text3); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; white-space: nowrap; }
     tr:last-child td { border-bottom: none; }
 
     /* Login Screen Overlay */
@@ -372,10 +412,11 @@
     }
 
     /* Toast */
-    .toast-tray { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 3000; display: flex; flex-direction: column; gap: 0.5rem; }
+    .toast-tray { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 3000; display: flex; flex-direction: column; gap: 0.5rem; max-width: calc(100vw - 3rem); }
     .toast-msg {
       background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-md);
       padding: 0.75rem 1.25rem; font-size: 0.85rem; color: var(--text); box-shadow: var(--shadow-md);
+      word-break: break-word;
     }
     .toast-msg.success { border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7; }
     .toast-msg.error { border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
@@ -385,10 +426,86 @@
       header { padding: 0.75rem 1rem; }
       main { padding: 1rem 0.85rem 3rem; }
       .brand-text span { display: none; }
+      .hide-mobile { display: none !important; }
       .deployments-grid, .monitors-grid { grid-template-columns: 1fr; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
-      .modal-box { max-height: 95vh; }
-      .modal-body { padding: 1rem; }
+      .quick-launch-grid { grid-template-columns: 1fr; }
+
+      /* Control Panel Modal Responsive */
+      .modal-backdrop { padding: 0.5rem 0.35rem; }
+      .modal-box { max-height: 96vh; border-radius: var(--radius-lg); }
+      .modal-head { padding: 0.85rem 1rem; }
+      .modal-head h2 { font-size: 1rem; }
+      .modal-body { padding: 1rem 0.85rem; gap: 1rem; }
+
+      .cp-tabs { padding: 0.2rem 0.35rem; }
+      .cp-tab-btn { padding: 0.65rem 0.7rem; font-size: 0.76rem; gap: 0.35rem; }
+      .cp-tab-btn svg { width: 13px; height: 13px; }
+    }
+
+    @media (max-width: 600px) {
+      .modal-backdrop { padding: 0.25rem 0.15rem; }
+      .modal-box { max-height: 98vh; border-radius: var(--radius-md); }
+      .modal-head { padding: 0.75rem 0.85rem; }
+      .modal-head h2 span { font-size: 0.92rem; }
+      .modal-body { padding: 0.85rem 0.65rem; }
+
+      .cp-card-box { padding: 0.85rem; }
+
+      /* Stack grids into 1 column on mobile */
+      .cp-grid-2, .cp-grid-3 {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* Full width button behavior for mobile control panel */
+      .cp-btn-mobile-full {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+      .cp-btn-group {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 0.5rem !important;
+      }
+      .cp-btn-group .btn {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+      .cp-input-btn-row {
+        flex-direction: column !important;
+        width: 100% !important;
+      }
+      .cp-input-btn-row .btn {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+      .cp-header-actions {
+        width: 100% !important;
+        display: flex !important;
+      }
+      .cp-header-actions .btn {
+        flex: 1 !important;
+        justify-content: center !important;
+      }
+
+      /* Session items mobile adaptation */
+      .cp-session-card {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.75rem !important;
+      }
+      .cp-session-btn-wrap {
+        width: 100% !important;
+      }
+      .cp-session-btn-wrap .btn {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+
+      /* Login card on narrow phones */
+      .login-card {
+        padding: 1.5rem 1.25rem;
+      }
     }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -627,7 +744,7 @@
           Connect your <strong>PostgreSQL Database</strong> (e.g. Neon, Render, or Supabase). All your API keys, multiple accounts, and project titles are automatically stored and persisted in PostgreSQL.
         </p>
 
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;">
+        <div class="cp-card-box" style="margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.6rem;">
           <div>
             <div style="font-size:0.75rem;color:var(--text3);font-weight:700;">CURRENT ENGINE</div>
             <div id="dbEngineBadge" style="font-size:0.95rem;font-weight:700;color:#38bdf8;margin-top:0.2rem;">PostgreSQL</div>
@@ -637,14 +754,14 @@
           </span>
         </div>
 
-        <div style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);border-radius:var(--radius-md);padding:0.9rem;margin-bottom:1rem;font-size:0.8rem;color:var(--text2);line-height:1.45;">
+        <div style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);border-radius:var(--radius-md);padding:0.9rem;margin-bottom:1rem;font-size:0.8rem;color:var(--text2);line-height:1.45;word-break:break-word;">
           <div style="font-weight:700;color:#38bdf8;margin-bottom:0.25rem;display:flex;align-items:center;gap:0.4rem;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#38bdf8;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
             <span>Neon PgBouncer Connection Pooling Active</span>
           </div>
           <div>All queries automatically use Neon's pooled endpoint (<code>-pooler</code>) with retry auto-reconnects to prevent connection timeouts.</div>
           <div style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px dashed rgba(56,189,248,0.2);">
-            <strong style="color:var(--text1);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#fbbf24;vertical-align:-2px;margin-right:3px;"><line x1="9" y1="18" x2="15" y2="18"></line><line x1="10" y1="22" x2="14" y2="22"></line><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"></path></svg>Keep Neon Active 24/7 (Prevent Suspend):</strong> In UptimeRobot, add a free 5-minute HTTP monitor pointing to <code class="mono" style="color:#a78bfa;background:var(--surface1);padding:0.15rem 0.35rem;border-radius:4px;">https://uptime.digitaltask.in/api/health</code>. This pings Neon every 5 minutes so it never sleeps!
+            <strong style="color:var(--text1);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#fbbf24;vertical-align:-2px;margin-right:3px;"><line x1="9" y1="18" x2="15" y2="18"></line><line x1="10" y1="22" x2="14" y2="22"></line><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"></path></svg>Keep Neon Active 24/7 (Prevent Suspend):</strong> In UptimeRobot, add a free 5-minute HTTP monitor pointing to <code class="mono" style="color:#a78bfa;background:var(--surface1);padding:0.15rem 0.35rem;border-radius:4px;word-break:break-all;display:inline-block;max-width:100%;">https://uptime.digitaltask.in/api/health</code>. This pings Neon every 5 minutes so it never sleeps!
           </div>
         </div>
 
@@ -653,7 +770,7 @@
           <input type="text" id="cpDatabaseUrl" class="form-input mono" placeholder="postgresql://user:pass@ep-xyz.neon.tech/neondb" />
         </div>
 
-        <div style="display:flex;gap:0.75rem;margin-top:1rem;">
+        <div class="cp-btn-group">
           <button onclick="testDbConnection()" class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:0.35rem;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
             <span>Test Connection</span>
@@ -678,9 +795,9 @@
         </div>
 
         <!-- Add Account Form -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.15rem;">
+        <div class="cp-card-box">
           <h4 style="font-size:0.85rem;font-weight:700;margin-bottom:0.75rem;">+ Add New Account</h4>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+          <div class="cp-grid-2">
             <div class="form-group">
               <label class="form-label">Provider</label>
               <select id="accNewProvider" class="form-input" style="cursor:pointer;" onchange="toggleAccFields()">
@@ -704,20 +821,20 @@
             <input type="text" id="accNewCfId" class="form-input mono" placeholder="From Cloudflare sidebar" />
           </div>
 
-          <button onclick="submitNewAccount()" class="btn btn-primary" style="margin-top:1rem;">Add Account to Database</button>
+          <button onclick="submitNewAccount()" class="btn btn-primary cp-btn-mobile-full" style="margin-top:1rem;">Add Account to Database</button>
         </div>
       </div>
 
       <!-- TAB 3: PROJECT TITLES & CUSTOM LINKS -->
       <div id="cpTabTitles" class="cp-content" style="display:none;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;flex-wrap:wrap;gap:0.6rem;">
-          <div>
+          <div style="min-width:0;flex:1;">
             <h4 style="font-size:0.88rem;font-weight:700;color:#fff;">Project Titles & Custom Links</h4>
             <p style="font-size:0.78rem;color:var(--text3);margin-top:0.2rem;">
               Rename your TinyURL projects or add custom direct links with titles to the Quick Launch dashboard.
             </p>
           </div>
-          <div style="display:inline-flex;gap:0.45rem;align-items:center;">
+          <div class="cp-header-actions">
             <button type="button" onclick="showAddCustomLinkForm()" class="btn btn-primary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               <span>+ Add Custom Link</span>
@@ -730,8 +847,8 @@
         </div>
 
         <!-- Collapsible Add Custom Link Form -->
-        <div id="addCustomLinkCard" style="display:none;background:var(--surface2);border:1px solid var(--accent-light);border-radius:var(--radius-md);padding:1.15rem;margin-bottom:1.15rem;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+        <div id="addCustomLinkCard" class="cp-card-box" style="display:none;border-color:var(--accent-light);margin-bottom:1.15rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.4rem;">
             <h4 style="font-size:0.85rem;font-weight:700;display:flex;align-items:center;gap:0.4rem;color:#fff;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
               <span>Add Custom Link with Title</span>
@@ -741,7 +858,7 @@
               <span>Cancel</span>
             </button>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:0.85rem;">
+          <div class="cp-grid-2">
             <div class="form-group">
               <label class="form-label">Display Title</label>
               <input type="text" id="customLinkTitle" class="form-input" placeholder="e.g. My Portfolio or Client Portal" onkeydown="if(event.key==='Enter') submitCustomLink()" />
@@ -752,7 +869,7 @@
             </div>
           </div>
           <div style="margin-top:0.85rem;display:flex;justify-content:flex-end;">
-            <button type="button" onclick="submitCustomLink()" class="btn btn-primary" style="font-size:0.82rem;padding:0.55rem 1.25rem;display:inline-flex;align-items:center;gap:0.35rem;">
+            <button type="button" onclick="submitCustomLink()" class="btn btn-primary cp-btn-mobile-full" style="font-size:0.82rem;padding:0.55rem 1.25rem;display:inline-flex;align-items:center;gap:0.35rem;">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <span>Add to Quick Launch</span>
             </button>
@@ -777,12 +894,12 @@
         </div>
 
         <!-- Direct Title Editor for TinyURL -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.15rem;">
+        <div class="cp-card-box">
           <h4 style="font-size:0.85rem;font-weight:700;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;color:#fff;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
             <span>Rename Existing Project</span>
           </h4>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:0.85rem;">
+          <div class="cp-grid-2">
             <div class="form-group">
               <label class="form-label">Select Project</label>
               <select id="titleProjectSelect" class="form-input mono" onchange="onProjectSelectChange()" style="cursor:pointer;">
@@ -793,16 +910,16 @@
             </div>
             <div class="form-group">
               <label class="form-label">New Display Title</label>
-              <div style="display:flex;gap:0.5rem;">
+              <div class="cp-input-btn-row">
                 <input type="text" id="titleNewName" class="form-input" placeholder="e.g. My Portfolio" style="flex:1;" onkeydown="if(event.key==='Enter') submitProjectTitle()" />
-                <button type="button" onclick="submitProjectTitle()" class="btn btn-primary" style="font-size:0.82rem;padding:0.6rem 1.15rem;white-space:nowrap;display:inline-flex;align-items:center;gap:0.35rem;">
+                <button type="button" onclick="submitProjectTitle()" class="btn btn-primary cp-action-btn" style="font-size:0.82rem;padding:0.6rem 1.15rem;white-space:nowrap;display:inline-flex;align-items:center;gap:0.35rem;">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                   <span>Save Title</span>
                 </button>
               </div>
             </div>
           </div>
-          <div id="manualSlugToggleWrap" style="margin-top:0.75rem;display:flex;align-items:center;justify-content:space-between;">
+          <div id="manualSlugToggleWrap" style="margin-top:0.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.4rem;">
             <span id="titleTinyUrlStatus" style="font-size:0.72rem;color:var(--text3);"></span>
             <button type="button" onclick="toggleManualSlugInput()" style="background:none;border:none;color:var(--text3);font-size:0.72rem;cursor:pointer;text-decoration:underline;">
               + Enter custom slug manually (advanced)
@@ -827,7 +944,7 @@
           <label class="form-label">TinyURL API Token</label>
           <input type="password" id="cpTinyKey" class="form-input mono" placeholder="Bearer token from tinyurl.com/app/settings/api" />
         </div>
-        <button onclick="saveApiKeys()" class="btn btn-primary" style="margin-top:1.25rem;">Save Keys to Database</button>
+        <button onclick="saveApiKeys()" class="btn btn-primary cp-btn-mobile-full" style="margin-top:1.25rem;">Save Keys to Database</button>
       </div>
 
       <!-- TAB 5: SECURITY -->
@@ -840,11 +957,11 @@
           <label class="form-label">New Admin Password</label>
           <input type="password" id="cpNewPass" class="form-input" placeholder="Enter new password" />
         </div>
-        <button onclick="submitChangePassword()" class="btn btn-primary" style="margin-top:0.75rem;">Update Password</button>
+        <button onclick="submitChangePassword()" class="btn btn-primary cp-btn-mobile-full" style="margin-top:0.75rem;">Update Password</button>
 
         <!-- TWO FACTOR AUTHENTICATION SECTION -->
         <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
             <div>
               <h4 style="font-size:0.88rem;font-weight:700;display:flex;align-items:center;gap:0.4rem;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent-light);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
@@ -859,43 +976,43 @@
 
           <!-- When 2FA is OFF -->
           <div id="cp2faOffBox">
-            <button onclick="start2FASetup()" class="btn btn-secondary" style="font-size:0.85rem;display:inline-flex;align-items:center;gap:0.4rem;">
+            <button onclick="start2FASetup()" class="btn btn-secondary cp-btn-mobile-full" style="font-size:0.85rem;display:inline-flex;align-items:center;gap:0.4rem;">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
               <span>Setup Authenticator App</span>
             </button>
           </div>
 
           <!-- When setting up 2FA -->
-          <div id="cp2faSetupBox" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-top:0.75rem;">
+          <div id="cp2faSetupBox" class="cp-card-box" style="display:none;margin-top:0.75rem;">
             <p style="font-size:0.8rem;color:var(--text2);margin-bottom:0.75rem;">
               <strong>Step 1:</strong> Scan this QR code in <strong>Google Authenticator</strong> or <strong>Microsoft Authenticator</strong>:
             </p>
             <div style="text-align:center;margin:0.75rem 0;">
-              <img id="cp2faQrImg" src="" alt="2FA QR Code" style="width:160px;height:160px;border-radius:8px;background:#fff;padding:8px;box-shadow:0 4px 12px rgba(0,0,0,0.4);" />
+              <img id="cp2faQrImg" src="" alt="2FA QR Code" style="width:160px;height:160px;max-width:100%;border-radius:8px;background:#fff;padding:8px;box-shadow:0 4px 12px rgba(0,0,0,0.4);" />
             </div>
             <p style="font-size:0.78rem;color:var(--text3);margin-bottom:0.25rem;">Or manually enter this secret key:</p>
-            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;">
-              <input type="text" id="cp2faSecretKey" class="form-input mono" readonly style="font-size:0.85rem;letter-spacing:0.1rem;" />
-              <button type="button" onclick="copy2FASecret()" class="btn btn-secondary btn-sm">Copy</button>
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;">
+              <input type="text" id="cp2faSecretKey" class="form-input mono" readonly style="font-size:0.85rem;letter-spacing:0.1rem;flex:1;min-width:180px;" />
+              <button type="button" onclick="copy2FASecret()" class="btn btn-secondary btn-sm cp-btn-mobile-full">Copy</button>
             </div>
             <p style="font-size:0.8rem;color:var(--text2);margin-bottom:0.5rem;">
               <strong>Step 2:</strong> Enter the 6-digit code shown in your app to verify:
             </p>
-            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-              <input type="text" id="cp2faVerifyCode" class="form-input mono" maxlength="6" inputmode="numeric" placeholder="123456" style="font-size:1.1rem;letter-spacing:0.25rem;text-align:center;max-width:140px;" />
+            <div class="cp-btn-group" style="margin-top:0.5rem;">
+              <input type="text" id="cp2faVerifyCode" class="form-input mono" maxlength="6" inputmode="numeric" placeholder="123456" style="font-size:1.1rem;letter-spacing:0.25rem;text-align:center;max-width:160px;" />
               <button type="button" onclick="submitEnable2FA()" class="btn btn-primary">Confirm & Enable 2FA</button>
               <button type="button" onclick="cancel2FASetup()" class="btn btn-secondary">Cancel</button>
             </div>
           </div>
 
           <!-- When 2FA is ON -->
-          <div id="cp2faOnBox" style="display:none;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:var(--radius-md);padding:1rem;margin-top:0.75rem;">
+          <div id="cp2faOnBox" class="cp-card-box" style="display:none;background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.3);margin-top:0.75rem;">
             <div style="display:flex;align-items:center;gap:0.4rem;color:#86efac;font-size:0.82rem;font-weight:600;margin-bottom:0.5rem;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <span>Two-factor authentication is active and protecting your dashboard.</span>
             </div>
-            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-              <input type="password" id="cp2faDisablePass" class="form-input mono" placeholder="Current 6-digit code or Admin Password" style="max-width:280px;" />
+            <div class="cp-btn-group" style="align-items:center;">
+              <input type="password" id="cp2faDisablePass" class="form-input mono" placeholder="Current 6-digit code or Admin Password" style="flex:1;min-width:180px;" />
               <button type="button" onclick="submitDisable2FA()" class="btn btn-danger btn-sm">Disable 2FA</button>
             </div>
           </div>
@@ -933,11 +1050,11 @@
         </div>
 
         <!-- Add User Form -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;">
+        <div class="cp-card-box">
           <h5 style="font-size:0.82rem;font-weight:700;color:var(--accent-light);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.04em;">
             + Add New User
           </h5>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:0.75rem;">
+          <div class="cp-grid-3">
             <div class="form-group">
               <label class="form-label">Username</label>
               <input type="text" id="userNewUsername" class="form-input" placeholder="e.g. rohan or ops_viewer" autocomplete="off" />
@@ -954,7 +1071,7 @@
               </select>
             </div>
           </div>
-          <button type="button" onclick="submitAddUser()" class="btn btn-primary" style="margin-top:0.85rem;font-size:0.82rem;padding:0.6rem 1.1rem;display:inline-flex;align-items:center;gap:0.35rem;">
+          <button type="button" onclick="submitAddUser()" class="btn btn-primary cp-btn-mobile-full" style="margin-top:0.85rem;font-size:0.82rem;padding:0.6rem 1.1rem;display:inline-flex;align-items:center;gap:0.35rem;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             <span>Add User</span>
           </button>
@@ -970,7 +1087,7 @@
               Track devices currently authenticated. 1-click revoke any session or log out all other devices.
             </p>
           </div>
-          <button onclick="logoutAllOtherDevices()" class="btn btn-danger btn-sm" style="font-size:0.78rem;display:inline-flex;align-items:center;gap:0.35rem;">
+          <button onclick="logoutAllOtherDevices()" class="btn btn-danger btn-sm cp-btn-mobile-full" style="font-size:0.78rem;display:inline-flex;align-items:center;gap:0.35rem;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
             </svg>
@@ -1354,7 +1471,13 @@
       if (el) el.style.display = t === tab ? 'block' : 'none';
     });
     document.querySelectorAll('.cp-tab-btn').forEach((btn) => {
-      btn.classList.toggle('active', btn.dataset.tab === tab);
+      const isActive = btn.dataset.tab === tab;
+      btn.classList.toggle('active', isActive);
+      if (isActive) {
+        try {
+          btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        } catch (e) {}
+      }
     });
     if (tab === 'titles') loadTitlesTable();
     if (tab === 'security') load2FAStatus();
@@ -1979,25 +2102,25 @@
           : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#38bdf8;"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>`;
 
         return `
-          <div style="background:var(--surface2);border:1px solid ${isCurrent ? 'rgba(99,102,241,0.5)' : 'var(--border)'};border-radius:var(--radius-md);padding:0.9rem;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
-            <div style="display:flex;align-items:center;gap:0.75rem;min-width:200px;">
-              <div style="width:36px;height:36px;border-radius:8px;background:var(--surface1);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);">
+          <div class="cp-session-card" style="background:var(--surface2);border:1px solid ${isCurrent ? 'rgba(99,102,241,0.5)' : 'var(--border)'};border-radius:var(--radius-md);padding:0.9rem;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:space-between;gap:0.85rem;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:0.75rem;flex:1;min-width:200px;">
+              <div style="width:36px;height:36px;border-radius:8px;background:var(--surface1);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);flex-shrink:0;">
                 ${iconSvg}
               </div>
-              <div>
-                <div style="display:flex;align-items:center;gap:0.5rem;">
-                  <strong style="font-size:0.86rem;color:var(--text1);">${esc(s.device_info || 'Unknown Device')}</strong>
+              <div style="min-width:0;flex:1;">
+                <div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">
+                  <strong style="font-size:0.86rem;color:var(--text1);word-break:break-word;">${esc(s.device_info || 'Unknown Device')}</strong>
                   ${isCurrent ? '<span style="font-size:0.65rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:999px;background:rgba(99,102,241,0.2);color:#a5b4fc;border:1px solid rgba(99,102,241,0.4);">THIS DEVICE</span>' : ''}
                 </div>
-                <div style="font-size:0.72rem;color:var(--text3);margin-top:0.15rem;display:flex;gap:0.6rem;font-family:'JetBrains Mono';">
+                <div style="font-size:0.72rem;color:var(--text3);margin-top:0.2rem;display:flex;gap:0.5rem;font-family:'JetBrains Mono';flex-wrap:wrap;word-break:break-all;">
                   <span>IP: ${esc(s.ip_address || '—')}</span>
                   <span>•</span>
                   <span>Active: ${s.last_active ? new Date(s.last_active).toLocaleString() : 'Just now'}</span>
                 </div>
               </div>
             </div>
-            <div>
-              <button onclick="revokeSession(${s.id}, ${isCurrent})" class="btn ${isCurrent ? 'btn-secondary' : 'btn-danger'} btn-sm" style="font-size:0.75rem;padding:0.35rem 0.65rem;display:inline-flex;align-items:center;gap:0.3rem;">
+            <div class="cp-session-btn-wrap">
+              <button onclick="revokeSession(${s.id}, ${isCurrent})" class="btn ${isCurrent ? 'btn-secondary' : 'btn-danger'} btn-sm cp-btn-mobile-full" style="font-size:0.75rem;padding:0.35rem 0.65rem;display:inline-flex;align-items:center;gap:0.3rem;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                   <polyline points="16 17 21 12 16 7"></polyline>
