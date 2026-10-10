@@ -37,7 +37,17 @@
       --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html {
+      overflow-x: hidden;
+      max-width: 100vw;
+      width: 100%;
+      -webkit-text-size-adjust: 100%;
+    }
     body {
       background: var(--bg);
       color: var(--text);
@@ -45,6 +55,17 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
+      max-width: 100vw;
+      width: 100%;
+      position: relative;
+    }
+    body.modal-open {
+      overflow: hidden;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
     }
 
     /* Header */
@@ -423,41 +444,208 @@
 
     /* Responsive Queries */
     @media (max-width: 768px) {
-      header { padding: 0.75rem 1rem; }
-      main { padding: 1rem 0.85rem 3rem; }
-      .brand-text span { display: none; }
-      .hide-mobile { display: none !important; }
-      .deployments-grid, .monitors-grid { grid-template-columns: 1fr; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
-      .quick-launch-grid { grid-template-columns: 1fr; }
+      /* Header */
+      header {
+        padding: 0.65rem 0.85rem;
+        gap: 0.5rem;
+      }
+      .brand {
+        gap: 0.5rem;
+        min-width: 0;
+        flex: 1;
+      }
+      .brand-icon {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+      }
+      .brand-icon svg {
+        width: 17px;
+        height: 17px;
+      }
+      .brand-text {
+        min-width: 0;
+        overflow: hidden;
+      }
+      .brand-text h1 {
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .brand-text span {
+        display: none !important;
+      }
+      .hide-mobile {
+        display: none !important;
+      }
+      .header-actions {
+        gap: 0.35rem;
+        flex-shrink: 0;
+      }
+      .header-actions .btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.76rem;
+      }
 
-      /* Control Panel Modal Responsive */
-      .modal-backdrop { padding: 0.5rem 0.35rem; }
-      .modal-box { max-height: 96vh; border-radius: var(--radius-lg); }
-      .modal-head { padding: 0.85rem 1rem; }
-      .modal-head h2 { font-size: 1rem; }
-      .modal-body { padding: 1rem 0.85rem; gap: 1rem; }
+      /* Main container */
+      main {
+        padding: 0.85rem 0.75rem 2.5rem;
+        width: 100%;
+        max-width: 100%;
+      }
 
-      .cp-tabs { padding: 0.2rem 0.35rem; }
-      .cp-tab-btn { padding: 0.65rem 0.7rem; font-size: 0.76rem; gap: 0.35rem; }
-      .cp-tab-btn svg { width: 13px; height: 13px; }
-    }
+      /* Quick Launch */
+      .quick-launch-section {
+        padding: 0.85rem 0.9rem;
+        margin-bottom: 1.15rem;
+        border-radius: var(--radius-md);
+      }
+      .quick-launch-header {
+        gap: 0.5rem;
+      }
+      .quick-launch-grid {
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+      }
+      .ql-card-link {
+        padding: 0.65rem 0.75rem;
+      }
 
-    @media (max-width: 600px) {
-      .modal-backdrop { padding: 0.25rem 0.15rem; }
-      .modal-box { max-height: 98vh; border-radius: var(--radius-md); }
-      .modal-head { padding: 0.75rem 0.85rem; }
-      .modal-head h2 span { font-size: 0.92rem; }
-      .modal-body { padding: 0.85rem 0.65rem; }
+      /* View Tabs (Deployments vs Monitors) */
+      .view-tabs-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+        margin-bottom: 1.15rem;
+      }
+      .view-tabs {
+        width: 100%;
+        display: flex;
+        padding: 0.25rem;
+        gap: 0.25rem;
+      }
+      .view-tab {
+        flex: 1;
+        justify-content: center;
+        padding: 0.55rem 0.4rem;
+        font-size: 0.78rem;
+        gap: 0.35rem;
+      }
+      .view-tab svg {
+        width: 13px;
+        height: 13px;
+      }
+      .tab-badge {
+        padding: 0.1rem 0.35rem;
+        font-size: 0.65rem;
+      }
 
-      .cp-card-box { padding: 0.85rem; }
+      /* Stats KPI Grid */
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.6rem;
+        margin-bottom: 1.15rem;
+      }
+      .stat-card {
+        padding: 0.85rem 0.75rem;
+        border-radius: var(--radius-md);
+      }
+      .stat-label {
+        font-size: 0.65rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .stat-value {
+        font-size: 1.45rem;
+        margin: 0.2rem 0 0.1rem;
+      }
+      .stat-sub {
+        font-size: 0.68rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
-      /* Stack grids into 1 column on mobile */
+      /* Deployments & Monitors Cards */
+      .deployments-grid, .monitors-grid {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+      }
+      .deployment-card, .monitor-card {
+        padding: 1rem 0.9rem;
+        gap: 0.85rem;
+        border-radius: var(--radius-md);
+      }
+      .card-header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .project-title {
+        font-size: 0.95rem;
+      }
+      .status-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.6rem;
+      }
+      .commit-box {
+        padding: 0.7rem 0.75rem;
+      }
+      .commit-message {
+        font-size: 0.8rem;
+      }
+
+      /* Full Screen Mobile App Experience for Control Panel Modal */
+      .modal-backdrop {
+        padding: 0;
+        align-items: stretch;
+      }
+      .modal-box {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+        margin: 0;
+      }
+      .modal-head {
+        padding: 0.85rem 1rem;
+      }
+      .modal-head h2 {
+        font-size: 0.95rem;
+      }
+      .modal-body {
+        padding: 1rem 0.85rem;
+        gap: 1rem;
+      }
+
+      /* Control panel tabs */
+      .cp-tabs {
+        padding: 0.25rem 0.4rem;
+        gap: 0.2rem;
+      }
+      .cp-tab-btn {
+        padding: 0.65rem 0.75rem;
+        font-size: 0.76rem;
+        gap: 0.35rem;
+      }
+      .cp-tab-btn svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      .cp-card-box {
+        padding: 0.85rem;
+      }
+
+      /* Grids to single column */
       .cp-grid-2, .cp-grid-3 {
         grid-template-columns: 1fr !important;
       }
 
-      /* Full width button behavior for mobile control panel */
+      /* Full width button behavior */
       .cp-btn-mobile-full {
         width: 100% !important;
         justify-content: center !important;
@@ -488,7 +676,7 @@
         justify-content: center !important;
       }
 
-      /* Session items mobile adaptation */
+      /* Sessions card mobile */
       .cp-session-card {
         flex-direction: column !important;
         align-items: stretch !important;
@@ -502,9 +690,23 @@
         justify-content: center !important;
       }
 
-      /* Login card on narrow phones */
+      /* Login card */
       .login-card {
         padding: 1.5rem 1.25rem;
+        max-width: 360px;
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .modal-head h2 span {
+        font-size: 0.86rem;
+      }
+      .header-actions .btn {
+        padding: 0.35rem 0.45rem;
       }
     }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
@@ -1155,6 +1357,7 @@
 
   function showLoginScreen() {
     $('loginScreen').classList.add('active');
+    document.body.classList.add('modal-open');
     $('loginStep1').style.display = 'block';
     $('loginStep2').style.display = 'none';
     $('loginPassword').value = '';
@@ -1164,6 +1367,7 @@
 
   function hideLoginScreen() {
     $('loginScreen').classList.remove('active');
+    document.body.classList.remove('modal-open');
     $('loginStep1').style.display = 'block';
     $('loginStep2').style.display = 'none';
     temp2faToken = '';
@@ -1456,12 +1660,14 @@
   // =========================================================================
   async function openControlPanel() {
     $('controlPanelModal').classList.add('open');
+    document.body.classList.add('modal-open');
     switchCpTab('db');
     loadControlPanelData();
   }
 
   function closeControlPanel() {
     $('controlPanelModal').classList.remove('open');
+    document.body.classList.remove('modal-open');
   }
 
   function switchCpTab(tab) {
