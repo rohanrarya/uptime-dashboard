@@ -667,32 +667,52 @@
 
       <!-- TAB 3: PROJECT TITLES -->
       <div id="cpTabTitles" class="cp-content" style="display:none;">
-        <p style="font-size:0.8rem;color:var(--text2);margin-bottom:1rem;">
-          Override project titles for your TinyURL aliases. For example, change <code>rohanrarya</code> to <strong>"My Portfolio"</strong>.
-        </p>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+          <div>
+            <h4 style="font-size:0.88rem;font-weight:700;color:#fff;">TinyURL Project Titles</h4>
+            <p style="font-size:0.78rem;color:var(--text3);margin-top:0.2rem;">
+              Override project titles for your TinyURL aliases. Custom titles will appear in Quick Launch and previews.
+            </p>
+          </div>
+          <button type="button" onclick="loadTinyUrlSlugs()" class="btn btn-secondary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            <span>Refresh TinyURL Slugs</span>
+          </button>
+        </div>
 
         <div class="table-container" style="margin-bottom:1.25rem;">
           <table>
             <thead>
-              <tr><th>TinyURL Alias</th><th>Custom Display Name</th><th>Action</th></tr>
+              <tr><th>TinyURL Alias (Slug)</th><th>Custom Display Name</th><th>Action</th></tr>
             </thead>
             <tbody id="cpTitlesTableBody"></tbody>
           </table>
         </div>
 
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.15rem;">
-          <h4 style="font-size:0.85rem;font-weight:700;margin-bottom:0.75rem;">+ Add / Update Title Override</h4>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+          <h4 style="font-size:0.85rem;font-weight:700;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            <span>Add / Update Title Override</span>
+          </h4>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:0.85rem;">
             <div class="form-group">
-              <label class="form-label">Alias (slug)</label>
-              <input type="text" id="titleNewAlias" class="form-input mono" placeholder="e.g. rohanrarya" />
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.2rem;">
+                <label class="form-label" style="margin-bottom:0;">Alias (Slug)</label>
+                <span id="titleTinyUrlStatus" style="font-size:0.68rem;color:#38bdf8;font-weight:600;">Auto-fetching...</span>
+              </div>
+              <select id="titleSlugSelect" class="form-input mono" onchange="onTitleSlugSelectChange()" style="cursor:pointer;margin-bottom:0.4rem;">
+                <option value="">-- Choose Auto-Fetched Slug from TinyURL --</option>
+              </select>
+              <input type="text" id="titleNewAlias" class="form-input mono" placeholder="Or type slug manually (e.g. rohanrarya)" />
             </div>
             <div class="form-group">
               <label class="form-label">Custom Display Name</label>
               <input type="text" id="titleNewName" class="form-input" placeholder="e.g. My Portfolio" />
+              <button onclick="submitProjectTitle()" class="btn btn-primary" style="margin-top:0.4rem;font-size:0.82rem;padding:0.65rem 1rem;">
+                Save Title Override
+              </button>
             </div>
           </div>
-          <button onclick="submitProjectTitle()" class="btn btn-primary" style="margin-top:1rem;">Save Title Override</button>
         </div>
       </div>
 
@@ -1236,6 +1256,7 @@
     document.querySelectorAll('.cp-tab-btn').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.tab === tab);
     });
+    if (tab === 'titles') loadTinyUrlSlugs();
     if (tab === 'security') load2FAStatus();
     if (tab === 'users') loadUsersList();
     if (tab === 'sessions') loadSessionsList();
@@ -1259,9 +1280,10 @@
       $('cpUptimeKey').value = data.keys.uptimerobot_api_key || '';
       $('cpTinyKey').value = data.keys.tinyurl_api_token || '';
 
-      // 2FA Status & Users Count
+      // 2FA Status, Users Count, & Auto-fetch TinyURL slugs
       load2FAStatus();
       loadUsersList();
+      loadTinyUrlSlugs();
 
       // Accounts Table
       $('cpAccountsTableBody').innerHTML = (data.accounts || []).map(a => `
@@ -1276,11 +1298,16 @@
       // Project Titles Table
       $('cpTitlesTableBody').innerHTML = (data.titles || []).map(t => `
         <tr>
-          <td><code style="color:#818cf8;">${esc(t.alias)}</code></td>
+          <td><code style="color:#818cf8;background:rgba(99,102,241,0.12);padding:0.15rem 0.4rem;border-radius:4px;font-size:0.8rem;">${esc(t.alias)}</code></td>
           <td><strong>${esc(t.custom_title)}</strong></td>
-          <td><button onclick="deleteTitle(${t.id})" class="btn btn-danger btn-sm">Delete</button></td>
+          <td>
+            <div style="display:flex;gap:0.4rem;">
+              <button onclick="editTitle('${esc(t.alias)}', '${esc(t.custom_title)}')" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.55rem;font-size:0.72rem;">Edit</button>
+              <button onclick="deleteTitle(${t.id})" class="btn btn-danger btn-sm" style="padding:0.2rem 0.55rem;font-size:0.72rem;">Delete</button>
+            </div>
+          </td>
         </tr>
-      `).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--text3);">No custom title overrides yet.</td></tr>';
+      `).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--text3);padding:1rem;">No custom title overrides yet.</td></tr>';
     } catch (e) {}
   }
 
@@ -1353,6 +1380,82 @@
     }
   }
 
+  // =========================================================================
+  // TINYURL SLUG AUTO-FETCHER & PROJECT TITLES
+  // =========================================================================
+  let cachedTinyLinks = [];
+
+  async function loadTinyUrlSlugs() {
+    const select = $('titleSlugSelect');
+    const status = $('titleTinyUrlStatus');
+    if (!select) return;
+
+    if (status) status.textContent = 'Auto-fetching from TinyURL...';
+
+    try {
+      const res = await apiFetch('/projects');
+      const data = await res.json();
+
+      if (!data.configured) {
+        if (status) status.textContent = 'API token not configured';
+        select.innerHTML = '<option value="">-- TinyURL token not set in API Keys tab --</option>';
+        return;
+      }
+
+      cachedTinyLinks = data.links || [];
+      if (!cachedTinyLinks.length) {
+        if (status) status.textContent = '0 links in TinyURL account';
+        select.innerHTML = '<option value="">-- No links found in TinyURL account --</option>';
+        return;
+      }
+
+      if (status) {
+        status.innerHTML = `<span style="color:#4ade80;">✓ ${cachedTinyLinks.length} slugs fetched</span>`;
+      }
+
+      select.innerHTML = '<option value="">-- Select Auto-Fetched Slug (' + cachedTinyLinks.length + ' available) --</option>' +
+        cachedTinyLinks.map(l => {
+          const aliasVal = l.alias || '';
+          return `<option value="${esc(aliasVal)}">${esc(aliasVal)} (${esc(l.displayUrl)})</option>`;
+        }).join('');
+
+    } catch (err) {
+      if (status) status.textContent = 'Failed to fetch slugs';
+    }
+  }
+
+  function onTitleSlugSelectChange() {
+    const select = $('titleSlugSelect');
+    const val = (select.value || '').trim();
+    if (val) {
+      $('titleNewAlias').value = val;
+      const found = cachedTinyLinks.find(l => (l.alias || '').toLowerCase() === val.toLowerCase());
+      if (found) {
+        if (found.title && found.title !== val) {
+          $('titleNewName').value = found.title;
+        } else {
+          $('titleNewName').value = '';
+        }
+      }
+      $('titleNewName').focus();
+    }
+  }
+
+  function editTitle(alias, customTitle) {
+    $('titleNewAlias').value = alias;
+    $('titleNewName').value = customTitle;
+    const select = $('titleSlugSelect');
+    if (select) {
+      for (let i = 0; i < select.options.length; i++) {
+        if (select.options[i].value.toLowerCase() === alias.toLowerCase()) {
+          select.selectedIndex = i;
+          break;
+        }
+      }
+    }
+    $('titleNewName').focus();
+  }
+
   async function submitProjectTitle() {
     const alias = $('titleNewAlias').value.trim();
     const title = $('titleNewName').value.trim();
@@ -1369,6 +1472,7 @@
       toast('Title override saved!', 'success');
       $('titleNewAlias').value = '';
       $('titleNewName').value = '';
+      if ($('titleSlugSelect')) $('titleSlugSelect').value = '';
       loadControlPanelData();
       refreshDashboard(true);
     } catch (err) {
