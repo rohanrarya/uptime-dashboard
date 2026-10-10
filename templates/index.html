@@ -270,13 +270,13 @@
 
     /* Modal dialogs */
     .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px);
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(10px);
       z-index: 1000; display: none; align-items: center; justify-content: center; padding: 1.25rem;
     }
     .modal-backdrop.open { display: flex; }
     .modal-box {
       background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl);
-      max-width: 760px; width: 100%; max-height: 90vh; display: flex; flex-direction: column;
+      max-width: 840px; width: 100%; max-height: 90vh; display: flex; flex-direction: column;
       box-shadow: var(--shadow-lg); overflow: hidden;
     }
     .modal-head {
@@ -284,17 +284,50 @@
       display: flex; align-items: center; justify-content: space-between;
     }
     .modal-head h2 { font-size: 1.15rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem; }
-    .modal-body { padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem; }
-
-    /* Admin Control Panel Specifics */
-    .cp-tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface2); overflow-x: auto; }
-    .cp-tab-btn {
-      padding: 0.75rem 1rem; font-size: 0.82rem; font-weight: 700; color: var(--text2);
-      border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;
-      display: inline-flex; align-items: center; gap: 0.45rem; transition: all 0.15s ease;
+    .modal-body {
+      padding: 1.5rem; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 1.25rem;
+      scrollbar-width: thin;
     }
-    .cp-tab-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.02); }
-    .cp-tab-btn.active { color: #fff; border-bottom-color: var(--accent-light); background: rgba(255, 255, 255, 0.04); }
+
+    /* Admin Control Panel Specifics - Eliminate Ugly Horizontal Scrollbar */
+    .cp-tabs {
+      display: flex; border-bottom: 1px solid var(--border); background: var(--surface2);
+      overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+      padding: 0 0.5rem; gap: 0.15rem;
+    }
+    .cp-tabs::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+    .cp-tab-btn {
+      padding: 0.75rem 0.85rem; font-size: 0.8rem; font-weight: 700; color: var(--text2);
+      border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+    .cp-tab-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
+    .cp-tab-btn.active { color: #fff; border-bottom-color: var(--accent-light); background: rgba(255, 255, 255, 0.06); }
+
+    /* Custom Sleek Dark Scrollbars across the entire app */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.16);
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
 
     .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
     .form-label { font-size: 0.75rem; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -305,7 +338,17 @@
     .form-input:focus { border-color: var(--accent-light); box-shadow: 0 0 0 3px var(--accent-glow); }
     .form-input.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
 
-    .table-container { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+    .table-container {
+      border: 1px solid var(--border); border-radius: var(--radius-md); overflow-x: auto;
+      scrollbar-width: thin;
+    }
+    .table-container::-webkit-scrollbar {
+      height: 5px;
+    }
+    .table-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 999px;
+    }
     table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
     th, td { padding: 0.65rem 0.85rem; text-align: left; border-bottom: 1px solid var(--border-subtle); }
     th { background: var(--surface2); color: var(--text3); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; }
@@ -665,22 +708,58 @@
         </div>
       </div>
 
-      <!-- TAB 3: PROJECT TITLES -->
+      <!-- TAB 3: PROJECT TITLES & CUSTOM LINKS -->
       <div id="cpTabTitles" class="cp-content" style="display:none;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;flex-wrap:wrap;gap:0.6rem;">
           <div>
-            <h4 style="font-size:0.88rem;font-weight:700;color:#fff;">Project Titles (TinyURL)</h4>
+            <h4 style="font-size:0.88rem;font-weight:700;color:#fff;">Project Titles & Custom Links</h4>
             <p style="font-size:0.78rem;color:var(--text3);margin-top:0.2rem;">
-              Rename your TinyURL links for Quick Launch. TinyURL redirect URLs remain untouched.
+              Rename your TinyURL projects or add custom direct links with titles to the Quick Launch dashboard.
             </p>
           </div>
-          <button type="button" onclick="loadTitlesTable()" class="btn btn-secondary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-            <span>Refresh Projects</span>
-          </button>
+          <div style="display:inline-flex;gap:0.45rem;align-items:center;">
+            <button type="button" onclick="showAddCustomLinkForm()" class="btn btn-primary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>+ Add Custom Link</span>
+            </button>
+            <button type="button" onclick="loadTitlesTable()" class="btn btn-secondary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <span>Refresh</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Table listing all TinyURL projects directly -->
+        <!-- Collapsible Add Custom Link Form -->
+        <div id="addCustomLinkCard" style="display:none;background:var(--surface2);border:1px solid var(--accent-light);border-radius:var(--radius-md);padding:1.15rem;margin-bottom:1.15rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+            <h4 style="font-size:0.85rem;font-weight:700;display:flex;align-items:center;gap:0.4rem;color:#fff;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+              <span>Add Custom Link with Title</span>
+            </h4>
+            <button type="button" onclick="hideAddCustomLinkForm()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.75rem;display:inline-flex;align-items:center;gap:0.25rem;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              <span>Cancel</span>
+            </button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:0.85rem;">
+            <div class="form-group">
+              <label class="form-label">Display Title</label>
+              <input type="text" id="customLinkTitle" class="form-input" placeholder="e.g. My Portfolio or Client Portal" onkeydown="if(event.key==='Enter') submitCustomLink()" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Destination URL</label>
+              <input type="url" id="customLinkUrl" class="form-input mono" placeholder="https://example.com" onkeydown="if(event.key==='Enter') submitCustomLink()" />
+            </div>
+          </div>
+          <div style="margin-top:0.85rem;display:flex;justify-content:flex-end;">
+            <button type="button" onclick="submitCustomLink()" class="btn btn-primary" style="font-size:0.82rem;padding:0.55rem 1.25rem;display:inline-flex;align-items:center;gap:0.35rem;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Add to Quick Launch</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Table listing all projects and custom links -->
         <div class="table-container" style="margin-bottom:1.25rem;">
           <table>
             <thead>
@@ -692,16 +771,16 @@
               </tr>
             </thead>
             <tbody id="cpTitlesTableBody">
-              <tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1.5rem;">Loading your TinyURL projects...</td></tr>
+              <tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1.5rem;">Loading your projects and links...</td></tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Direct Title Editor (No alias typing needed) -->
+        <!-- Direct Title Editor for TinyURL -->
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.15rem;">
           <h4 style="font-size:0.85rem;font-weight:700;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;color:#fff;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-            <span>Change Project Title</span>
+            <span>Rename Existing Project</span>
           </h4>
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:0.85rem;">
             <div class="form-group">
@@ -1094,45 +1173,43 @@
     }
   }
 
-  // 1. Quick Launch (Projects + Titles)
+  // 1. Quick Launch (Projects + Titles + Custom Links)
   async function loadQuickLaunch(force = false) {
     try {
       const res = await apiFetch(force ? '/projects?force=1' : '/projects');
       const data = await res.json();
 
-      if (!data.configured) {
-        $('qlStatus').textContent = 'TinyURL token not set (Click Control Panel to configure)';
-        $('quickLaunchGrid').innerHTML = '<div style="color:var(--text3);font-size:0.8rem;padding:0.5rem 0;">No TinyURL projects configured yet.</div>';
-        return;
-      }
-
       const links = data.links || [];
       $('qlBadge').textContent = `${links.length} Project${links.length === 1 ? '' : 's'}`;
-      $('qlStatus').textContent = `Auto-synced (${links.length} active)`;
+      $('qlStatus').textContent = `${links.length} active link${links.length === 1 ? '' : 's'}`;
 
       if (!links.length) {
-        $('quickLaunchGrid').innerHTML = '<div style="color:var(--text3);font-size:0.8rem;">0 links found in your TinyURL account.</div>';
+        $('quickLaunchGrid').innerHTML = '<div style="color:var(--text3);font-size:0.8rem;padding:0.75rem 0;">No projects or links configured yet. Open Control Panel to add custom links or connect TinyURL.</div>';
         return;
       }
 
-      $('quickLaunchGrid').innerHTML = links.map(l => `
+      $('quickLaunchGrid').innerHTML = links.map(l => {
+        const destUrl = l.targetUrl || l.tinyUrl;
+        const isCustom = Boolean(l.isCustomLink);
+        return `
         <div class="ql-card">
-          <a href="${esc(l.tinyUrl)}" target="_blank" rel="noopener" class="ql-card-link">
+          <a href="${esc(destUrl)}" target="_blank" rel="noopener" class="ql-card-link">
             <div class="ql-card-top">
               <svg class="ql-project-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
               <span class="ql-project-name">${esc(l.title)}</span>
               <span class="ql-external-icon">↗</span>
             </div>
             <div class="ql-url-line">
-              <span class="ql-tiny-tag">TinyURL</span>
+              <span class="ql-tiny-tag" style="${isCustom ? 'background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);' : ''}">${isCustom ? 'Custom' : 'TinyURL'}</span>
               <span class="ql-url-text">${esc(l.displayUrl)}</span>
             </div>
           </a>
-          <button class="ql-copy-btn" onclick="copyLink('${esc(l.tinyUrl)}')" title="Copy Link">
+          <button class="ql-copy-btn" onclick="copyLink('${esc(destUrl)}')" title="Copy Link">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
           </button>
         </div>
-      `).join('');
+        `;
+      }).join('');
     } catch (e) {}
   }
 
@@ -1395,13 +1472,65 @@
   let cachedTinyProjects = [];
   let cachedOverridesMap = {};
 
+  function showAddCustomLinkForm() {
+    const card = $('addCustomLinkCard');
+    if (card) {
+      card.style.display = 'block';
+      $('customLinkTitle').focus();
+    }
+  }
+
+  function hideAddCustomLinkForm() {
+    const card = $('addCustomLinkCard');
+    if (card) {
+      card.style.display = 'none';
+      $('customLinkTitle').value = '';
+      $('customLinkUrl').value = '';
+    }
+  }
+
+  async function submitCustomLink() {
+    const title = $('customLinkTitle').value.trim();
+    let url = $('customLinkUrl').value.trim();
+
+    if (!title) {
+      toast('Please enter a display title', 'error');
+      $('customLinkTitle').focus();
+      return;
+    }
+    if (!url) {
+      toast('Please enter a destination URL', 'error');
+      $('customLinkUrl').focus();
+      return;
+    }
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url;
+    }
+
+    try {
+      const res = await apiFetch('/admin/titles', {
+        method: 'POST',
+        body: JSON.stringify({ custom_title: title, target_url: url })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      toast(`Custom link "${title}" added to Quick Launch!`, 'success');
+      hideAddCustomLinkForm();
+      loadTitlesTable();
+      refreshDashboard(true);
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
   async function loadTitlesTable() {
     const tbody = $('cpTitlesTableBody');
     const select = $('titleProjectSelect');
     const status = $('titleTinyUrlStatus');
     if (!tbody) return;
 
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1.5rem;">Loading your TinyURL projects...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1.5rem;">Loading your projects and links...</td></tr>';
 
     try {
       const [projRes, overRes] = await Promise.all([
@@ -1414,27 +1543,21 @@
       const customOverrides = overData.titles || [];
       const overridesMap = {};
       customOverrides.forEach(o => {
-        overridesMap[(o.alias || '').toLowerCase().trim()] = { id: o.id, title: o.custom_title };
+        overridesMap[(o.alias || '').toLowerCase().trim()] = { id: o.id, title: o.custom_title, target_url: o.target_url };
       });
       cachedOverridesMap = overridesMap;
 
-      if (!projData.configured) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1.5rem;">TinyURL API token not configured yet. Set it in the <strong>API Keys</strong> tab.</td></tr>';
-        if (select) select.innerHTML = '<option value="">-- Add TinyURL Token in API Keys --</option>';
-        if (status) status.textContent = 'API token not configured';
-        return;
-      }
-
       cachedTinyProjects = projData.links || [];
+
       if (!cachedTinyProjects.length) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1.5rem;">No short links found in your TinyURL account.</td></tr>';
-        if (select) select.innerHTML = '<option value="">-- No links in TinyURL account --</option>';
-        if (status) status.textContent = '0 links in TinyURL';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1.5rem;">No projects or links found. Click <strong>+ Add Custom Link</strong> above to create one.</td></tr>';
+        if (select) select.innerHTML = '<option value="">-- No links created yet --</option>';
+        if (status) status.textContent = '0 links in Quick Launch';
         return;
       }
 
       if (status) {
-        status.innerHTML = `<span style="color:#4ade80;display:inline-flex;align-items:center;gap:0.25rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> ${cachedTinyProjects.length} projects synced</span>`;
+        status.innerHTML = `<span style="color:#4ade80;display:inline-flex;align-items:center;gap:0.25rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> ${cachedTinyProjects.length} active links</span>`;
       }
 
       // Populate Project Selector Dropdown
@@ -1443,7 +1566,8 @@
           const aliasLower = (l.alias || '').toLowerCase().trim();
           const override = overridesMap[aliasLower];
           const displayTitle = override ? override.title : l.title;
-          return `<option value="${esc(l.alias)}">${esc(displayTitle)} (${esc(l.displayUrl)})</option>`;
+          const tag = l.isCustomLink ? 'Custom' : 'TinyURL';
+          return `<option value="${esc(l.alias)}">[${tag}] ${esc(displayTitle)} (${esc(l.displayUrl)})</option>`;
         }).join('');
 
         // Automatically pre-select first project
@@ -1459,39 +1583,53 @@
       tbody.innerHTML = cachedTinyProjects.map(l => {
         const aliasLower = (l.alias || '').toLowerCase().trim();
         const override = overridesMap[aliasLower];
-        const isCustom = Boolean(override);
-        const displayTitle = isCustom ? override.title : l.title;
+        const isCustomLink = Boolean(l.isCustomLink);
+        const isRenamed = Boolean(override);
+        const displayTitle = isRenamed ? override.title : l.title;
+        const linkUrl = l.targetUrl || l.tinyUrl;
+        const dbId = l.db_id || (override ? override.id : null);
+
+        let badgeHtml = '';
+        if (isCustomLink) {
+          badgeHtml = '<span style="font-size:0.62rem;font-weight:700;padding:0.05rem 0.4rem;border-radius:999px;background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);">CUSTOM LINK</span>';
+        } else if (isRenamed) {
+          badgeHtml = '<span style="font-size:0.62rem;font-weight:700;padding:0.05rem 0.35rem;border-radius:999px;background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3);">RENAMED</span>';
+        }
 
         return `
           <tr>
             <td>
               <div style="display:flex;align-items:center;gap:0.45rem;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent-light);"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                <a href="${esc(l.tinyUrl)}" target="_blank" rel="noopener" class="site-url-link" style="font-weight:700;">${esc(l.displayUrl)}</a>
+                <a href="${esc(linkUrl)}" target="_blank" rel="noopener" class="site-url-link" style="font-weight:700;">${esc(l.displayUrl)}</a>
               </div>
             </td>
             <td>
-              <span style="font-size:0.75rem;color:var(--text3);font-family:'JetBrains Mono';max-width:200px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(l.targetUrl || '')}">
-                ${esc(l.targetUrl ? l.targetUrl.replace(/^https?:\/\//, '') : '—')}
+              <span style="font-size:0.75rem;color:var(--text3);font-family:'JetBrains Mono';max-width:200px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(l.targetUrl || linkUrl || '')}">
+                ${esc(l.targetUrl ? l.targetUrl.replace(/^https?:\/\//, '') : (linkUrl ? linkUrl.replace(/^https?:\/\//, '') : '—'))}
               </span>
             </td>
             <td>
               <div style="display:flex;align-items:center;gap:0.45rem;">
                 <strong style="color:var(--text1);font-size:0.86rem;">${esc(displayTitle)}</strong>
-                ${isCustom ? '<span style="font-size:0.62rem;font-weight:700;padding:0.05rem 0.35rem;border-radius:999px;background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3);">CUSTOM</span>' : ''}
+                ${badgeHtml}
               </div>
             </td>
             <td style="text-align:right;">
               <div style="display:inline-flex;gap:0.35rem;">
                 <button type="button" onclick="selectProjectForRename('${esc(l.alias)}', '${esc(displayTitle)}')" class="btn btn-secondary btn-sm" style="font-size:0.75rem;padding:0.25rem 0.6rem;display:inline-flex;align-items:center;gap:0.3rem;">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                  <span>Rename</span>
+                  <span>${isCustomLink ? 'Edit' : 'Rename'}</span>
                 </button>
-                ${isCustom ? `
+                ${isCustomLink && dbId ? `
+                  <button type="button" onclick="deleteTitle(${dbId})" class="btn btn-danger btn-sm" style="font-size:0.75rem;padding:0.25rem 0.5rem;" title="Delete custom link">
+                    Delete
+                  </button>
+                ` : (isRenamed ? `
                   <button type="button" onclick="deleteTitle(${override.id})" class="btn btn-danger btn-sm" style="font-size:0.75rem;padding:0.25rem 0.5rem;" title="Reset to default title">
                     Reset
                   </button>
-                ` : ''}
+                ` : '')}
               </div>
             </td>
           </tr>

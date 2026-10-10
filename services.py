@@ -338,64 +338,90 @@ def fetch_uptimerobot_monitors(force=False):
 # =============================================================================
 
 def fetch_tinyurl_projects(force=False):
-    """Fetches TinyURL links and merges custom title overrides with caching."""
+    """Fetches TinyURL links, merges custom titles, and includes all custom direct links."""
     global _tinyurl_cache, _tinyurl_cache_ts
     now = time.time()
     if not force and _tinyurl_cache and (now - _tinyurl_cache_ts < 30):
         return _tinyurl_cache
 
     token = db.get_setting('tinyurl_api_token')
-    if not token:
-        return {'configured': False, 'links': [], 'message': 'TinyURL API token not configured.'}, 200
-
     titles_list = db.get_all_project_titles()
-    titles_map = {t['alias'].lower().strip(): t['custom_title'] for t in titles_list}
+    titles_map = {t['alias'].lower().strip(): t for t in titles_list}
+    matched_aliases = set()
+    links = []
 
-    try:
-        session = get_http_session()
-        r = session.get(
-            'https://api.tinyurl.com/urls/available',
-            headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},
-            timeout=10
-        )
-        if r.status_code != 200:
-            return {'configured': True, 'links': [], 'error': f'TinyURL API error: {r.text[:140]}'}, 200
+    # 1. Fetch TinyURL links if token is configured
+    if token:
+        try:
+            session = get_http_session()
+            r = session.get(
+                'https://api.tinyurl.com/urls/available',
+                headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},
+                timeout=10
+            )
+            if r.status_code == 200:
+                data = r.json()
+                raw_list = data.get('data', [])
+                if isinstance(raw_list, dict):
+                    raw_list = [raw_list]
 
-        data = r.json()
-        raw_list = data.get('data', [])
-        if isinstance(raw_list, dict):
-            raw_list = [raw_list]
+                for item in raw_list:
+                    domain = item.get('domain', 'tinyurl.com')
+                    alias = item.get('alias', '')
+                    short_url = item.get('tiny_url') or f"https://{domain}/{alias}"
+                    target_url = item.get('url', '')
 
-        links = []
-        for item in raw_list:
-            domain = item.get('domain', 'tinyurl.com')
-            alias = item.get('alias', '')
-            short_url = item.get('tiny_url') or f"https://{domain}/{alias}"
-            target_url = item.get('url', '')
+                    clean_alias = alias.lower().strip()
+                    matched_aliases.add(clean_alias)
 
-            clean_alias = alias.lower().strip()
-            if clean_alias in titles_map:
-                title = titles_map[clean_alias]
-            else:
-                title = item.get('description') or item.get('title') or (
-                    alias.replace('-', ' ').replace('_', ' ').title() if alias else 'Project Link'
-                )
+                    if clean_alias in titles_map:
+                        t_item = titles_map[clean_alias]
+                        title = t_item.get('custom_title')
+                        db_id = t_item.get('id')
+                    else:
+                        title = item.get('description') or item.get('title') or (
+                            alias.replace('-', ' ').replace('_', ' ').title() if alias else 'Project Link'
+                        )
+                        db_id = None
 
+                    links.append({
+                        'id': item.get('id') or alias,
+                        'db_id': db_id,
+                        'title': title,
+                        'alias': alias,
+                        'tinyUrl': short_url,
+                        'displayUrl': short_url.replace('https://', '').replace('http://', ''),
+                        'targetUrl': target_url,
+                        'isCustomLink': False
+                    })
+        except Exception:
+            pass
+
+    # 2. Add all custom direct links from database that are not TinyURL short links
+    for t in titles_list:
+        c_alias = (t.get('alias') or '').lower().strip()
+        if c_alias not in matched_aliases:
+            target = t.get('target_url') or ''
             links.append({
-                'id': item.get('id') or alias,
-                'title': title,
-                'alias': alias,
-                'tinyUrl': short_url,
-                'displayUrl': short_url.replace('https://', '').replace('http://', ''),
-                'targetUrl': target_url
+                'id': f"custom-{t['id']}",
+                'db_id': t['id'],
+                'title': t.get('custom_title') or t.get('alias'),
+                'alias': t.get('alias'),
+                'tinyUrl': target if target else '#',
+                'displayUrl': target.replace('https://', '').replace('http://', '') if target else t.get('alias'),
+                'targetUrl': target,
+                'isCustomLink': True
             })
 
-        res = {'configured': True, 'links': links, 'count': len(links)}, 200
-        _tinyurl_cache = res
-        _tinyurl_cache_ts = now
-        return res
-    except Exception as e:
-        return {'configured': True, 'links': [], 'error': str(e)}, 200
+    res = {
+        'configured': bool(token or links),
+        'tinyurl_configured': bool(token),
+        'links': links,
+        'count': len(links)
+    }, 200
+    _tinyurl_cache = res
+    _tinyurl_cache_ts = now
+    return res
 
 
 # =============================================================================

@@ -280,18 +280,29 @@ def delete_account(acc_id):
 @app.route('/api/admin/titles', methods=['POST'])
 @require_auth
 def save_project_title():
-    """Sets a custom title override for a slug/alias."""
+    """Sets a custom title override for a slug/alias or creates a custom direct link."""
+    import re, time
     data = request.get_json(silent=True) or {}
     alias = data.get('alias', '').strip().lower()
     custom_title = data.get('custom_title', '').strip()
     target_url = data.get('target_url', '').strip() or None
 
-    if not alias or not custom_title:
-        return jsonify({'error': 'Alias and Custom Title are required.'}), 400
+    if not custom_title:
+        return jsonify({'error': 'Display Title is required.'}), 400
+
+    # Auto-generate alias if not provided
+    if not alias:
+        alias = re.sub(r'[^a-z0-9]+', '-', custom_title.lower()).strip('-')
+        if not alias:
+            alias = f"link-{int(time.time())}"
+        if target_url:
+            all_titles = db.get_all_project_titles()
+            if any(t['alias'].lower() == alias for t in all_titles):
+                alias = f"{alias}-{int(time.time()) % 10000}"
 
     db.set_project_title(alias, custom_title, target_url)
     services.invalidate_services_cache()
-    return jsonify({'success': True, 'message': f"Title for '{alias}' set to '{custom_title}'!"})
+    return jsonify({'success': True, 'message': f"Title for '{custom_title}' saved successfully!"})
 
 
 @app.route('/api/admin/titles/<int:title_id>', methods=['DELETE'])
