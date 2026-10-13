@@ -167,6 +167,7 @@ def get_config():
     _, engine = db.get_connection()
     return jsonify({
         'uptimeRobotConfigured': bool(db.get_setting('uptimerobot_api_key')),
+        'dubConfigured': bool(db.get_setting('dub_api_key') or db.get_setting('dub_api_token')),
         'tinyUrlConfigured': bool(db.get_setting('tinyurl_api_token')),
         'renderAccountsCount': len([a for a in accounts if a['provider'] == 'render']),
         'cfAccountsCount': len([a for a in accounts if a['provider'] == 'cloudflare']),
@@ -196,7 +197,7 @@ def get_monitors():
 @app.route('/api/projects', methods=['GET'])
 @require_auth
 def get_projects():
-    """Fetches TinyURL projects with custom titles."""
+    """Fetches Dub.co and TinyURL projects with custom titles."""
     force = request.args.get('force') in ['1', 'true', 'yes']
     result, code = services.fetch_tinyurl_projects(force=force)
     return jsonify(result), code
@@ -228,6 +229,7 @@ def admin_overview():
         },
         'keys': {
             'uptimerobot_api_key': db.get_setting('uptimerobot_api_key'),
+            'dub_api_key': db.get_setting('dub_api_key') or db.get_setting('dub_api_token'),
             'tinyurl_api_token': db.get_setting('tinyurl_api_token')
         },
         'accounts': db.get_all_accounts(),
@@ -242,6 +244,8 @@ def update_settings():
     data = request.get_json(silent=True) or {}
     if 'uptimerobot_api_key' in data:
         db.set_setting('uptimerobot_api_key', data['uptimerobot_api_key'].strip())
+    if 'dub_api_key' in data:
+        db.set_setting('dub_api_key', data['dub_api_key'].strip())
     if 'tinyurl_api_token' in data:
         db.set_setting('tinyurl_api_token', data['tinyurl_api_token'].strip())
     if 'database_url' in data:
@@ -285,6 +289,7 @@ def save_project_title():
     import re, time
     data = request.get_json(silent=True) or {}
     title_id = data.get('id')
+    link_id = data.get('linkId') or data.get('link_id')
     alias = data.get('alias', '').strip().lower()
     custom_title = data.get('custom_title', '').strip()
     target_url = data.get('target_url', '').strip()
@@ -311,8 +316,28 @@ def save_project_title():
         if any(t['alias'].lower() == alias for t in all_titles):
             alias = f"{alias}-{int(time.time()) % 10000}"
 
-    # If updating a TinyURL link's destination URL, attempt to sync to TinyURL API
-    if target_url:
+    # 1. Sync destination URL & title to Dub.co API if configured
+    dub_token = db.get_setting('dub_api_key') or db.get_setting('dub_api_token')
+    dub_synced = False
+    if dub_token and target_url:
+        target_link_id = link_id
+        if not target_link_id or not str(target_link_id).startswith('link_'):
+            try:
+                for dl in services.fetch_dub_links():
+                    if (dl.get('key') or '').lower() == alias or dl.get('id') == link_id:
+                        target_link_id = dl.get('id')
+                        break
+            except Exception:
+                pass
+        if target_link_id and str(target_link_id).startswith('link_'):
+            try:
+                services.update_dub_link(target_link_id, new_target_url=target_url, new_title=custom_title)
+                dub_synced = True
+            except Exception:
+                pass
+
+    # 2. Sync to TinyURL if not Dub.co
+    if not dub_synced and target_url:
         try:
             services.change_tinyurl_destination(alias, target_url)
         except Exception:
@@ -321,6 +346,18 @@ def save_project_title():
     db.set_project_title(alias, custom_title, target_url or None)
     services.invalidate_services_cache()
     return jsonify({'success': True, 'message': f"Saved '{custom_title}' successfully!"})
+
+
+@app.route('/api/admin/dub/create', methods=['POST'])
+@require_auth
+def create_dub_link():
+    """Creates a new short link directly on Dub.co."""
+    data = request.get_json(silent=True) or {}
+    url = data.get('url', '').strip()
+    key = data.get('key', '').strip()
+    title = data.get('title', '').strip()
+    result, code = services.create_dub_link(url, key, title)
+    return jsonify(result), code
 
 
 @app.route('/api/admin/titles/<int:title_id>', methods=['DELETE'])
@@ -332,11 +369,13 @@ def delete_project_title(title_id):
     return jsonify({'success': True, 'message': 'Title override removed.'})
 
 
-@app.route('/api/admin/tinyurl/<alias>', methods=['DELETE'])
+@app.route('/api/admin/links/<path:identifier>', methods=['DELETE'])
+@app.route('/api/admin/dub/<path:identifier>', methods=['DELETE'])
+@app.route('/api/admin/tinyurl/<path:identifier>', methods=['DELETE'])
 @require_auth
-def delete_tinyurl_link(alias):
-    """Deletes or removes a TinyURL link from TinyURL API and hides from dashboard."""
-    result = services.delete_tinyurl_link(alias.strip().lower())
+def delete_link(identifier):
+    """Deletes or removes a link from Dub.co, TinyURL, or database."""
+    result = services.delete_project_link(identifier.strip())
     return jsonify(result), 200
 
 
