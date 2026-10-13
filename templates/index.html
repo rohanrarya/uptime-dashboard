@@ -338,7 +338,7 @@
         </div>
       </div>
 
-      <!-- TAB 3: SHORT LINKS & REDIRECTS (DUB.CO) -->
+      <!-- TAB 3: SHORT LINKS & REDIRECTS (TINYURL) -->
       <div id="cpTabTitles" class="cp-content" style="display:none;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;flex-wrap:wrap;gap:0.6rem;">
           <div style="min-width:0;flex:1;">
@@ -347,13 +347,13 @@
               <span>Short Links, Destination Redirects & Project Titles</span>
             </h4>
             <p style="font-size:0.78rem;color:var(--text3);margin-top:0.25rem;">
-              Manage your Dub.co short links and dashboard shortcuts. Change target destination URLs without changing short links, track real-time visitor clicks, or purge deactivated links.
+              Manage your TinyURL short links and dashboard shortcuts. Change target destination URLs without changing short links, organize project titles, and add direct app links.
             </p>
           </div>
           <div class="cp-header-actions">
-            <a href="https://app.dub.co" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;text-decoration:none;" title="Open your official Dub.co dashboard">
+            <a href="https://tinyurl.com/app" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;text-decoration:none;" title="Open your official TinyURL dashboard">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-              <span>Dub.co ↗</span>
+              <span>TinyURL ↗</span>
             </a>
             <button type="button" onclick="showAddCustomLinkForm()" class="btn btn-primary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -394,13 +394,13 @@
           </div>
           <div class="cp-grid-2" style="margin-top:0.75rem;">
             <div class="form-group">
-              <label class="form-label">Custom Slug / Key (Optional)</label>
-              <input type="text" id="customLinkSlug" class="form-input mono" placeholder="e.g. my-app (creates dub.sh/my-app)" onkeydown="if(event.key==='Enter') submitCustomLink()" />
+              <label class="form-label">Custom Slug / Alias (Optional)</label>
+              <input type="text" id="customLinkSlug" class="form-input mono" placeholder="e.g. my-app (creates tinyurl.com/my-app)" onkeydown="if(event.key==='Enter') submitCustomLink()" />
             </div>
             <div class="form-group" style="display:flex;align-items:flex-end;">
               <label style="display:inline-flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text2);cursor:pointer;margin-bottom:0.6rem;">
-                <input type="checkbox" id="customLinkCreateOnDub" checked style="cursor:pointer;" />
-                <span>Create link on Dub.co (if API key connected)</span>
+                <input type="checkbox" id="customLinkCreateOnTiny" checked style="cursor:pointer;" />
+                <span>Create link on TinyURL (if API token connected)</span>
               </label>
             </div>
           </div>
@@ -462,7 +462,7 @@
             <div class="form-group">
               <label class="form-label">Target Destination URL (Where link redirects to)</label>
               <input type="url" id="titleTargetUrl" class="form-input mono" placeholder="https://example.com" onkeydown="if(event.key==='Enter') submitProjectTitle()" />
-              <span style="font-size:0.7rem;color:var(--text3);margin-top:0.25rem;display:block;">Syncs immediately with Dub.co API. Short link remains unchanged.</span>
+              <span style="font-size:0.7rem;color:var(--text3);margin-top:0.25rem;display:block;">Syncs immediately with TinyURL API. Short link remains unchanged.</span>
             </div>
           </div>
 
@@ -498,36 +498,38 @@
             <span>API Keys & Service Integrations</span>
           </h4>
           <p style="font-size:0.78rem;color:var(--text3);margin-top:0.25rem;">
-            Configure external API tokens to power Dub.co short links and UptimeRobot monitoring.
+            Configure external API tokens to power TinyURL short links and UptimeRobot monitoring.
           </p>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
-            <span>Dub.co API Key (Workspace Token)</span>
-            <a href="https://app.dub.co/settings/tokens" target="_blank" rel="noopener" style="color:var(--accent-light);font-size:0.75rem;text-decoration:none;font-weight:600;">Get Key in Dub.co ↗</a>
-          </label>
-          <input type="password" id="cpDubKey" class="form-input mono" placeholder="dub_... (from app.dub.co/settings/tokens)" />
+        <div class="form-group" style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.25);border-radius:var(--radius-md);padding:1rem;margin-bottom:1.25rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;flex-wrap:wrap;gap:0.35rem;">
+            <label class="form-label" style="color:#34d399;font-weight:700;display:flex;align-items:center;gap:0.4rem;margin-bottom:0;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+              <span>TinyURL API Token</span>
+            </label>
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <a href="https://tinyurl.com/app/settings/api" target="_blank" rel="noopener" style="color:#34d399;font-size:0.75rem;text-decoration:none;font-weight:600;">Get Token in TinyURL ↗</a>
+              <button type="button" onclick="clearTinyKey()" class="btn btn-secondary btn-sm" style="font-size:0.7rem;padding:0.15rem 0.5rem;border-color:rgba(239,68,68,0.4);color:#fca5a5;">Clear Token</button>
+            </div>
+          </div>
+          <input type="password" id="cpTinyKey" class="form-input mono" placeholder="Bearer token (from tinyurl.com/app/settings/api)" />
           <span style="font-size:0.72rem;color:var(--text3);margin-top:0.35rem;display:block;line-height:1.4;">
-            Modern URL shortener with instant 301/302 redirects, clicks tracking, and editable destination URLs.
+            Powers automatic short link creation, destination changes, and syncs directly with TinyURL.
           </span>
-        </div>
-
-        <div class="form-group" style="margin-top:1.25rem;">
-          <label class="form-label">UptimeRobot Read-Only API Key</label>
-          <input type="password" id="cpUptimeKey" class="form-input mono" placeholder="ur123456-abcdef..." />
         </div>
 
         <div class="form-group" style="margin-top:1.25rem;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.35rem;">
-            <label class="form-label" style="color:var(--text3);margin-bottom:0;">TinyURL API Token (Legacy Optional)</label>
-            <button type="button" onclick="clearTinyKey()" class="btn btn-secondary btn-sm" style="font-size:0.7rem;padding:0.15rem 0.5rem;border-color:rgba(239,68,68,0.4);color:#fca5a5;">Clear / Disconnect</button>
+            <label class="form-label" style="font-weight:600;color:var(--text1);margin-bottom:0;">UptimeRobot Read-Only API Key</label>
+            <a href="https://uptimerobot.com/dashboard#mySettings" target="_blank" rel="noopener" style="color:var(--accent-light);font-size:0.75rem;text-decoration:none;font-weight:600;">Get Key in UptimeRobot ↗</a>
           </div>
-          <input type="password" id="cpTinyKey" class="form-input mono" placeholder="Optional bearer token (leave blank if deactivated)" />
+          <input type="password" id="cpUptimeKey" class="form-input mono" placeholder="ur123456-abcdef..." />
           <span style="font-size:0.72rem;color:var(--text3);margin-top:0.35rem;display:block;line-height:1.4;">
-            If you deactivated your TinyURL account, clear this field and save, or click "Clear / Disconnect" to remove leftover TinyURL links.
+            Used to fetch 24/7 uptime monitors, response times, and health logs.
           </span>
         </div>
+
         <button onclick="saveApiKeys()" class="btn btn-primary cp-btn-mobile-full" style="margin-top:1.25rem;">Save Keys to Database</button>
       </div>
 
@@ -898,7 +900,7 @@
       $('qlStatus').textContent = `${links.length} active link${links.length === 1 ? '' : 's'}`;
 
       if (!links.length) {
-        $('quickLaunchGrid').innerHTML = '<div style="color:var(--text3);font-size:0.8rem;padding:0.75rem 0;">No projects or links configured yet. Open Control Panel to connect Dub.co or add custom links.</div>';
+        $('quickLaunchGrid').innerHTML = '<div style="color:var(--text3);font-size:0.8rem;padding:0.75rem 0;">No projects or links configured yet. Open Control Panel to connect TinyURL or add custom links.</div>';
         return;
       }
 
@@ -910,12 +912,11 @@
         if (!destUrl) {
           destUrl = '#';
         }
-        const isDub = l.provider === 'dub';
         const isCustom = Boolean(l.isCustomLink);
-        const tagText = isDub ? 'Dub.co' : (isCustom ? 'Custom' : 'TinyURL');
-        const tagClass = isDub ? 'ql-dub-tag' : (isCustom ? 'ql-custom-tag' : 'ql-tiny-tag');
+        const tagText = isCustom ? 'Custom' : 'TinyURL';
+        const tagClass = isCustom ? 'ql-custom-tag' : 'ql-tiny-tag';
         const displayHost = (destUrl && destUrl !== '#') ? destUrl.replace(/^https?:\/\//, '') : (l.displayUrl && l.displayUrl !== '#' ? l.displayUrl : l.title);
-        const clicksBadge = (l.clicks !== undefined && l.clicks !== null && l.clicks > 0) ? `<span class="clicks-pill" title="${l.clicks} tracked clicks on Dub.co"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>${l.clicks} clicks</span>` : '';
+        const clicksBadge = '';
 
         return `
         <div class="ql-card">
@@ -1151,9 +1152,8 @@
       $('cpDatabaseUrl').value = data.database.url || '';
 
       // API Keys
-      $('cpUptimeKey').value = data.keys.uptimerobot_api_key || '';
-      if ($('cpDubKey')) $('cpDubKey').value = data.keys.dub_api_key || '';
-      $('cpTinyKey').value = data.keys.tinyurl_api_token || '';
+      if ($('cpUptimeKey')) $('cpUptimeKey').value = (data.keys && data.keys.uptimerobot_api_key) || '';
+      if ($('cpTinyKey')) $('cpTinyKey').value = (data.keys && data.keys.tinyurl_api_token) || '';
 
       // 2FA Status, Users Count, & Auto-fetch TinyURL projects
       load2FAStatus();
@@ -1268,7 +1268,7 @@
     const title = $('customLinkTitle').value.trim();
     let url = $('customLinkUrl').value.trim();
     const slug = $('customLinkSlug') ? $('customLinkSlug').value.trim() : '';
-    const createOnDub = $('customLinkCreateOnDub') ? $('customLinkCreateOnDub').checked : true;
+    const createOnTiny = $('customLinkCreateOnTiny') ? $('customLinkCreateOnTiny').checked : true;
 
     if (!title) {
       toast('Please enter a display title', 'error');
@@ -1286,14 +1286,14 @@
     }
 
     try {
-      if (createOnDub) {
-        const dubRes = await apiFetch('/admin/dub/create', {
+      if (createOnTiny) {
+        const tRes = await apiFetch('/admin/tinyurl/create', {
           method: 'POST',
-          body: JSON.stringify({ url, title, key: slug })
+          body: JSON.stringify({ url, title, alias: slug })
         });
-        const dubData = await dubRes.json();
-        if (dubRes.ok) {
-          toast(dubData.message || `Created short link on Dub.co!`, 'success');
+        const tData = await tRes.json();
+        if (tRes.ok) {
+          toast(tData.message || `Created short link on TinyURL!`, 'success');
           $('customLinkTitle').value = '';
           $('customLinkUrl').value = '';
           if ($('customLinkSlug')) $('customLinkSlug').value = '';
@@ -1301,8 +1301,8 @@
           loadTitlesTable();
           refreshDashboard(true);
           return;
-        } else if (dubData.error && !dubData.error.includes('Dub.co API Key is not configured')) {
-          throw new Error(dubData.error);
+        } else if (tData.error && !tData.error.includes('TinyURL API token is not configured')) {
+          throw new Error(tData.error);
         }
       }
 
@@ -1352,7 +1352,7 @@
       cachedTinyProjects = projData.links || [];
 
       if (!cachedTinyProjects.length) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:1.5rem;">No links found. Connect Dub.co in API Keys or click <strong>+ Create / Add Link</strong> above.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:1.5rem;">No links found. Add your TinyURL API token in API Keys or click <strong>+ Create / Add Link</strong> above.</td></tr>';
         if (select) select.innerHTML = '<option value="">-- No links created yet --</option>';
         if (status) status.textContent = '0 links in Quick Launch';
         return;
@@ -1368,7 +1368,7 @@
           const aliasLower = (l.alias || '').toLowerCase().trim();
           const override = overridesMap[aliasLower];
           const displayTitle = override ? override.title : l.title;
-          const tag = l.provider === 'dub' ? 'Dub.co' : (l.isCustomLink ? 'Custom' : 'TinyURL');
+          const tag = l.isCustomLink ? 'Custom' : 'TinyURL';
           return `<option value="${esc(l.linkId || l.alias)}">[${tag}] ${esc(displayTitle)} (${esc(l.displayUrl || l.alias)})</option>`;
         }).join('');
 
@@ -1386,10 +1386,7 @@
           if ($('titleTargetUrl')) $('titleTargetUrl').value = firstTarget || '';
           if ($('titleDbId')) $('titleDbId').value = first.db_id || (firstOverride ? firstOverride.id : '');
           if ($('editProjectTypeBadge')) {
-            if (first.provider === 'dub') {
-              $('editProjectTypeBadge').textContent = 'DUB.CO LINK' + (first.clicks > 0 ? ` (${first.clicks} Clicks)` : '');
-              $('editProjectTypeBadge').className = 'status-badge badge-live';
-            } else if (first.isCustomLink) {
+            if (first.isCustomLink) {
               $('editProjectTypeBadge').textContent = 'CUSTOM LINK';
               $('editProjectTypeBadge').className = 'status-badge badge-live';
             } else {
@@ -1405,7 +1402,6 @@
         const aliasLower = (l.alias || '').toLowerCase().trim();
         const override = overridesMap[aliasLower];
         const isCustomLink = Boolean(l.isCustomLink);
-        const isDub = l.provider === 'dub';
         const isRenamed = Boolean(override);
         const displayTitle = isRenamed ? override.title : l.title;
         let linkUrl = (l.targetUrl && l.targetUrl !== '#') ? l.targetUrl : (l.shortUrl && l.shortUrl !== '#' ? l.shortUrl : (l.tinyUrl && l.tinyUrl !== '#' ? l.tinyUrl : ''));
@@ -1419,16 +1415,14 @@
         const shortUrl = l.shortUrl || l.tinyUrl || linkUrl;
 
         let typeBadge = '';
-        if (isDub) {
-          typeBadge = '<span class="platform-pill dub" style="font-size:0.62rem;">DUB.CO</span>';
-        } else if (isCustomLink) {
+        if (isCustomLink) {
           typeBadge = '<span class="platform-pill" style="font-size:0.62rem;background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);">CUSTOM</span>';
         } else {
           typeBadge = '<span class="platform-pill" style="font-size:0.62rem;background:rgba(16,185,129,0.12);color:#34d399;border:1px solid rgba(16,185,129,0.3);">TINYURL</span>';
         }
 
         const clicksHtml = (l.clicks !== undefined && l.clicks !== null && l.clicks > 0)
-          ? `<span class="clicks-pill" title="${l.clicks} tracked clicks on Dub.co"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>${l.clicks} clicks</span>`
+          ? `<span class="clicks-pill" title="${l.clicks} tracked clicks"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>${l.clicks} clicks</span>`
           : '';
 
         const displayTarget = (linkUrl && linkUrl !== '#') ? linkUrl.replace(/^https?:\/\//, '') : (l.alias || '—');
@@ -1510,10 +1504,7 @@
     }
 
     if ($('editProjectTypeBadge')) {
-      if (provider === 'dub') {
-        $('editProjectTypeBadge').textContent = 'DUB.CO LINK' + (clicks > 0 ? ` (${clicks} Clicks)` : '');
-        $('editProjectTypeBadge').className = 'status-badge badge-live';
-      } else if (isCustomLink) {
+      if (isCustomLink) {
         $('editProjectTypeBadge').textContent = 'CUSTOM LINK';
         $('editProjectTypeBadge').className = 'status-badge badge-live';
       } else {
@@ -1523,9 +1514,7 @@
     }
 
     if ($('titleTinyUrlStatus')) {
-      if (provider === 'dub') {
-        $('titleTinyUrlStatus').innerHTML = `<span style="color:#a5b4fc;font-weight:600;">Dub.co Key:</span> <code style="font-family:'JetBrains Mono';">${esc(alias || linkId)}</code>`;
-      } else if (isCustomLink) {
+      if (isCustomLink) {
         $('titleTinyUrlStatus').textContent = cleanTarget ? `Direct URL: ${cleanTarget}` : 'Direct Custom Link';
       } else {
         $('titleTinyUrlStatus').textContent = `TinyURL slug: ${alias}`;
@@ -1609,7 +1598,7 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      toast(`Saved "${title}"! Destination synced with Dub.co.`, 'success');
+      toast(`Saved "${title}"! Destination synced with TinyURL.`, 'success');
       loadTitlesTable();
       refreshDashboard(true);
     } catch (err) {
@@ -1639,7 +1628,7 @@
   }
 
   async function purgeDeactivatedTinyLinks() {
-    if (!confirm('This will permanently delete all leftover TinyURL and custom links left behind after deactivating your TinyURL account, and disconnect the TinyURL token.\n\nActive Dub.co links will NOT be affected.\n\nProceed?')) return;
+    if (!confirm('This will permanently delete all leftover TinyURL and custom links left behind after deactivating your TinyURL account, and disconnect the TinyURL token.\n\nProceed?')) return;
     try {
       const res = await apiFetch('/admin/links/purge-legacy', { method: 'POST' });
       const data = await res.json();
@@ -1680,13 +1669,12 @@
 
   async function saveApiKeys() {
     const uptimerobot_api_key = $('cpUptimeKey').value.trim();
-    const dub_api_key = $('cpDubKey') ? $('cpDubKey').value.trim() : '';
     const tinyurl_api_token = $('cpTinyKey').value.trim();
 
     try {
       await apiFetch('/admin/settings', {
         method: 'POST',
-        body: JSON.stringify({ uptimerobot_api_key, dub_api_key, tinyurl_api_token })
+        body: JSON.stringify({ uptimerobot_api_key, tinyurl_api_token })
       });
       toast('API keys saved to database!', 'success');
       refreshDashboard(true);

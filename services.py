@@ -495,38 +495,14 @@ def fetch_uptimerobot_monitors(force=False):
 
 
 # =============================================================================
-# Short Links & Quick Launch: Dub.co (Modern) & TinyURL (Legacy)
+# Short Links & Quick Launch: TinyURL & Custom Direct Links
 # =============================================================================
 
-def fetch_dub_links():
-    """Fetches all short links and real-time click statistics from Dub.co API."""
-    token = db.get_setting('dub_api_key') or db.get_setting('dub_api_token')
+def create_tinyurl_link(url, alias=None, title=None, domain='tinyurl.com'):
+    """Creates a new short link directly on TinyURL API."""
+    token = db.get_setting('tinyurl_api_token')
     if not token:
-        return []
-
-    try:
-        session = get_http_session()
-        r = session.get(
-            'https://api.dub.co/links?limit=100',
-            headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},
-            timeout=10
-        )
-        if r.status_code == 200:
-            data = r.json()
-            if isinstance(data, list):
-                return data
-            elif isinstance(data, dict):
-                return data.get('links') or data.get('data') or []
-        return []
-    except Exception:
-        return []
-
-
-def create_dub_link(url, key=None, title=None):
-    """Creates a new short link in the user's Dub.co workspace."""
-    token = db.get_setting('dub_api_key') or db.get_setting('dub_api_token')
-    if not token:
-        return {'success': False, 'error': 'Dub.co API Key is not configured. Add it in Control Panel Settings.'}, 400
+        return {'success': False, 'error': 'TinyURL API token is not configured. Add it in Control Panel Settings.'}, 400
 
     if not url or url == '#':
         return {'success': False, 'error': 'A valid destination URL is required.'}, 400
@@ -535,143 +511,59 @@ def create_dub_link(url, key=None, title=None):
     if not (url.startswith('http://') or url.startswith('https://')):
         url = f"https://{url}"
 
-    payload = {'url': url}
-    if key and key.strip():
-        payload['key'] = key.strip().lower()
+    clean_alias = str(alias or '').strip().lower().replace('https://', '').replace('http://', '').replace('tinyurl.com/', '').strip('/')
+
+    payload = {
+        'url': url,
+        'domain': domain
+    }
+    if clean_alias:
+        payload['alias'] = clean_alias
     if title and title.strip():
-        payload['title'] = title.strip()
+        payload['description'] = title.strip()
 
     try:
         session = get_http_session()
         r = session.post(
-            'https://api.dub.co/links',
+            'https://api.tinyurl.com/create',
             headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json', 'Accept': 'application/json'},
             json=payload,
             timeout=10
         )
         data = r.json() if r.text else {}
         if r.status_code in (200, 201):
-            created_key = data.get('key') or (key.strip().lower() if key else '')
-            if created_key:
-                db.set_project_title(created_key, title or created_key, url)
+            link_data = data.get('data', {}) if isinstance(data, dict) else {}
+            created_alias = link_data.get('alias') or clean_alias
+            short_url = link_data.get('tiny_url') or f"https://{domain}/{created_alias}"
+            if created_alias:
+                db.set_project_title(created_alias, title or created_alias, url)
+                hidden = db.get_setting('hidden_project_aliases', db.get_setting('hidden_tinyurl_aliases', ''))
+                hidden_set = set(h.strip().lower() for h in hidden.split(',') if h.strip())
+                if created_alias in hidden_set:
+                    hidden_set.remove(created_alias)
+                    db.set_setting('hidden_project_aliases', ','.join(sorted(hidden_set)))
+                    db.set_setting('hidden_tinyurl_aliases', ','.join(sorted(hidden_set)))
+
             invalidate_services_cache()
             return {
                 'success': True,
-                'link': data,
-                'shortUrl': data.get('shortLink') or f"https://{data.get('domain', 'dub.sh')}/{created_key}",
-                'message': 'Short link created successfully on Dub.co!'
+                'link': link_data,
+                'alias': created_alias,
+                'shortUrl': short_url,
+                'message': f"Created short link https://{domain}/{created_alias} successfully!"
             }, 200
         else:
-            err_msg = data.get('error', {}).get('message') if isinstance(data.get('error'), dict) else (data.get('error') or data.get('message') or f"HTTP {r.status_code}")
-            return {'success': False, 'error': f"Dub.co API error: {err_msg}"}, r.status_code
+            errors = data.get('errors', [])
+            err_msg = (errors[0] if errors else data.get('message')) or f"HTTP {r.status_code}"
+            return {'success': False, 'error': f"TinyURL error: {err_msg}"}, r.status_code
     except Exception as e:
-        return {'success': False, 'error': f"Failed to connect to Dub.co API: {str(e)}"}, 500
-
-
-def update_dub_link(link_id, new_target_url=None, new_title=None, new_key=None):
-    """Updates destination URL, title, or slug of an existing link on Dub.co."""
-    token = db.get_setting('dub_api_key') or db.get_setting('dub_api_token')
-    if not token or not link_id:
-        return {'success': False, 'error': 'Missing Dub.co token or Link ID'}, 400
-
-    payload = {}
-    if new_target_url and new_target_url != '#':
-        url = new_target_url.strip()
-        if not (url.startswith('http://') or url.startswith('https://')):
-            url = f"https://{url}"
-        payload['url'] = url
-    if new_title:
-        payload['title'] = new_title.strip()
-    if new_key:
-        payload['key'] = new_key.strip().lower()
-
-    if not payload:
-        return {'success': True, 'message': 'No changes needed'}, 200
-
-    try:
-        session = get_http_session()
-        r = session.patch(
-            f'https://api.dub.co/links/{link_id}',
-            headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json', 'Accept': 'application/json'},
-            json=payload,
-            timeout=10
-        )
-        data = r.json() if r.text else {}
-        if r.status_code in (200, 204):
-            invalidate_services_cache()
-            return {'success': True, 'link': data, 'message': 'Successfully updated link on Dub.co!'}, 200
-        else:
-            err_msg = data.get('error', {}).get('message') if isinstance(data.get('error'), dict) else (data.get('error') or data.get('message') or f"HTTP {r.status_code}")
-            return {'success': False, 'error': f"Dub.co API error: {err_msg}"}, r.status_code
-    except Exception as e:
-        return {'success': False, 'error': f"Dub.co API unreachable: {str(e)}"}, 500
-
-
-def delete_dub_link(link_id_or_alias):
-    """Deletes a link from Dub.co workspace, deletes local title override, and updates cache."""
-    token = db.get_setting('dub_api_key') or db.get_setting('dub_api_token')
-    clean_id = (link_id_or_alias or '').strip()
-    api_deleted = False
-    api_message = ''
-
-    link_id_to_delete = clean_id
-    alias_to_delete = clean_id.lower()
-
-    if token:
-        try:
-            if not clean_id.startswith('link_'):
-                dub_links = fetch_dub_links()
-                for dl in dub_links:
-                    if (dl.get('key') or '').lower() == alias_to_delete or dl.get('id') == clean_id:
-                        link_id_to_delete = dl.get('id')
-                        alias_to_delete = (dl.get('key') or '').lower()
-                        break
-
-            if link_id_to_delete:
-                session = get_http_session()
-                r = session.delete(
-                    f'https://api.dub.co/links/{link_id_to_delete}',
-                    headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},
-                    timeout=10
-                )
-                if r.status_code in (200, 204):
-                    api_deleted = True
-                    api_message = 'Deleted from Dub.co server.'
-                else:
-                    try:
-                        err_json = r.json()
-                        err_msg = err_json.get('error', {}).get('message') if isinstance(err_json.get('error'), dict) else (err_json.get('error') or err_json.get('message') or f"HTTP {r.status_code}")
-                    except Exception:
-                        err_msg = f"HTTP {r.status_code}"
-                    api_message = f"Dub.co note: {err_msg}"
-        except Exception as e:
-            api_message = f"Dub.co API unreachable: {str(e)}"
-
-    # Remove any local title override from database
-    for t in db.get_all_project_titles():
-        if t['alias'].lower().strip() == alias_to_delete or t['alias'].lower().strip() == clean_id.lower():
-            db.delete_project_title(t['id'])
-
-    # Add to hidden aliases set to ensure it disappears immediately from dashboard
-    hidden = db.get_setting('hidden_project_aliases', db.get_setting('hidden_tinyurl_aliases', ''))
-    hidden_set = set(h.strip().lower() for h in hidden.split(',') if h.strip())
-    hidden_set.add(alias_to_delete)
-    hidden_set.add(clean_id.lower())
-    db.set_setting('hidden_project_aliases', ','.join(sorted(hidden_set)))
-    db.set_setting('hidden_tinyurl_aliases', ','.join(sorted(hidden_set)))
-
-    invalidate_services_cache()
-    return {
-        'success': True,
-        'api_deleted': api_deleted,
-        'message': f"Link removed from dashboard. {api_message}".strip()
-    }
+        return {'success': False, 'error': f"Failed to connect to TinyURL API: {str(e)}"}, 500
 
 
 def delete_project_link(identifier, alias=None, db_id=None):
     """
-    Unified delete dispatcher for Dub.co, TinyURL, or database custom links.
-    Handles 'custom-<id>', numeric ID, alias, slug, full URL, or Dub ID.
+    Unified delete dispatcher for TinyURL or database custom links.
+    Handles 'custom-<id>', numeric ID, alias, slug, or full URL.
     Guarantees deletion from local database, marks as hidden, and attempts remote removal.
     """
     raw_id = str(identifier or '').strip()
@@ -760,21 +652,7 @@ def delete_project_link(identifier, alias=None, db_id=None):
     db.set_setting('hidden_project_aliases', ','.join(sorted(hidden_set)))
     db.set_setting('hidden_tinyurl_aliases', ','.join(sorted(hidden_set)))
 
-    # 4. If Dub.co is configured, attempt remote deletion for Dub links
-    dub_token = db.get_setting('dub_api_key') or db.get_setting('dub_api_token')
-    if dub_token:
-        try:
-            dub_links = fetch_dub_links()
-            for dl in dub_links:
-                dl_id = dl.get('id') or ''
-                dl_key = (dl.get('key') or '').strip().lower()
-                if dl_id in candidates or dl_key in candidates:
-                    delete_dub_link(dl_id or dl_key)
-                    break
-        except Exception:
-            pass
-
-    # 5. If TinyURL token is configured, attempt remote deletion (non-blocking if deactivated)
+    # 4. If TinyURL token is configured, attempt remote deletion (non-blocking if deactivated)
     tiny_token = db.get_setting('tinyurl_api_token')
     if tiny_token:
         try:
@@ -798,39 +676,21 @@ def delete_project_link(identifier, alias=None, db_id=None):
 def purge_deactivated_tinyurl_links():
     """
     Cleans up all legacy TinyURL / orphaned custom links when TinyURL account is deactivated,
-    clears tinyurl_api_token setting, and preserves active Dub.co links.
+    clears tinyurl_api_token setting, and removes unneeded records.
     """
     # 1. Clear TinyURL token so no further requests stall
     db.set_setting('tinyurl_api_token', '')
 
-    # 2. Get active Dub.co keys to avoid deleting user's Dub.co links
-    dub_keys = set()
-    dub_token = db.get_setting('dub_api_key') or db.get_setting('dub_api_token')
-    if dub_token:
-        try:
-            for dl in fetch_dub_links():
-                if dl.get('key'):
-                    dub_keys.add(dl.get('key').lower().strip())
-                if dl.get('id'):
-                    dub_keys.add(dl.get('id').lower().strip())
-        except Exception:
-            pass
-
-    # 3. Delete non-Dub titles from database
+    # 2. Delete non-persisted titles from database
     all_titles = db.get_all_project_titles()
-    deleted_count = 0
-    hidden = db.get_setting('hidden_project_aliases', db.get_setting('hidden_tinyurl_aliases', ''))
-    hidden_set = set(h.strip().lower() for h in hidden.split(',') if h.strip())
+    deleted_count = len(all_titles)
+    hidden_set = set()
 
     for t in all_titles:
         alias_clean = (t.get('alias') or '').lower().strip()
-        # Keep if it belongs to an active Dub.co link
-        if alias_clean in dub_keys:
-            continue
         db.delete_project_title(t['id'])
         hidden_set.add(alias_clean)
         hidden_set.add(f"custom-{t['id']}")
-        deleted_count += 1
 
     db.set_setting('hidden_project_aliases', ','.join(sorted(hidden_set)))
     db.set_setting('hidden_tinyurl_aliases', ','.join(sorted(hidden_set)))
@@ -839,18 +699,17 @@ def purge_deactivated_tinyurl_links():
     return {
         'success': True,
         'deleted_count': deleted_count,
-        'message': f"Purged {deleted_count} legacy link{'s' if deleted_count != 1 else ''} and disconnected TinyURL account."
+        'message': f"Purged {deleted_count} link{'s' if deleted_count != 1 else ''} and cleared TinyURL settings."
     }
 
 
 def fetch_tinyurl_projects(force=False):
-    """Fetches links from Dub.co (primary) and TinyURL (legacy), merges custom titles and direct links."""
+    """Fetches links from TinyURL API, merges custom titles and direct custom links."""
     global _tinyurl_cache, _tinyurl_cache_ts
     now = time.time()
     if not force and _tinyurl_cache and (now - _tinyurl_cache_ts < 30):
         return _tinyurl_cache
 
-    dub_token = db.get_setting('dub_api_key') or db.get_setting('dub_api_token')
     tiny_token = db.get_setting('tinyurl_api_token')
 
     titles_list = db.get_all_project_titles()
@@ -861,56 +720,7 @@ def fetch_tinyurl_projects(force=False):
     hidden = db.get_setting('hidden_project_aliases', db.get_setting('hidden_tinyurl_aliases', ''))
     hidden_set = set(h.strip().lower() for h in hidden.split(',') if h.strip())
 
-    # 1. Fetch from Dub.co (modern short link platform with clicks analytics)
-    if dub_token:
-        try:
-            dub_raw = fetch_dub_links()
-            for item in dub_raw:
-                link_id = item.get('id', '')
-                key = item.get('key', '')
-                domain = item.get('domain', 'dub.sh')
-                clean_key = key.lower().strip()
-                if clean_key in hidden_set or (link_id and link_id.lower() in hidden_set):
-                    continue
-
-                short_url = item.get('shortLink') or f"https://{domain}/{key}"
-                target_url = item.get('url', '')
-                clicks = item.get('clicks', 0)
-
-                matched_aliases.add(clean_key)
-
-                if clean_key in titles_map:
-                    t_item = titles_map[clean_key]
-                    title = t_item.get('custom_title') or item.get('title') or key
-                    db_id = t_item.get('id')
-                    if t_item.get('target_url'):
-                        target_url = t_item.get('target_url')
-                else:
-                    title = item.get('title') or (
-                        key.replace('-', ' ').replace('_', ' ').title() if key else 'Project Link'
-                    )
-                    db_id = None
-
-                links.append({
-                    'id': link_id or f"dub-{key}",
-                    'linkId': link_id,
-                    'db_id': db_id,
-                    'title': title,
-                    'alias': key,
-                    'domain': domain,
-                    'provider': 'dub',
-                    'providerLabel': 'Dub.co',
-                    'shortUrl': short_url,
-                    'tinyUrl': short_url,
-                    'displayUrl': short_url.replace('https://', '').replace('http://', ''),
-                    'targetUrl': target_url,
-                    'clicks': clicks,
-                    'isCustomLink': False
-                })
-        except Exception:
-            pass
-
-    # 2. Fetch from TinyURL (legacy support)
+    # 1. Fetch from TinyURL (legacy and modern TinyURL accounts)
     if tiny_token:
         try:
             session = get_http_session()
@@ -964,10 +774,10 @@ def fetch_tinyurl_projects(force=False):
                         'clicks': 0,
                         'isCustomLink': False
                     })
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[Fetch TinyURL Notice] {e}")
 
-    # 3. Add all custom direct links from database that are not short links
+    # 2. Add all custom direct links from database that are not TinyURL short links
     for t in titles_list:
         c_alias = (t.get('alias') or '').lower().strip()
         if c_alias in hidden_set:
@@ -1002,8 +812,7 @@ def fetch_tinyurl_projects(force=False):
             })
 
     res = {
-        'configured': bool(dub_token or tiny_token or links),
-        'dub_configured': bool(dub_token),
+        'configured': bool(tiny_token or links),
         'tinyurl_configured': bool(tiny_token),
         'links': links,
         'count': len(links)

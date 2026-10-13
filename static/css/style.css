@@ -257,11 +257,6 @@ header {
   color: #f8fafc;
   border: 1px solid rgba(255, 255, 255, 0.28);
 }
-.platform-pill.dub {
-  background: rgba(99, 102, 241, 0.15);
-  color: #a5b4fc;
-  border: 1px solid rgba(99, 102, 241, 0.35);
-}
 
 .status-badge {
   display: inline-flex;
@@ -453,11 +448,6 @@ header {
   border-radius: 3px;
   letter-spacing: 0.04em;
   flex-shrink: 0;
-}
-.ql-dub-tag {
-  background: rgba(99, 102, 241, 0.15) !important;
-  color: #a5b4fc !important;
-  border: 1px solid rgba(99, 102, 241, 0.35) !important;
 }
 .ql-custom-tag {
   background: rgba(59, 130, 246, 0.15) !important;
