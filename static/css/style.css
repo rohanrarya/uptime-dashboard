@@ -1,0 +1,1478 @@
+/* =============================================================================
+   Ops Command Center — Main Stylesheet
+   Organized sections:
+   1. Theme & Design Tokens (:root)
+   2. Base Layout & Reset
+   3. Top Navigation Header
+   4. Buttons & Badges
+   5. Quick Launch Grid (Projects & Shortcuts)
+   6. View Switcher Tabs (Deployments & Monitors)
+   7. KPI Statistics Summary Cards
+   8. Deployment & Monitor Status Cards
+   9. Commit & URL Preview Boxes
+   10. Modal Dialogs & Control Panel Container
+   11. Form Inputs, Selects & Tables
+   12. Authentication Overlay (Login Screen)
+   13. Floating Toast Notifications
+   14. Responsive Mobile Layout (<768px & <380px)
+   15. Keyframe Animations
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. Theme & Design Tokens (:root)
+   ----------------------------------------------------------------------------- */
+:root {
+  --bg: #090c15;
+  --surface: #101626;
+  --surface2: #161e33;
+  --surface3: #1d2742;
+  --border: #232f4e;
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --accent: #6366f1;
+  --accent-light: #818cf8;
+  --accent-glow: rgba(99, 102, 241, 0.2);
+  --success: #10b981;
+  --success-glow: rgba(16, 185, 129, 0.15);
+  --warning: #f59e0b;
+  --warning-glow: rgba(245, 158, 11, 0.15);
+  --danger: #ef4444;
+  --danger-glow: rgba(239, 68, 68, 0.15);
+  --text: #f8fafc;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* -----------------------------------------------------------------------------
+   2. Base Layout & Reset
+   ----------------------------------------------------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  position: relative;
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+code, pre, .mono {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+/* Custom Sleek Dark Scrollbars across the entire app */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Main Layout Container */
+main {
+  flex: 1;
+  max-width: 1320px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem 3rem;
+}
+
+/* -----------------------------------------------------------------------------
+   3. Top Navigation Header
+   ----------------------------------------------------------------------------- */
+header {
+  background: rgba(16, 22, 38, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0.9rem 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #4f46e5, #06b6d4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+}
+
+.brand-text h1 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.brand-text span {
+  font-size: 0.72rem;
+  color: var(--text3);
+  font-weight: 500;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* -----------------------------------------------------------------------------
+   4. Buttons & Badges
+   ----------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  outline: none;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+}
+.btn-primary:hover {
+  background: #4f46e5;
+}
+
+.btn-secondary {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover {
+  background: var(--surface3);
+  border-color: var(--accent-light);
+}
+
+.btn-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.btn-success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.btn-success:hover {
+  background: rgba(16, 185, 129, 0.3);
+}
+
+.btn-sm {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.72rem;
+  border-radius: var(--radius-sm);
+}
+
+.platform-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.platform-pill.render {
+  background: rgba(70, 227, 183, 0.12);
+  color: #46e3b7;
+  border: 1px solid rgba(70, 227, 183, 0.3);
+}
+.platform-pill.cloudflare {
+  background: rgba(246, 130, 31, 0.12);
+  color: #f6821f;
+  border: 1px solid rgba(246, 130, 31, 0.3);
+}
+.platform-pill.vercel {
+  background: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+.platform-pill.dub {
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.badge-live {
+  background: var(--success-glow);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.badge-building {
+  background: var(--warning-glow);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  animation: pulse 1.8s infinite;
+}
+.badge-failed {
+  background: var(--danger-glow);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.badge-canceled {
+  background: rgba(100, 116, 139, 0.15);
+  color: var(--text2);
+  border: 1px solid rgba(100, 116, 139, 0.25);
+}
+
+/* -----------------------------------------------------------------------------
+   5. Quick Launch Grid (Projects & Shortcuts)
+   ----------------------------------------------------------------------------- */
+.quick-launch-section {
+  background: linear-gradient(135deg, rgba(24, 32, 50, 0.75), rgba(16, 22, 35, 0.95));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.15rem 1.4rem;
+  margin-bottom: 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.quick-launch-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.ql-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ql-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background: rgba(99, 102, 241, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-light);
+}
+
+.ql-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.ql-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+.ql-subtext {
+  font-size: 0.74rem;
+  color: var(--text3);
+}
+
+.quick-launch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.ql-card {
+  background: var(--surface2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.ql-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-light);
+  background: var(--surface3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.ql-card-link {
+  flex: 1;
+  padding: 0.75rem 0.9rem;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.ql-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.ql-project-icon {
+  color: var(--accent-light);
+  flex-shrink: 0;
+}
+
+.ql-project-name {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.ql-external-icon {
+  font-size: 0.75rem;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+.ql-card:hover .ql-external-icon {
+  color: var(--accent-light);
+}
+
+.ql-url-line {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.ql-tiny-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.ql-dub-tag {
+  background: rgba(99, 102, 241, 0.15) !important;
+  color: #a5b4fc !important;
+  border: 1px solid rgba(99, 102, 241, 0.35) !important;
+}
+.ql-custom-tag {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #93c5fd !important;
+  border: 1px solid rgba(59, 130, 246, 0.35) !important;
+}
+
+.clicks-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  padding: 0.06rem 0.4rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+
+.ql-url-text {
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.ql-copy-btn {
+  width: 38px;
+  background: rgba(0, 0, 0, 0.15);
+  border: none;
+  border-left: 1px solid var(--border-subtle);
+  color: var(--text3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.ql-copy-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: #fff;
+}
+
+/* -----------------------------------------------------------------------------
+   6. View Switcher Tabs (Deployments & Monitors)
+   ----------------------------------------------------------------------------- */
+.view-tabs-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.view-tabs {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.35rem;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.view-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.view-tab.active {
+  background: var(--surface2);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.tab-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
+.tab-badge.building {
+  background: var(--warning);
+  color: #000;
+  animation: pulse 1.5s infinite;
+}
+
+/* -----------------------------------------------------------------------------
+   7. KPI Statistics Summary Cards
+   ----------------------------------------------------------------------------- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--border);
+}
+.stat-card.live::before { background: var(--success); }
+.stat-card.building::before { background: var(--warning); }
+.stat-card.failed::before { background: var(--danger); }
+.stat-card.accounts::before { background: var(--accent); }
+
+.stat-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text3);
+  letter-spacing: 0.05em;
+}
+
+.stat-value {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0.35rem 0 0.15rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.stat-sub {
+  font-size: 0.75rem;
+  color: var(--text2);
+}
+
+/* -----------------------------------------------------------------------------
+   8. Deployment & Monitor Status Cards
+   ----------------------------------------------------------------------------- */
+.deployments-grid, .monitors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.deployment-card, .monitor-card {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  position: relative;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.deployment-card:hover, .monitor-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-light);
+  box-shadow: var(--shadow-md);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.project-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.project-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.project-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  flex: 1;
+}
+
+/* -----------------------------------------------------------------------------
+   9. Commit & URL Preview Boxes
+   ----------------------------------------------------------------------------- */
+.commit-box {
+  background: rgba(24, 32, 50, 0.65);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.commit-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  width: 100%;
+  min-width: 0;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.branch-pill {
+  font-family: 'JetBrains Mono', monospace;
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.12);
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.commit-message {
+  font-size: 0.82rem;
+  color: var(--text);
+  font-weight: 500;
+  line-height: 1.35;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  width: 100%;
+  min-width: 0;
+}
+
+.site-url-bar {
+  background: var(--surface2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.75rem;
+  font-size: 0.78rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.site-url-link {
+  color: var(--text2);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+  display: block;
+}
+.site-url-link:hover {
+  color: var(--accent-light);
+  text-decoration: underline;
+}
+
+.card-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* -----------------------------------------------------------------------------
+   10. Modal Dialogs & Control Panel Container
+   ----------------------------------------------------------------------------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+.modal-backdrop.open {
+  display: flex;
+}
+
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  max-width: 840px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  position: relative;
+}
+
+.modal-head {
+  padding: 1.15rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+.modal-head h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  min-width: 0;
+}
+.modal-head h2 span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  scrollbar-width: thin;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+/* Control Panel Specifics */
+.cp-content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.cp-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  padding: 0 0.5rem;
+  gap: 0.15rem;
+  flex-shrink: 0;
+}
+.cp-tabs::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.cp-tab-btn {
+  padding: 0.75rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text2);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.cp-tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+}
+.cp-tab-btn.active {
+  color: #fff;
+  border-bottom-color: var(--accent-light);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cp-card-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.15rem;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+.cp-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.cp-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.cp-btn-group {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.cp-input-btn-row {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.cp-header-actions {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+/* -----------------------------------------------------------------------------
+   11. Form Inputs, Selects & Tables
+   ----------------------------------------------------------------------------- */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+.form-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.form-input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.95rem;
+  font-size: 0.85rem;
+  color: #fff;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.form-input:focus {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.form-input.mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.table-container {
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  box-sizing: border-box;
+}
+.table-container::-webkit-scrollbar {
+  height: 5px;
+}
+.table-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  min-width: 520px;
+}
+
+th, td {
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+th {
+  background: var(--surface2);
+  color: var(--text3);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* -----------------------------------------------------------------------------
+   12. Authentication Overlay (Login Screen)
+   ----------------------------------------------------------------------------- */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 30%, #151d33 0%, #090c15 80%);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.login-overlay.active {
+  display: flex;
+}
+
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 2.25rem;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.login-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-lg);
+  margin: 0 auto;
+  background: linear-gradient(135deg, #4f46e5, #06b6d4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.5);
+}
+
+/* -----------------------------------------------------------------------------
+   13. Floating Toast Notifications
+   ----------------------------------------------------------------------------- */
+.toast-tray {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: calc(100vw - 3rem);
+}
+
+.toast-msg {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1.25rem;
+  font-size: 0.85rem;
+  color: var(--text);
+  box-shadow: var(--shadow-md);
+  word-break: break-word;
+}
+.toast-msg.success {
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #6ee7b7;
+}
+.toast-msg.error {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+/* -----------------------------------------------------------------------------
+   14. Responsive Mobile Layout (<768px & <380px)
+   ----------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  /* Header */
+  header {
+    padding: 0.65rem 0.85rem;
+    gap: 0.5rem;
+  }
+  .brand {
+    gap: 0.5rem;
+    min-width: 0;
+    flex: 1;
+  }
+  .brand-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+  .brand-icon svg {
+    width: 17px;
+    height: 17px;
+  }
+  .brand-text {
+    min-width: 0;
+    overflow: hidden;
+  }
+  .brand-text h1 {
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .brand-text span {
+    display: none !important;
+  }
+  .hide-mobile {
+    display: none !important;
+  }
+  .header-actions {
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+  .header-actions .btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.76rem;
+  }
+
+  /* Main container */
+  main {
+    padding: 0.85rem 0.75rem 2.5rem;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Quick Launch */
+  .quick-launch-section {
+    padding: 0.85rem 0.9rem;
+    margin-bottom: 1.15rem;
+    border-radius: var(--radius-md);
+  }
+  .quick-launch-header {
+    gap: 0.5rem;
+  }
+  .quick-launch-grid {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+  .ql-card-link {
+    padding: 0.65rem 0.75rem;
+  }
+
+  /* View Tabs (Deployments vs Monitors) */
+  .view-tabs-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+    margin-bottom: 1.15rem;
+  }
+  .view-tabs {
+    width: 100%;
+    display: flex;
+    padding: 0.25rem;
+    gap: 0.25rem;
+  }
+  .view-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 0.55rem 0.4rem;
+    font-size: 0.78rem;
+    gap: 0.35rem;
+  }
+  .view-tab svg {
+    width: 13px;
+    height: 13px;
+  }
+  .tab-badge {
+    padding: 0.1rem 0.35rem;
+    font-size: 0.65rem;
+  }
+
+  /* Stats KPI Grid */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    margin-bottom: 1.15rem;
+  }
+  .stat-card {
+    padding: 0.85rem 0.75rem;
+    border-radius: var(--radius-md);
+  }
+  .stat-label {
+    font-size: 0.65rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .stat-value {
+    font-size: 1.45rem;
+    margin: 0.2rem 0 0.1rem;
+  }
+  .stat-sub {
+    font-size: 0.68rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Deployments & Monitors Cards */
+  .deployments-grid, .monitors-grid {
+    grid-template-columns: 100%;
+    gap: 0.85rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .deployment-card, .monitor-card {
+    padding: 0.95rem 0.85rem;
+    gap: 0.8rem;
+    border-radius: var(--radius-md);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    flex-wrap: nowrap;
+  }
+  .project-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .project-name-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .project-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    min-width: 0;
+    flex: 1;
+  }
+  .status-badge {
+    font-size: 0.7rem;
+    padding: 0.22rem 0.55rem;
+    flex-shrink: 0;
+    white-space: nowrap;
+    margin-left: auto;
+  }
+  .commit-box {
+    padding: 0.65rem 0.75rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .commit-meta {
+    font-size: 0.7rem;
+    gap: 0.35rem;
+  }
+  .commit-message {
+    font-size: 0.78rem;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  .site-url-bar {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    padding: 0.4rem 0.65rem;
+  }
+  .site-url-link {
+    font-size: 0.74rem;
+    min-width: 0;
+    max-width: 100%;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card-footer-actions {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-top: 0.45rem;
+  }
+
+  /* Full Screen Mobile App Experience for Control Panel Modal */
+  .modal-backdrop {
+    padding: 0;
+    align-items: stretch;
+  }
+  .modal-box {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+    margin: 0;
+  }
+  .modal-head {
+    padding: 0.85rem 1rem;
+  }
+  .modal-head h2 {
+    font-size: 0.95rem;
+  }
+  .modal-body {
+    padding: 1rem 0.85rem;
+    gap: 1rem;
+  }
+
+  /* Control panel tabs */
+  .cp-tabs {
+    padding: 0.25rem 0.4rem;
+    gap: 0.2rem;
+  }
+  .cp-tab-btn {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.76rem;
+    gap: 0.35rem;
+  }
+  .cp-tab-btn svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .cp-card-box {
+    padding: 0.85rem;
+  }
+
+  /* Grids to single column */
+  .cp-grid-2, .cp-grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Full width button behavior */
+  .cp-btn-mobile-full {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .cp-btn-group {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 0.5rem !important;
+  }
+  .cp-btn-group .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .cp-input-btn-row {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  .cp-input-btn-row .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .cp-header-actions {
+    width: 100% !important;
+    display: flex !important;
+  }
+  .cp-header-actions .btn {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+
+  /* Sessions card mobile */
+  .cp-session-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+  .cp-session-btn-wrap {
+    width: 100% !important;
+  }
+  .cp-session-btn-wrap .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Login card */
+  .login-card {
+    padding: 1.5rem 1.25rem;
+    max-width: 360px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .modal-head h2 span {
+    font-size: 0.86rem;
+  }
+  .header-actions .btn {
+    padding: 0.35rem 0.45rem;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   15. Keyframe Animations
+   ----------------------------------------------------------------------------- */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}

@@ -668,35 +668,179 @@ def delete_dub_link(link_id_or_alias):
     }
 
 
-def delete_project_link(identifier):
-    """Unified delete dispatcher for Dub.co, TinyURL, or database custom links."""
-    clean_id = str(identifier).strip()
-    dub_token = db.get_setting('dub_api_key') or db.get_setting('dub_api_token')
-    if dub_token:
-        res = delete_dub_link(clean_id)
-        if res.get('api_deleted'):
-            return res
+def delete_project_link(identifier, alias=None, db_id=None):
+    """
+    Unified delete dispatcher for Dub.co, TinyURL, or database custom links.
+    Handles 'custom-<id>', numeric ID, alias, slug, full URL, or Dub ID.
+    Guarantees deletion from local database, marks as hidden, and attempts remote removal.
+    """
+    raw_id = str(identifier or '').strip()
+    raw_alias = str(alias or '').strip() if alias else ''
+    raw_db_id = str(db_id or '').strip() if db_id else ''
 
-    tiny_token = db.get_setting('tinyurl_api_token')
-    if tiny_token:
-        res = delete_tinyurl_link(clean_id)
-        if res.get('api_deleted'):
-            return res
+    # Build set of all candidate identifiers and aliases
+    candidates = set()
+    if raw_id:
+        candidates.add(raw_id)
+        candidates.add(raw_id.lower())
+    if raw_alias:
+        candidates.add(raw_alias)
+        candidates.add(raw_alias.lower())
 
-    # Clean up database title overrides if direct link or already deleted from remote
-    for t in db.get_all_project_titles():
-        if str(t['id']) == clean_id or t['alias'].lower().strip() == clean_id.lower():
-            db.delete_project_title(t['id'])
+    # Extract numeric database ID if present
+    num_id = None
+    if raw_id.lower().startswith('custom-'):
+        num_str = raw_id.lower().replace('custom-', '').strip()
+        if num_str.isdigit():
+            num_id = int(num_str)
+            candidates.add(num_str)
+            candidates.add(f"custom-{num_str}")
+    elif raw_id.isdigit():
+        num_id = int(raw_id)
+    if num_id is None and raw_db_id and raw_db_id.isdigit():
+        num_id = int(raw_db_id)
+        candidates.add(raw_db_id)
+        candidates.add(f"custom-{raw_db_id}")
 
-    # Ensure hidden locally
+    # Extract clean slug / key from URL or domain-style inputs
+    for s in list(candidates):
+        clean_s = s.replace('https://', '').replace('http://', '').strip('/')
+        candidates.add(clean_s)
+        candidates.add(clean_s.lower())
+        if '/' in clean_s:
+            slug = clean_s.split('/')[-1].strip()
+            if slug:
+                candidates.add(slug)
+                candidates.add(slug.lower())
+
+    # 1. Delete all matching records from local database (project_titles)
+    deleted_titles = []
+    try:
+        all_titles = db.get_all_project_titles()
+        for t in all_titles:
+            t_id = t.get('id')
+            t_alias = (t.get('alias') or '').strip().lower()
+            t_slug = t_alias.replace('https://', '').replace('http://', '').strip('/').split('/')[-1]
+
+            match = False
+            if num_id is not None and t_id == num_id:
+                match = True
+            elif str(t_id) in candidates:
+                match = True
+            elif t_alias in candidates or t_slug in candidates:
+                match = True
+            elif any(c in t_alias for c in candidates if len(c) >= 3 and not c.startswith('custom-')):
+                match = True
+
+            if match:
+                db.delete_project_title(t_id)
+                deleted_titles.append(t)
+                candidates.add(t_alias)
+                candidates.add(t_slug)
+                if t_id is not None:
+                    candidates.add(str(t_id))
+                    candidates.add(f"custom-{t_id}")
+    except Exception as e:
+        print(f"[DeleteLink DB Error] {e}")
+
+    # 2. Also try direct alias SQL deletion for any candidate
+    for c in list(candidates):
+        if not c.startswith('custom-') and not c.isdigit() and len(c) >= 2:
+            try:
+                db.delete_project_title_by_alias(c)
+            except Exception:
+                pass
+
+    # 3. Add all candidate strings to hidden_project_aliases and hidden_tinyurl_aliases
     hidden = db.get_setting('hidden_project_aliases', db.get_setting('hidden_tinyurl_aliases', ''))
     hidden_set = set(h.strip().lower() for h in hidden.split(',') if h.strip())
-    hidden_set.add(clean_id.lower())
+    for c in candidates:
+        if c:
+            hidden_set.add(c.lower())
+    db.set_setting('hidden_project_aliases', ','.join(sorted(hidden_set)))
+    db.set_setting('hidden_tinyurl_aliases', ','.join(sorted(hidden_set)))
+
+    # 4. If Dub.co is configured, attempt remote deletion for Dub links
+    dub_token = db.get_setting('dub_api_key') or db.get_setting('dub_api_token')
+    if dub_token:
+        try:
+            dub_links = fetch_dub_links()
+            for dl in dub_links:
+                dl_id = dl.get('id') or ''
+                dl_key = (dl.get('key') or '').strip().lower()
+                if dl_id in candidates or dl_key in candidates:
+                    delete_dub_link(dl_id or dl_key)
+                    break
+        except Exception:
+            pass
+
+    # 5. If TinyURL token is configured, attempt remote deletion (non-blocking if deactivated)
+    tiny_token = db.get_setting('tinyurl_api_token')
+    if tiny_token:
+        try:
+            for c in list(candidates):
+                if not c.startswith('custom-') and not c.isdigit() and '.' not in c and len(c) >= 2:
+                    clean_slug = c.replace('tinyurl.com', '').strip('/')
+                    if clean_slug:
+                        delete_tinyurl_link(clean_slug)
+                        break
+        except Exception:
+            pass
+
+    invalidate_services_cache()
+    display_name = raw_alias or (deleted_titles[0].get('custom_title') if deleted_titles else raw_id)
+    return {
+        'success': True,
+        'message': f"Link '{display_name}' deleted successfully and removed from dashboard."
+    }
+
+
+def purge_deactivated_tinyurl_links():
+    """
+    Cleans up all legacy TinyURL / orphaned custom links when TinyURL account is deactivated,
+    clears tinyurl_api_token setting, and preserves active Dub.co links.
+    """
+    # 1. Clear TinyURL token so no further requests stall
+    db.set_setting('tinyurl_api_token', '')
+
+    # 2. Get active Dub.co keys to avoid deleting user's Dub.co links
+    dub_keys = set()
+    dub_token = db.get_setting('dub_api_key') or db.get_setting('dub_api_token')
+    if dub_token:
+        try:
+            for dl in fetch_dub_links():
+                if dl.get('key'):
+                    dub_keys.add(dl.get('key').lower().strip())
+                if dl.get('id'):
+                    dub_keys.add(dl.get('id').lower().strip())
+        except Exception:
+            pass
+
+    # 3. Delete non-Dub titles from database
+    all_titles = db.get_all_project_titles()
+    deleted_count = 0
+    hidden = db.get_setting('hidden_project_aliases', db.get_setting('hidden_tinyurl_aliases', ''))
+    hidden_set = set(h.strip().lower() for h in hidden.split(',') if h.strip())
+
+    for t in all_titles:
+        alias_clean = (t.get('alias') or '').lower().strip()
+        # Keep if it belongs to an active Dub.co link
+        if alias_clean in dub_keys:
+            continue
+        db.delete_project_title(t['id'])
+        hidden_set.add(alias_clean)
+        hidden_set.add(f"custom-{t['id']}")
+        deleted_count += 1
+
     db.set_setting('hidden_project_aliases', ','.join(sorted(hidden_set)))
     db.set_setting('hidden_tinyurl_aliases', ','.join(sorted(hidden_set)))
 
     invalidate_services_cache()
-    return {'success': True, 'message': f"Link '{clean_id}' deleted successfully."}
+    return {
+        'success': True,
+        'deleted_count': deleted_count,
+        'message': f"Purged {deleted_count} legacy link{'s' if deleted_count != 1 else ''} and disconnected TinyURL account."
+    }
 
 
 def fetch_tinyurl_projects(force=False):
@@ -773,7 +917,7 @@ def fetch_tinyurl_projects(force=False):
             r = session.get(
                 'https://api.tinyurl.com/urls/available',
                 headers={'Authorization': f'Bearer {tiny_token}', 'Accept': 'application/json'},
-                timeout=10
+                timeout=5
             )
             if r.status_code == 200:
                 data = r.json()
@@ -872,21 +1016,24 @@ def fetch_tinyurl_projects(force=False):
 def delete_tinyurl_link(alias, domain='tinyurl.com'):
     """Deletes short link from TinyURL API, removes local title overrides, and hides from dashboard."""
     token = db.get_setting('tinyurl_api_token')
-    clean_alias = alias.lower().strip()
+    raw_alias = str(alias or '').strip()
+    clean_alias = raw_alias.lower().replace('https://', '').replace('http://', '').replace('tinyurl.com/', '').strip('/')
     api_deleted = False
     api_message = ''
 
-    if token:
+    if token and clean_alias and not clean_alias.startswith('custom-') and not clean_alias.isdigit():
         try:
             session = get_http_session()
             r = session.delete(
                 f'https://api.tinyurl.com/alias/{domain}/{clean_alias}',
                 headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'},
-                timeout=10
+                timeout=5
             )
             if r.status_code in (200, 204):
                 api_deleted = True
                 api_message = 'Deleted from TinyURL server.'
+            elif r.status_code in (401, 403):
+                api_message = 'TinyURL note: Account deactivated or invalid token.'
             else:
                 try:
                     err_json = r.json()
@@ -899,12 +1046,16 @@ def delete_tinyurl_link(alias, domain='tinyurl.com'):
             api_message = f"TinyURL API unreachable: {str(e)}"
 
     for t in db.get_all_project_titles():
-        if t['alias'].lower().strip() == clean_alias:
+        t_alias = (t.get('alias') or '').lower().strip()
+        t_slug = t_alias.replace('https://', '').replace('http://', '').replace('tinyurl.com/', '').strip('/')
+        if t_alias == clean_alias or t_slug == clean_alias or t_alias == raw_alias.lower():
             db.delete_project_title(t['id'])
 
     hidden = db.get_setting('hidden_project_aliases', db.get_setting('hidden_tinyurl_aliases', ''))
     hidden_set = set(h.strip().lower() for h in hidden.split(',') if h.strip())
     hidden_set.add(clean_alias)
+    if raw_alias:
+        hidden_set.add(raw_alias.lower())
     db.set_setting('hidden_project_aliases', ','.join(sorted(hidden_set)))
     db.set_setting('hidden_tinyurl_aliases', ','.join(sorted(hidden_set)))
 

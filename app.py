@@ -8,7 +8,7 @@
 
 import os
 from functools import wraps
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 
 import db
@@ -19,7 +19,7 @@ import services
 # Application Initialization
 # =============================================================================
 
-app = Flask(__name__, template_folder='templates')
+app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='/static')
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Auto-initialize database schema and sync .env variables on boot
@@ -375,7 +375,17 @@ def delete_project_title(title_id):
 @require_auth
 def delete_link(identifier):
     """Deletes or removes a link from Dub.co, TinyURL, or database."""
-    result = services.delete_project_link(identifier.strip())
+    alias = request.args.get('alias', '').strip()
+    db_id = request.args.get('db_id', '').strip()
+    result = services.delete_project_link(identifier.strip(), alias=alias, db_id=db_id)
+    return jsonify(result), 200
+
+
+@app.route('/api/admin/links/purge-legacy', methods=['POST'])
+@require_auth
+def purge_legacy_links():
+    """Purges all orphaned TinyURL/custom links from database and clears deactivated TinyURL token."""
+    result = services.purge_deactivated_tinyurl_links()
     return jsonify(result), 200
 
 
@@ -451,8 +461,21 @@ def logout_other_sessions():
 
 
 # =============================================================================
-# Frontend Template Serving
+# Frontend Template & Static Asset Serving
 # =============================================================================
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    static_dirs = [
+        os.path.join(app.root_path, 'static'),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static'),
+        'static'
+    ]
+    for s_dir in static_dirs:
+        if os.path.exists(os.path.join(s_dir, filename)):
+            return send_from_directory(s_dir, filename)
+    return jsonify({'error': 'Static file not found'}), 404
+
 
 @app.route('/')
 @app.route('/dashboard')
@@ -469,7 +492,7 @@ def serve_index():
 
 @app.route('/<path:path>')
 def catch_all(path):
-    if path.startswith('api/'):
+    if path.startswith('api/') or path.startswith('static/'):
         return jsonify({'error': 'Endpoint not found'}), 404
     return serve_index()
 

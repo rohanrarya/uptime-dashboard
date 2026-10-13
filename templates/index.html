@@ -8,948 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <style>
-    :root {
-      --bg: #090c15;
-      --surface: #101626;
-      --surface2: #161e33;
-      --surface3: #1d2742;
-      --border: #232f4e;
-      --border-subtle: rgba(255, 255, 255, 0.07);
-      --accent: #6366f1;
-      --accent-light: #818cf8;
-      --accent-glow: rgba(99, 102, 241, 0.2);
-      --success: #10b981;
-      --success-glow: rgba(16, 185, 129, 0.15);
-      --warning: #f59e0b;
-      --warning-glow: rgba(245, 158, 11, 0.15);
-      --danger: #ef4444;
-      --danger-glow: rgba(239, 68, 68, 0.15);
-      --text: #f8fafc;
-      --text2: #94a3b8;
-      --text3: #64748b;
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --radius-xl: 18px;
-      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
-      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
-      --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
-    }
-
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    html {
-      overflow-x: hidden;
-      max-width: 100vw;
-      width: 100%;
-      -webkit-text-size-adjust: 100%;
-    }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-      max-width: 100vw;
-      width: 100%;
-      position: relative;
-    }
-    body.modal-open {
-      overflow: hidden;
-    }
-    img {
-      max-width: 100%;
-      height: auto;
-    }
-
-    /* Header */
-    header {
-      background: rgba(16, 22, 38, 0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      padding: 0.9rem 1.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .brand { display: flex; align-items: center; gap: 0.75rem; }
-    .brand-icon {
-      width: 36px; height: 36px; border-radius: var(--radius-md);
-      background: linear-gradient(135deg, #4f46e5, #06b6d4);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
-    }
-    .brand-text h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; }
-    .brand-text span { font-size: 0.72rem; color: var(--text3); font-weight: 500; }
-    .header-actions { display: flex; align-items: center; gap: 0.6rem; }
-
-    /* Buttons */
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
-      padding: 0.5rem 0.95rem; border-radius: var(--radius-md); font-size: 0.8rem;
-      font-weight: 600; cursor: pointer; transition: all 0.15s ease; border: none; outline: none;
-    }
-    .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3); }
-    .btn-primary:hover { background: #4f46e5; }
-    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-    .btn-secondary:hover { background: var(--surface3); border-color: var(--accent-light); }
-    .btn-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-    .btn-danger:hover { background: rgba(239, 68, 68, 0.3); }
-    .btn-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .btn-success:hover { background: rgba(16, 185, 129, 0.3); }
-    .btn-sm { padding: 0.3rem 0.65rem; font-size: 0.72rem; border-radius: var(--radius-sm); }
-
-    /* Layout Container */
-    main { flex: 1; max-width: 1320px; width: 100%; margin: 0 auto; padding: 1.75rem 1.5rem 3rem; }
-
-    /* Quick Launch Bar */
-    .quick-launch-section {
-      background: linear-gradient(135deg, rgba(24, 32, 50, 0.75), rgba(16, 22, 35, 0.95));
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1.15rem 1.4rem;
-      margin-bottom: 1.75rem;
-      box-shadow: var(--shadow-sm);
-    }
-    .quick-launch-header {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 1rem; margin-bottom: 0.9rem; flex-wrap: wrap;
-    }
-    .ql-title-wrap { display: flex; align-items: center; gap: 0.6rem; }
-    .ql-icon {
-      width: 26px; height: 26px; border-radius: var(--radius-sm);
-      background: rgba(99, 102, 241, 0.15); display: flex; align-items: center;
-      justify-content: center; color: var(--accent-light);
-    }
-    .ql-title { font-size: 0.9rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
-    .ql-badge {
-      font-size: 0.68rem; font-weight: 700; padding: 0.12rem 0.5rem;
-      border-radius: 999px; background: rgba(99, 102, 241, 0.15); color: #a5b4fc;
-      border: 1px solid rgba(99, 102, 241, 0.25);
-    }
-    .ql-subtext { font-size: 0.74rem; color: var(--text3); }
-
-    .quick-launch-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
-      gap: 0.75rem;
-      width: 100%;
-      max-width: 100%;
-      box-sizing: border-box;
-    }
-    .ql-card {
-      background: var(--surface2); border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md); position: relative; display: flex;
-      align-items: stretch; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      overflow: hidden;
-      width: 100%;
-      max-width: 100%;
-      min-width: 0;
-      box-sizing: border-box;
-    }
-    .ql-card:hover {
-      transform: translateY(-2px); border-color: var(--accent-light);
-      background: var(--surface3); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-    }
-    .ql-card-link {
-      flex: 1; padding: 0.75rem 0.9rem; text-decoration: none;
-      display: flex; flex-direction: column; gap: 0.35rem; min-width: 0;
-      max-width: 100%;
-      overflow: hidden;
-    }
-    .ql-card-top { display: flex; align-items: center; gap: 0.5rem; min-width: 0; width: 100%; }
-    .ql-project-icon { color: var(--accent-light); flex-shrink: 0; }
-    .ql-project-name {
-      font-size: 0.86rem; font-weight: 700; color: var(--text);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;
-    }
-    .ql-external-icon { font-size: 0.75rem; color: var(--text3); flex-shrink: 0; }
-    .ql-card:hover .ql-external-icon { color: var(--accent-light); }
-
-    .ql-url-line {
-      display: flex; align-items: center; gap: 0.45rem;
-      font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;
-      min-width: 0; width: 100%; overflow: hidden;
-    }
-    .ql-tiny-tag {
-      font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
-      background: rgba(16, 185, 129, 0.12); color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.25); padding: 0.05rem 0.35rem;
-      border-radius: 3px; letter-spacing: 0.04em;
-      flex-shrink: 0;
-    }
-    .ql-dub-tag {
-      background: rgba(99, 102, 241, 0.15) !important; color: #a5b4fc !important;
-      border: 1px solid rgba(99, 102, 241, 0.35) !important;
-    }
-    .ql-custom-tag {
-      background: rgba(59, 130, 246, 0.15) !important; color: #93c5fd !important;
-      border: 1px solid rgba(59, 130, 246, 0.35) !important;
-    }
-    .clicks-pill {
-      font-size: 0.65rem; font-weight: 700;
-      color: #38bdf8; background: rgba(56, 189, 248, 0.12);
-      border: 1px solid rgba(56, 189, 248, 0.28);
-      padding: 0.06rem 0.4rem; border-radius: 999px;
-      display: inline-flex; align-items: center; gap: 0.2rem;
-      flex-shrink: 0;
-    }
-    .ql-url-text {
-      color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      flex: 1; min-width: 0;
-    }
-
-    .ql-copy-btn {
-      width: 38px; background: rgba(0, 0, 0, 0.15); border: none;
-      border-left: 1px solid var(--border-subtle); color: var(--text3);
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s ease;
-    }
-    .ql-copy-btn:hover { background: rgba(99, 102, 241, 0.2); color: #fff; }
-
-    /* Navigation Tabs */
-    .view-tabs-container {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
-    }
-    .view-tabs {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 0.35rem; display: flex; gap: 0.35rem;
-    }
-    .view-tab {
-      display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 1.25rem;
-      border-radius: var(--radius-md); font-size: 0.86rem; font-weight: 700;
-      color: var(--text2); background: transparent; border: none; cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .view-tab.active { background: var(--surface2); color: #fff; box-shadow: var(--shadow-sm); }
-    .tab-badge {
-      font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem;
-      border-radius: 999px; background: rgba(255, 255, 255, 0.1); color: var(--text);
-    }
-    .tab-badge.building { background: var(--warning); color: #000; animation: pulse 1.5s infinite; }
-
-    /* KPI Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      width: 100%;
-      max-width: 100%;
-      box-sizing: border-box;
-    }
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: 1.25rem;
-      position: relative;
-      overflow: hidden;
-      box-shadow: var(--shadow-sm);
-      width: 100%;
-      max-width: 100%;
-      min-width: 0;
-      box-sizing: border-box;
-    }
-    .stat-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: var(--border);
-    }
-    .stat-card.live::before { background: var(--success); }
-    .stat-card.building::before { background: var(--warning); }
-    .stat-card.failed::before { background: var(--danger); }
-    .stat-card.accounts::before { background: var(--accent); }
-    .stat-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text3); letter-spacing: 0.05em; }
-    .stat-value { font-size: 1.85rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.15rem; font-family: 'JetBrains Mono', monospace; }
-    .stat-sub { font-size: 0.75rem; color: var(--text2); }
-
-    /* Deployments & Monitors Grids */
-    .deployments-grid, .monitors-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
-      gap: 1.25rem;
-      width: 100%;
-      max-width: 100%;
-      box-sizing: border-box;
-    }
-    .deployment-card, .monitor-card {
-      background: var(--surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: 1.25rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.9rem;
-      position: relative;
-      transition: all 0.2s ease;
-      box-shadow: var(--shadow-sm);
-      width: 100%;
-      max-width: 100%;
-      min-width: 0;
-      overflow: hidden;
-      box-sizing: border-box;
-    }
-    .deployment-card:hover, .monitor-card:hover {
-      transform: translateY(-2px);
-      border-color: var(--accent-light);
-      box-shadow: var(--shadow-md);
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.6rem;
-      width: 100%;
-      max-width: 100%;
-      min-width: 0;
-    }
-    .project-info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-      min-width: 0;
-      flex: 1;
-    }
-    .project-name-wrap {
-      display: flex;
-      align-items: center;
-      gap: 0.45rem;
-      flex-wrap: wrap;
-      min-width: 0;
-    }
-    .project-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--text);
-      word-break: break-word;
-      overflow-wrap: anywhere;
-      min-width: 0;
-      flex: 1;
-    }
-
-    .platform-pill {
-      font-size: 0.68rem;
-      font-weight: 700;
-      padding: 0.15rem 0.5rem;
-      border-radius: var(--radius-sm);
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-      flex-shrink: 0;
-    }
-    .platform-pill.render { background: rgba(70, 227, 183, 0.12); color: #46e3b7; border: 1px solid rgba(70, 227, 183, 0.3); }
-    .platform-pill.cloudflare { background: rgba(246, 130, 31, 0.12); color: #f6821f; border: 1px solid rgba(246, 130, 31, 0.3); }
-    .platform-pill.vercel { background: rgba(255, 255, 255, 0.12); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.28); }
-    .platform-pill.dub { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.35); }
-
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 0.25rem 0.65rem;
-      border-radius: 999px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-    .badge-live { background: var(--success-glow); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .badge-building { background: var(--warning-glow); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); animation: pulse 1.8s infinite; }
-    .badge-failed { background: var(--danger-glow); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-    .badge-canceled { background: rgba(100, 116, 139, 0.15); color: var(--text2); border: 1px solid rgba(100, 116, 139, 0.25); }
-
-    .commit-box {
-      background: rgba(24, 32, 50, 0.65);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 0.75rem 0.85rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-      width: 100%;
-      max-width: 100%;
-      min-width: 0;
-      box-sizing: border-box;
-      overflow: hidden;
-    }
-    .commit-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 0.72rem;
-      width: 100%;
-      min-width: 0;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-    }
-    .branch-pill {
-      font-family: 'JetBrains Mono', monospace;
-      color: #818cf8;
-      background: rgba(99, 102, 241, 0.12);
-      padding: 0.12rem 0.45rem;
-      border-radius: 4px;
-      flex-shrink: 0;
-    }
-    .commit-message {
-      font-size: 0.82rem;
-      color: var(--text);
-      font-weight: 500;
-      line-height: 1.35;
-      word-break: break-word;
-      overflow-wrap: anywhere;
-      width: 100%;
-      min-width: 0;
-    }
-
-    .site-url-bar {
-      background: var(--surface2);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      padding: 0.45rem 0.75rem;
-      font-size: 0.78rem;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text2);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      overflow: hidden;
-      width: 100%;
-      max-width: 100%;
-      min-width: 0;
-      box-sizing: border-box;
-    }
-    .site-url-link {
-      color: var(--text2);
-      text-decoration: none;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      flex: 1;
-      min-width: 0;
-      display: block;
-    }
-    .site-url-link:hover { color: var(--accent-light); text-decoration: underline; }
-
-    .card-footer-actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.75rem;
-      padding-top: 0.5rem;
-      border-top: 1px solid var(--border-subtle);
-      font-size: 0.75rem;
-      width: 100%;
-      max-width: 100%;
-      min-width: 0;
-      box-sizing: border-box;
-    }
-
-    /* Global Box-Sizing & Word Wrap Rules */
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
-    code, pre, .mono {
-      word-break: break-all;
-      overflow-wrap: anywhere;
-    }
-
-    /* Modal dialogs */
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(10px);
-      z-index: 1000; display: none; align-items: center; justify-content: center; padding: 1.25rem;
-    }
-    .modal-backdrop.open { display: flex; }
-    .modal-box {
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl);
-      max-width: 840px; width: 100%; max-height: 90vh; display: flex; flex-direction: column;
-      box-shadow: var(--shadow-lg); overflow: hidden; position: relative;
-    }
-    .modal-head {
-      padding: 1.15rem 1.5rem; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-shrink: 0;
-    }
-    .modal-head h2 {
-      font-size: 1.1rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;
-      margin: 0; min-width: 0;
-    }
-    .modal-head h2 span {
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .modal-body {
-      padding: 1.5rem; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 1.25rem;
-      scrollbar-width: thin; flex: 1; min-height: 0; width: 100%;
-    }
-
-    /* Admin Control Panel Specifics */
-    .cp-content {
-      width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;
-    }
-    .cp-tabs {
-      display: flex; border-bottom: 1px solid var(--border); background: var(--surface2);
-      overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
-      -webkit-overflow-scrolling: touch; scroll-behavior: smooth;
-      padding: 0 0.5rem; gap: 0.15rem; flex-shrink: 0;
-    }
-    .cp-tabs::-webkit-scrollbar {
-      display: none; width: 0; height: 0;
-    }
-    .cp-tab-btn {
-      padding: 0.75rem 0.85rem; font-size: 0.8rem; font-weight: 700; color: var(--text2);
-      border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;
-      display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.15s ease;
-      flex-shrink: 0; user-select: none; -webkit-tap-highlight-color: transparent;
-    }
-    .cp-tab-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
-    .cp-tab-btn.active { color: #fff; border-bottom-color: var(--accent-light); background: rgba(255, 255, 255, 0.06); }
-
-    /* Control Panel Responsive Grid & Layout Helpers */
-    .cp-card-box {
-      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-md);
-      padding: 1.15rem; box-sizing: border-box; width: 100%; max-width: 100%;
-    }
-    .cp-grid-2 {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; width: 100%;
-    }
-    .cp-grid-3 {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; width: 100%;
-    }
-    .cp-btn-group {
-      display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; width: 100%;
-    }
-    .cp-input-btn-row {
-      display: flex; gap: 0.5rem; width: 100%;
-    }
-    .cp-header-actions {
-      display: inline-flex; gap: 0.45rem; align-items: center;
-    }
-
-    /* Custom Sleek Dark Scrollbars across the entire app */
-    * {
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
-    }
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 5px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.16);
-      border-radius: 999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    .form-group { display: flex; flex-direction: column; gap: 0.4rem; width: 100%; max-width: 100%; }
-    .form-label { font-size: 0.75rem; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; }
-    .form-input {
-      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-md);
-      padding: 0.65rem 0.95rem; font-size: 0.85rem; color: #fff; font-family: inherit; outline: none;
-      width: 100%; max-width: 100%; box-sizing: border-box;
-    }
-    .form-input:focus { border-color: var(--accent-light); box-shadow: 0 0 0 3px var(--accent-glow); }
-    .form-input.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
-
-    .table-container {
-      width: 100%; max-width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md);
-      overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin;
-      box-sizing: border-box;
-    }
-    .table-container::-webkit-scrollbar {
-      height: 5px;
-    }
-    .table-container::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 999px;
-    }
-    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 520px; }
-    th, td { padding: 0.65rem 0.85rem; text-align: left; border-bottom: 1px solid var(--border-subtle); }
-    th { background: var(--surface2); color: var(--text3); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; white-space: nowrap; }
-    tr:last-child td { border-bottom: none; }
-
-    /* Login Screen Overlay */
-    .login-overlay {
-      position: fixed; inset: 0; background: radial-gradient(circle at 50% 30%, #151d33 0%, #090c15 80%);
-      z-index: 2000; display: none; align-items: center; justify-content: center; padding: 1.5rem;
-    }
-    .login-overlay.active { display: flex; }
-    .login-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl);
-      padding: 2.25rem; max-width: 400px; width: 100%; box-shadow: var(--shadow-lg); display: flex;
-      flex-direction: column; gap: 1.5rem; text-align: center;
-    }
-    .login-icon {
-      width: 50px; height: 50px; border-radius: var(--radius-lg); margin: 0 auto;
-      background: linear-gradient(135deg, #4f46e5, #06b6d4); display: flex; align-items: center;
-      justify-content: center; box-shadow: 0 0 25px rgba(99, 102, 241, 0.5);
-    }
-
-    /* Toast */
-    .toast-tray { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 3000; display: flex; flex-direction: column; gap: 0.5rem; max-width: calc(100vw - 3rem); }
-    .toast-msg {
-      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-md);
-      padding: 0.75rem 1.25rem; font-size: 0.85rem; color: var(--text); box-shadow: var(--shadow-md);
-      word-break: break-word;
-    }
-    .toast-msg.success { border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7; }
-    .toast-msg.error { border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
-
-    /* Responsive Queries */
-    @media (max-width: 768px) {
-      /* Header */
-      header {
-        padding: 0.65rem 0.85rem;
-        gap: 0.5rem;
-      }
-      .brand {
-        gap: 0.5rem;
-        min-width: 0;
-        flex: 1;
-      }
-      .brand-icon {
-        width: 32px;
-        height: 32px;
-        flex-shrink: 0;
-      }
-      .brand-icon svg {
-        width: 17px;
-        height: 17px;
-      }
-      .brand-text {
-        min-width: 0;
-        overflow: hidden;
-      }
-      .brand-text h1 {
-        font-size: 0.95rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .brand-text span {
-        display: none !important;
-      }
-      .hide-mobile {
-        display: none !important;
-      }
-      .header-actions {
-        gap: 0.35rem;
-        flex-shrink: 0;
-      }
-      .header-actions .btn {
-        padding: 0.4rem 0.6rem;
-        font-size: 0.76rem;
-      }
-
-      /* Main container */
-      main {
-        padding: 0.85rem 0.75rem 2.5rem;
-        width: 100%;
-        max-width: 100%;
-      }
-
-      /* Quick Launch */
-      .quick-launch-section {
-        padding: 0.85rem 0.9rem;
-        margin-bottom: 1.15rem;
-        border-radius: var(--radius-md);
-      }
-      .quick-launch-header {
-        gap: 0.5rem;
-      }
-      .quick-launch-grid {
-        grid-template-columns: 1fr;
-        gap: 0.6rem;
-      }
-      .ql-card-link {
-        padding: 0.65rem 0.75rem;
-      }
-
-      /* View Tabs (Deployments vs Monitors) */
-      .view-tabs-container {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.6rem;
-        margin-bottom: 1.15rem;
-      }
-      .view-tabs {
-        width: 100%;
-        display: flex;
-        padding: 0.25rem;
-        gap: 0.25rem;
-      }
-      .view-tab {
-        flex: 1;
-        justify-content: center;
-        padding: 0.55rem 0.4rem;
-        font-size: 0.78rem;
-        gap: 0.35rem;
-      }
-      .view-tab svg {
-        width: 13px;
-        height: 13px;
-      }
-      .tab-badge {
-        padding: 0.1rem 0.35rem;
-        font-size: 0.65rem;
-      }
-
-      /* Stats KPI Grid */
-      .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.6rem;
-        margin-bottom: 1.15rem;
-      }
-      .stat-card {
-        padding: 0.85rem 0.75rem;
-        border-radius: var(--radius-md);
-      }
-      .stat-label {
-        font-size: 0.65rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .stat-value {
-        font-size: 1.45rem;
-        margin: 0.2rem 0 0.1rem;
-      }
-      .stat-sub {
-        font-size: 0.68rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      /* Deployments & Monitors Cards */
-      .deployments-grid, .monitors-grid {
-        grid-template-columns: 100%;
-        gap: 0.85rem;
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        box-sizing: border-box;
-      }
-      .deployment-card, .monitor-card {
-        padding: 0.95rem 0.85rem;
-        gap: 0.8rem;
-        border-radius: var(--radius-md);
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        overflow: hidden;
-        box-sizing: border-box;
-      }
-      .card-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 0.5rem;
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        flex-wrap: nowrap;
-      }
-      .project-info {
-        flex: 1;
-        min-width: 0;
-      }
-      .project-name-wrap {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        flex-wrap: wrap;
-        min-width: 0;
-      }
-      .project-title {
-        font-size: 0.92rem;
-        font-weight: 700;
-        word-break: break-word;
-        overflow-wrap: anywhere;
-        min-width: 0;
-        flex: 1;
-      }
-      .status-badge {
-        font-size: 0.7rem;
-        padding: 0.22rem 0.55rem;
-        flex-shrink: 0;
-        white-space: nowrap;
-        margin-left: auto;
-      }
-      .commit-box {
-        padding: 0.65rem 0.75rem;
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        box-sizing: border-box;
-      }
-      .commit-meta {
-        font-size: 0.7rem;
-        gap: 0.35rem;
-      }
-      .commit-message {
-        font-size: 0.78rem;
-        word-break: break-word;
-        overflow-wrap: anywhere;
-      }
-      .site-url-bar {
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        box-sizing: border-box;
-        overflow: hidden;
-        padding: 0.4rem 0.65rem;
-      }
-      .site-url-link {
-        font-size: 0.74rem;
-        min-width: 0;
-        max-width: 100%;
-        display: block;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .card-footer-actions {
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.5rem;
-        padding-top: 0.45rem;
-      }
-
-      /* Full Screen Mobile App Experience for Control Panel Modal */
-      .modal-backdrop {
-        padding: 0;
-        align-items: stretch;
-      }
-      .modal-box {
-        width: 100vw;
-        max-width: 100vw;
-        height: 100vh;
-        max-height: 100vh;
-        border-radius: 0;
-        border: none;
-        margin: 0;
-      }
-      .modal-head {
-        padding: 0.85rem 1rem;
-      }
-      .modal-head h2 {
-        font-size: 0.95rem;
-      }
-      .modal-body {
-        padding: 1rem 0.85rem;
-        gap: 1rem;
-      }
-
-      /* Control panel tabs */
-      .cp-tabs {
-        padding: 0.25rem 0.4rem;
-        gap: 0.2rem;
-      }
-      .cp-tab-btn {
-        padding: 0.65rem 0.75rem;
-        font-size: 0.76rem;
-        gap: 0.35rem;
-      }
-      .cp-tab-btn svg {
-        width: 13px;
-        height: 13px;
-      }
-
-      .cp-card-box {
-        padding: 0.85rem;
-      }
-
-      /* Grids to single column */
-      .cp-grid-2, .cp-grid-3 {
-        grid-template-columns: 1fr !important;
-      }
-
-      /* Full width button behavior */
-      .cp-btn-mobile-full {
-        width: 100% !important;
-        justify-content: center !important;
-      }
-      .cp-btn-group {
-        flex-direction: column !important;
-        width: 100% !important;
-        gap: 0.5rem !important;
-      }
-      .cp-btn-group .btn {
-        width: 100% !important;
-        justify-content: center !important;
-      }
-      .cp-input-btn-row {
-        flex-direction: column !important;
-        width: 100% !important;
-      }
-      .cp-input-btn-row .btn {
-        width: 100% !important;
-        justify-content: center !important;
-      }
-      .cp-header-actions {
-        width: 100% !important;
-        display: flex !important;
-      }
-      .cp-header-actions .btn {
-        flex: 1 !important;
-        justify-content: center !important;
-      }
-
-      /* Sessions card mobile */
-      .cp-session-card {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 0.75rem !important;
-      }
-      .cp-session-btn-wrap {
-        width: 100% !important;
-      }
-      .cp-session-btn-wrap .btn {
-        width: 100% !important;
-        justify-content: center !important;
-      }
-
-      /* Login card */
-      .login-card {
-        padding: 1.5rem 1.25rem;
-        max-width: 360px;
-        width: 100%;
-      }
-    }
-
-    @media (max-width: 380px) {
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-      .modal-head h2 span {
-        font-size: 0.86rem;
-      }
-      .header-actions .btn {
-        padding: 0.35rem 0.45rem;
-      }
-    }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .spin { animation: spin 0.8s linear infinite; }
-  </style>
+  <!-- External Master Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
 
@@ -1064,10 +124,10 @@
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
           </svg>
         </div>
-        <span class="ql-title">Quick Launch (Projects)</span>
+        <span class="ql-title">Project Quick Launch (Shortcuts & Redirects)</span>
         <span class="ql-badge" id="qlBadge">0 Projects</span>
       </div>
-      <div id="qlStatus" class="ql-subtext">Fetching links from backend...</div>
+      <div id="qlStatus" class="ql-subtext">Fetching live links from backend...</div>
     </div>
     <div id="quickLaunchGrid" class="quick-launch-grid"></div>
   </section>
@@ -1082,14 +142,14 @@
           <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
           <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
         </svg>
-        <span>Git Deployments</span>
+        <span>Cloud Deployments (Render / Cloudflare / Vercel)</span>
         <span class="tab-badge" id="badgeDeployments">0</span>
       </button>
       <button class="view-tab" data-tab="monitors" onclick="switchTab('monitors')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
         </svg>
-        <span>Uptime Monitors</span>
+        <span>Uptime Monitors (24/7 Health Checks)</span>
         <span class="tab-badge" id="badgeMonitors">0</span>
       </button>
     </div>
@@ -1132,7 +192,7 @@
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
         </svg>
-        <span>Interactive Control Panel</span>
+        <span>Ops Control Panel & Settings</span>
       </h2>
       <button onclick="closeControlPanel()" class="btn btn-secondary btn-sm" style="display:inline-flex;align-items:center;gap:0.3rem;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -1151,15 +211,15 @@
       </button>
       <button class="cp-tab-btn" data-tab="accounts" onclick="switchCpTab('accounts')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
-        <span>Accounts</span>
+        <span>Deploy Providers</span>
       </button>
       <button class="cp-tab-btn" data-tab="titles" onclick="switchCpTab('titles')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-        <span>Titles</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+        <span>Short Links & Redirects</span>
       </button>
       <button class="cp-tab-btn" data-tab="keys" onclick="switchCpTab('keys')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"></circle><path d="m21 2-9.6 9.6"></path><path d="m15.5 7.5 3 3"></path></svg>
-        <span>API Keys</span>
+        <span>API Integrations</span>
       </button>
       <button class="cp-tab-btn" data-tab="security" onclick="switchCpTab('security')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
@@ -1167,21 +227,27 @@
       </button>
       <button class="cp-tab-btn" data-tab="users" onclick="switchCpTab('users')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-        <span>Users</span>
+        <span>Team & Users</span>
         <span id="cpTotalUsersBadge" class="tab-badge" style="margin-left:0.2rem;padding:0.05rem 0.4rem;font-size:0.68rem;">0</span>
       </button>
       <button class="cp-tab-btn" data-tab="sessions" onclick="switchCpTab('sessions')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-        <span>Active Devices</span>
+        <span>Active Sessions</span>
       </button>
     </div>
 
     <div class="modal-body">
       <!-- TAB 1: DATABASE -->
       <div id="cpTabDb" class="cp-content">
-        <p style="font-size:0.8rem;color:var(--text2);margin-bottom:1rem;">
-          Connect your <strong>PostgreSQL Database</strong> (e.g. Neon, Render, or Supabase). All your API keys, multiple accounts, and project titles are automatically stored and persisted in PostgreSQL.
-        </p>
+        <div style="margin-bottom:1rem;">
+          <h4 style="font-size:0.92rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:0.45rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+            <span>PostgreSQL Database Connection</span>
+          </h4>
+          <p style="font-size:0.78rem;color:var(--text3);margin-top:0.25rem;">
+            Connect your PostgreSQL Database (Neon, Render, Supabase). Saves credentials, multiple cloud deployment accounts, short links, and user logins permanently.
+          </p>
+        </div>
 
         <div class="cp-card-box" style="margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.6rem;">
           <div>
@@ -1220,9 +286,15 @@
 
       <!-- TAB 2: ACCOUNTS -->
       <div id="cpTabAccounts" class="cp-content" style="display:none;">
-        <p style="font-size:0.8rem;color:var(--text2);margin-bottom:1rem;">
-          Manage multiple Render, Cloudflare, and Vercel accounts. Services, Pages, and Vercel projects are automatically discovered.
-        </p>
+        <div style="margin-bottom:1rem;">
+          <h4 style="font-size:0.92rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:0.45rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+            <span>Cloud Deployment Accounts (Render, Cloudflare Pages, Vercel)</span>
+          </h4>
+          <p style="font-size:0.78rem;color:var(--text3);margin-top:0.25rem;">
+            Connect multiple Render, Cloudflare, and Vercel accounts. Live deployment statuses, build pipelines, and preview domains are automatically discovered and monitored.
+          </p>
+        </div>
 
         <div class="table-container" style="margin-bottom:1.25rem;">
           <table>
@@ -1266,13 +338,16 @@
         </div>
       </div>
 
-      <!-- TAB 3: PROJECT TITLES & SHORT LINKS (DUB.CO) -->
+      <!-- TAB 3: SHORT LINKS & REDIRECTS (DUB.CO) -->
       <div id="cpTabTitles" class="cp-content" style="display:none;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;flex-wrap:wrap;gap:0.6rem;">
           <div style="min-width:0;flex:1;">
-            <h4 style="font-size:0.88rem;font-weight:700;color:#fff;">Short Links & Project Titles (Dub.co)</h4>
-            <p style="font-size:0.78rem;color:var(--text3);margin-top:0.2rem;">
-              Manage Dub.co short links and custom projects. Edit target destination URLs anytime without changing the short link, or delete unused URLs.
+            <h4 style="font-size:0.92rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:0.45rem;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+              <span>Short Links, Destination Redirects & Project Titles</span>
+            </h4>
+            <p style="font-size:0.78rem;color:var(--text3);margin-top:0.25rem;">
+              Manage your Dub.co short links and dashboard shortcuts. Change target destination URLs without changing short links, track real-time visitor clicks, or purge deactivated links.
             </p>
           </div>
           <div class="cp-header-actions">
@@ -1283,6 +358,10 @@
             <button type="button" onclick="showAddCustomLinkForm()" class="btn btn-primary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               <span>+ Create / Add Link</span>
+            </button>
+            <button type="button" onclick="purgeDeactivatedTinyLinks()" class="btn btn-secondary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;border-color:rgba(239,68,68,0.35);color:#fca5a5;" title="Remove all legacy TinyURL / custom links left behind after deactivating TinyURL">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              <span>Clear Inactive TinyURL Links</span>
             </button>
             <button type="button" onclick="loadTitlesTable()" class="btn btn-secondary btn-sm" style="font-size:0.75rem;display:inline-flex;align-items:center;gap:0.35rem;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
@@ -1334,6 +413,10 @@
         </div>
 
         <!-- Table listing all projects and custom links -->
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text1);margin-bottom:0.45rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.4rem;">
+          <span>Active Short Links & Dashboard Shortcuts</span>
+          <span id="titleTinyUrlStatus" style="font-size:0.72rem;color:var(--text3);font-weight:normal;"></span>
+        </div>
         <div class="table-container" style="margin-bottom:1.25rem;">
           <table>
             <thead>
@@ -1409,6 +492,16 @@
 
       <!-- TAB 4: API KEYS -->
       <div id="cpTabKeys" class="cp-content" style="display:none;">
+        <div style="margin-bottom:1rem;">
+          <h4 style="font-size:0.92rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:0.45rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"></circle><path d="m21 2-9.6 9.6"></path><path d="m15.5 7.5 3 3"></path></svg>
+            <span>API Keys & Service Integrations</span>
+          </h4>
+          <p style="font-size:0.78rem;color:var(--text3);margin-top:0.25rem;">
+            Configure external API tokens to power Dub.co short links and UptimeRobot monitoring.
+          </p>
+        </div>
+
         <div class="form-group">
           <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
             <span>Dub.co API Key (Workspace Token)</span>
@@ -1426,18 +519,29 @@
         </div>
 
         <div class="form-group" style="margin-top:1.25rem;">
-          <label class="form-label" style="color:var(--text3);">TinyURL API Token (Legacy Optional)</label>
-          <input type="password" id="cpTinyKey" class="form-input mono" placeholder="Optional bearer token from tinyurl.com" />
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.35rem;">
+            <label class="form-label" style="color:var(--text3);margin-bottom:0;">TinyURL API Token (Legacy Optional)</label>
+            <button type="button" onclick="clearTinyKey()" class="btn btn-secondary btn-sm" style="font-size:0.7rem;padding:0.15rem 0.5rem;border-color:rgba(239,68,68,0.4);color:#fca5a5;">Clear / Disconnect</button>
+          </div>
+          <input type="password" id="cpTinyKey" class="form-input mono" placeholder="Optional bearer token (leave blank if deactivated)" />
+          <span style="font-size:0.72rem;color:var(--text3);margin-top:0.35rem;display:block;line-height:1.4;">
+            If you deactivated your TinyURL account, clear this field and save, or click "Clear / Disconnect" to remove leftover TinyURL links.
+          </span>
         </div>
         <button onclick="saveApiKeys()" class="btn btn-primary cp-btn-mobile-full" style="margin-top:1.25rem;">Save Keys to Database</button>
       </div>
 
       <!-- TAB 5: SECURITY -->
       <div id="cpTabSecurity" class="cp-content" style="display:none;">
-        <h4 style="font-size:0.88rem;font-weight:700;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"></circle><path d="m21 2-9.6 9.6"></path><path d="m15.5 7.5 3 3"></path></svg>
-          <span>Admin Password</span>
-        </h4>
+        <div style="margin-bottom:1rem;">
+          <h4 style="font-size:0.92rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:0.45rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span>Administrator Security & Two-Factor Authentication (2FA)</span>
+          </h4>
+          <p style="font-size:0.78rem;color:var(--text3);margin-top:0.25rem;">
+            Update administrator credentials and configure TOTP 2FA (Google Authenticator) for login protection.
+          </p>
+        </div>
         <div class="form-group">
           <label class="form-label">New Admin Password</label>
           <input type="password" id="cpNewPass" class="form-input" placeholder="Enter new password" />
@@ -1506,11 +610,14 @@
 
       <!-- TAB 6: USERS MANAGEMENT -->
       <div id="cpTabUsers" class="cp-content" style="display:none;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;flex-wrap:wrap;gap:0.5rem;">
           <div>
-            <h4 style="font-size:0.88rem;font-weight:700;color:#fff;">Users & Access Roles</h4>
+            <h4 style="font-size:0.92rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:0.45rem;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <span>Dashboard User Accounts & Roles</span>
+            </h4>
             <p style="font-size:0.78rem;color:var(--text3);margin-top:0.2rem;">
-              Manage users stored in PostgreSQL. Admins have access to Control Panel; Viewers have read-only access.
+              Manage team members who can access this dashboard. Assign 'Administrator' for full control or 'Viewer' for read-only monitoring.
             </p>
           </div>
           <span style="font-size:0.75rem;font-weight:700;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:0.25rem 0.65rem;border-radius:999px;border:1px solid rgba(99,102,241,0.3);">
@@ -1567,9 +674,12 @@
       <div id="cpTabSessions" class="cp-content" style="display:none;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
           <div>
-            <h4 style="font-size:0.88rem;font-weight:700;color:#fff;">Logged Devices & Active Sessions</h4>
-            <p style="font-size:0.78rem;color:var(--text3);margin-top:0.2rem;">
-              Track devices currently authenticated. 1-click revoke any session or log out all other devices.
+            <h4 style="font-size:0.92rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:0.45rem;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+              <span>Logged-In Devices & Active Sessions</span>
+            </h4>
+            <p style="font-size:0.78rem;color:var(--text3);margin-top:0.25rem;">
+              Review currently authenticated devices, browsers, and IP addresses. Revoke unauthorized or old sessions with 1 click.
             </p>
           </div>
           <button onclick="logoutAllOtherDevices()" class="btn btn-danger btn-sm cp-btn-mobile-full" style="font-size:0.78rem;display:inline-flex;align-items:center;gap:0.35rem;">
@@ -2353,7 +1463,7 @@
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                   <span>Edit</span>
                 </button>
-                <button type="button" onclick="deleteProjectLink('${esc(deleteId)}', '${esc(displayTitle)}')" class="btn btn-danger btn-sm" style="font-size:0.75rem;padding:0.25rem 0.5rem;" title="Delete link">
+                <button type="button" onclick="deleteProjectLink('${esc(deleteId)}', '${esc(displayTitle)}', '${esc(l.alias || '')}', ${dbId || 'null'})" class="btn btn-danger btn-sm" style="font-size:0.75rem;padding:0.25rem 0.5rem;" title="Delete link">
                   Delete
                 </button>
               </div>
@@ -2507,10 +1617,17 @@
     }
   }
 
-  async function deleteProjectLink(identifier, title) {
-    if (!confirm(`Are you sure you want to delete "${title || identifier}"? This will delete the short link from Dub.co and remove it from your dashboard.`)) return;
+  async function deleteProjectLink(identifier, title, alias, dbId) {
+    if (!confirm(`Are you sure you want to delete "${title || identifier}"? This will permanently remove it from your dashboard.`)) return;
     try {
-      const res = await apiFetch('/admin/links/' + encodeURIComponent(identifier), { method: 'DELETE' });
+      let url = '/admin/links/' + encodeURIComponent(identifier);
+      const params = new URLSearchParams();
+      if (alias) params.set('alias', alias);
+      if (dbId) params.set('db_id', dbId);
+      const qs = params.toString();
+      if (qs) url += '?' + qs;
+
+      const res = await apiFetch(url, { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to remove link');
       toast(data.message || `Removed "${title || identifier}"`, 'success');
@@ -2521,12 +1638,33 @@
     }
   }
 
+  async function purgeDeactivatedTinyLinks() {
+    if (!confirm('This will permanently delete all leftover TinyURL and custom links left behind after deactivating your TinyURL account, and disconnect the TinyURL token.\n\nActive Dub.co links will NOT be affected.\n\nProceed?')) return;
+    try {
+      const res = await apiFetch('/admin/links/purge-legacy', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to purge links');
+      toast(data.message || 'Successfully purged inactive links!', 'success');
+      if ($('cpTinyKey')) $('cpTinyKey').value = '';
+      loadTitlesTable();
+      refreshDashboard(true);
+    } catch (e) {
+      toast(e.message || 'Failed to purge links', 'error');
+    }
+  }
+
+  async function clearTinyKey() {
+    if (!confirm('Disconnect TinyURL and clear token from database?')) return;
+    if ($('cpTinyKey')) $('cpTinyKey').value = '';
+    await saveApiKeys();
+  }
+
   // Aliases for backward compatibility
   function deleteCustomLink(id, alias) {
-    deleteProjectLink(id || alias, alias);
+    deleteProjectLink(id || alias, alias, alias, id);
   }
   function deleteTinyUrlLink(alias) {
-    deleteProjectLink(alias, alias);
+    deleteProjectLink(alias, alias, alias, null);
   }
 
   async function deleteTitle(id) {

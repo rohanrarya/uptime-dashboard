@@ -765,13 +765,42 @@ def delete_project_title(title_id):
     global _titles_cache
     _titles_cache = None
 
+    if title_id is None:
+        return False
+    try:
+        t_id = int(str(title_id).replace('custom-', '').strip())
+    except (ValueError, TypeError):
+        t_id = title_id
+
     conn, engine = get_connection()
     cur = conn.cursor()
     try:
         if engine == 'postgres':
-            cur.execute("DELETE FROM project_titles WHERE id = %s;", (title_id,))
+            cur.execute("DELETE FROM project_titles WHERE id = %s;", (t_id,))
         else:
-            cur.execute("DELETE FROM project_titles WHERE id = ?;", (title_id,))
+            cur.execute("DELETE FROM project_titles WHERE id = ?;", (t_id,))
+            conn.commit()
+        return True
+    finally:
+        cur.close()
+        conn.close()
+
+
+def delete_project_title_by_alias(alias):
+    global _titles_cache
+    _titles_cache = None
+
+    clean_alias = str(alias or '').strip()
+    if not clean_alias:
+        return False
+
+    conn, engine = get_connection()
+    cur = conn.cursor()
+    try:
+        if engine == 'postgres':
+            cur.execute("DELETE FROM project_titles WHERE LOWER(alias) = LOWER(%s);", (clean_alias,))
+        else:
+            cur.execute("DELETE FROM project_titles WHERE LOWER(alias) = LOWER(?);", (clean_alias,))
             conn.commit()
         return True
     finally:
