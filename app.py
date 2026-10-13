@@ -452,6 +452,33 @@ def serve_static(filename):
     return jsonify({'error': 'Static file not found'}), 404
 
 
+@app.route('/favicon.ico')
+def serve_favicon():
+    static_dirs = [
+        os.path.join(app.root_path, 'static'),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static'),
+        app.root_path,
+        'static'
+    ]
+    for s_dir in static_dirs:
+        if os.path.exists(os.path.join(s_dir, 'favicon.ico')):
+            return send_from_directory(s_dir, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return jsonify({'error': 'Favicon not found'}), 404
+
+
+@app.route('/apple-touch-icon.png')
+def serve_apple_touch_icon():
+    static_dirs = [
+        os.path.join(app.root_path, 'static'),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static'),
+        'static'
+    ]
+    for s_dir in static_dirs:
+        if os.path.exists(os.path.join(s_dir, 'apple-touch-icon.png')):
+            return send_from_directory(s_dir, 'apple-touch-icon.png', mimetype='image/png')
+    return jsonify({'error': 'Touch icon not found'}), 404
+
+
 @app.route('/')
 @app.route('/dashboard')
 def serve_index():
